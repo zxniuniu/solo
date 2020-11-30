@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>在Java中调用Python - 随心笔客</title><meta name="description" content="在微服务架构大行其道的今天，对于将程序进行嵌套调用的做法其实并不可取，甚至显得有些愚蠢。但有时候确实要面对这个问题，恰好我在项目中就遇到了这个问题，需要在 Java 程序中调用 Python 程序。关于在 Java 中调用 Python 程序的实现，根据不同的用途可以使用多种不同的方法，在这里就将在 Java 中调用 Python 程序的方式做一个总结。 方法一、直接通过 Runtime 进行调用，方法二、通过 Jython 调用。"/><meta property="og:description" content="在微服务架构大行其道的今天，对于将程序进行嵌套调用的做法其实并不可取，甚至显得有些愚蠢。但有时候确实要面对这个问题，恰好我在项目中就遇到了这个问题，需要在 Java 程序中调用 Python 程序。关于在 Java 中调用 Python 程序的实现，根据不同的用途可以使用多种不同的方法，在这里就将在 Java 中调用 Python 程序的方式做一个总结。 方法一、直接通过 Runtime 进行调用，方法二、通过 Jython 调用。"/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="在Java中调用Python - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2018/09/09/1536454673406.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="在Java中调用Python - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2018/09/09/1536454673406.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title="开源博客Solo零基础搭建，以及Apache、Tomcat下多应用部署" href="https://zxniuniu.github.io/articles/2018/09/08/1536376494775.html">
+            <link rel="next" title="阿里Druid数据源配置数据库密码加密" href="https://zxniuniu.github.io/articles/2018/09/18/1537258285996.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2018/09/09/1536454673406.html">
+                            在Java中调用Python
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2018-09-09
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2018/09/09/1536454673406.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1536454673406">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2018/09/09/1536454673406.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <p><img src="https://img.hacpai.com/bing/20180816.jpg?imageView2/1/w/960/h/520/interlace/1/q/100" alt=""></p>
+<h2 id="toc_h2_0">写在前面</h2>
+<p>在微服务架构大行其道的今天，对于将程序进行嵌套调用的做法其实并不可取，甚至显得有些愚蠢。但有时候确实要面对这个问题，恰好我在项目中就遇到了这个问题，需要在 Java 程序中调用 Python 程序。关于在 Java 中调用 Python 程序的实现，根据不同的用途可以使用多种不同的方法，在这里就将在 Java 中调用 Python 程序的方式做一个总结。</p>
+<h2 id="toc_h2_1">直接通过 Runtime 进行调用</h2>
+<p>我们知道，在 Java 中如果需要调用第三方程序，可以直接通过 Runtime 实现，这也是最直接最粗暴的做法。</p>
+<pre><code class="language-fallback highlight-chroma">public class InvokeByRuntime {
+    /**
+     * @param args
+     * @throws IOException 
+     * @throws InterruptedException 
+     */
+    public static void main(String[] args) throws IOException， InterruptedException {
+        String exe = "python.exe";
+        String command = "D:\\calculator.py";
+        String num1 = "1";
+        String num2 = "2";
+        String[] cmdArr = new String[] {exe， command， num1， num2};
+        Process process = Runtime.getRuntime().exec(cmdArr);
+        InputStream is = process.getInputStream();
+        DataInputStream dis = new DataInputStream(is);
+        String str = dis.readLine();
+        process.waitFor();
+        System.out.println(str);
+    }
+}
+</code></pre>
+<p>输出：</p>
+<pre><code class="language-fallback highlight-chroma">3
+</code></pre>
+<p>calculator.py:</p>
+<pre><code class="language-fallback highlight-chroma"># coding=utf-8
+from sys import argv
+
+num1 = argv[1]
+num2 = argv[2]
+sum = int(num1) + int(num2)
+print sum
+</code></pre>
+<p>显然，在 Java 中通过 Runtime 调用 Python 程序与直接执行 Python 程序的效果是一样的，可以在 Python 中读取传递的参数，也可以在 Java 中读取到 Python 的执行结果。需要注意的是，不能在 Python 中通过 return 语句返回结果，只能将返回值写入到标准输出流中，然后在 Java 中通过标准输入流读取 Python 的输出值。</p>
+<h2 id="toc_h2_2">通过 Jython 调用</h2>
+<p>通过 Jython 调用 Python？我在听到这个概念的时候一脸懵逼，不是说好的在 Java 中调用 Python 程序吗？这个 Jython 是什么鬼？难道是一个在 Java 中调用 Python 程序的组件或工具？其实，关于 Jython 是什么这个疑问，我估计有许多人在一开始接触的时候也是很疑惑的，下面我们就一一道来。</p>
+<h3 id="toc_h3_3">1. 什么是 Jython</h3>
+<p>Jython 主页：<a href="http://www.jython.org/currentdocs.html" target="_blank">http://www.jython.org/currentdocs.html</a><br>
+按照官方的定义，Jython 是 Python 语言在 Java 平台的实现。这个概念似乎有点拗口，反正我一开始并没有理解。Python 难道不已经是一门语言了吗？什么叫做 Jython 是 Python 语言在 Java 平台的实现？<br>
+实际上，之所以存在这样的困惑主要是因为我们对 Python 语言的相关概念掌握和理解不清楚导致的。<br>
+Python 其实只是一个语言规范，它存在多个不同语言实现的版本。具体来说，目前 Python 语言存在如下几个具体实现：<br>
+（1）CPython：CPython 是标准 Python，也是其他 Python 编译器的参考实现。通常提到“Python”一词，都是指 CPython。CPython 由 C 编写，将 Python 源码编译成 CPython 字节码，由虚拟机解释执行。没有用到 JIT 等技术，垃圾回收方面采用的是引用计数。<br>
+（2）Jython：Jython 是在 JVM 上实现的 Python，由 Java 编写。Jython 将 Python 源码编译成 JVM 字节码，由 JVM 执行对应的字节码。因此能很好的与 JVM 集成，比如利用 JVM 的垃圾回收和 JIT，直接导入并调用 JVM 上其他语言编写的库和函数。<br>
+（3）IronPython：IronPython 与 Jython 类似，所不同的是 IronPython 在 CLR 上实现的 Python，即面向.NET 平台，由 C#编写。IronPython 将源码编译成 TODO CLR，同样能很好的与.NET 平台集成。即与 Jython 相同，可以利用.NET 框架的 JIT、垃圾回收等功能，能导入并调用.NET 上其他语言编写的库和函数。IronPython 默认使用 Unicode 字符串。<br>
+（4）PyPy：这里说的 PyPy 是指使用 RPython 实现，利用 Tracing JIT 技术实现的 Python，而不是 RPython 工具链。PyPy 可以选择多种垃圾回收方式，如标记清除、标记压缩、分代等。<br>
+（5）Pyston：Pyston 由 Dropbox 开发，使用 C++11 编写，采用 Method-at-a-time-JIT 和 Mark Sweep——Stop the World 的 GC 技术。Pyston 使用类似 JavaScript V8 那样的多层编译，其中也用到了 LLVM 来优化代码。</p>
+<p>所以，我们现在再来理解什么是 Jython 就非常清楚了：Jython 是 Python 语言规范在 Java 平台的具体实现。具体来说，可以将 Python 源码编译为 JVM 可以解释执行的字节码。<br>
+Jython 原本叫做 JPython，于 1997 年由 Jim Hugunin 创建，后来在 1999 年 2.0 版本发布的时候由 Barry Warsaw 更名为 Jython，在这里我们就不再深究为什么要把 JPython 更名为 Jython 的原因了。<strong>注意：</strong> Jython 从 2.0 版本开始就与 CPython 的版本保持一致，即：Jython 2.7 与 CPython 2.7 保持对应。</p>
+<p>虽然我们理解了什么是 Jython，但是还存在一个疑问，为什么 Python 语言存在这么多不同语言的实现呢？为什么不能就只存在一个 C 语言实现的版本就可以了呢？存在这么多版本，真的给初学者带来了许多困惑。<br>
+当然，要回答这个问题可能就需要深究一些历史的原因了，就此打住。我们在此只讨论使用 Jython 能做什么以及如何使用 Jython？</p>
+<h3 id="toc_h3_4">2. 使用 Jython 能做什么</h3>
+<p>既然 Jython 是 Python 语言在 Java 平台的实现，是 Java 语言实现的，那么是否可以在 Jython 程序中调用 Java，在 Java 中也能调用 Jython 呢？<br>
+答案是肯定的，实际上，Jython 的主要通途就是在 Java 中调用 Python 程序；而且，还可以直接在 Jython 程序中引用 Java。</p>
+<h3 id="toc_h3_5">3. 如何使用 Jython</h3>
+<h4 id="toc_h4_6">3.1 安装 Jython</h4>
+<p>在 Jython 的官方下载页面我们可以看到如下描述（详见：<a href="http://www.jython.org/downloads.html" target="_blank">http://www.jython.org/downloads.html</a>）<br>
+<img src="https://images2017.cnblogs.com/blog/722072/201802/722072-20180209153212435-1015516033.png" alt=""></p>
+<p>显然，可以下载 2 个 Jython 的 jar 包。其中，<code>jython-installer-${version}.jar</code>是用于安装 Jython 的，<code>jython-standalone-${version}.jar</code>用于嵌入到 Java 程序中使用。<br>
+什么意思？我一开始也是很疑惑，为什么要提供 2 个不同的 jar 包呢？他们有什么不同呢？2 个不同的 Jar 包如何使用呢？<br>
+首先，<code>jython-installer-${version}.jar</code>用于安装 Jython，就好比我们需要安装 JRE，用于运行 Java 程序。除此之外，当需要在 Python 程序中引用一些公共的第三方库时，也需要先安装 Jython 才能下载所依赖的模块。</p>
+<p>下载<code>jython-installer-${version}.jar</code>完毕之后，进入控制台，执行如下命令：</p>
+<pre><code class="language-fallback highlight-chroma">java -jar jython-installer-${version}.jar
+</code></pre>
+<p>此时会弹出一个图形化的安装界面，只需要一步一步选择相应参数进行安装即可。安装完毕之后，请将 Jython 安装目录添加为环境变量 JYTHON_HOME，同时添加 bin 目录到 PATH 变量中：<code>PATH=$PATH:$JYTHON_HOME/bin</code>。<br>
+进入控制台，执行如下命令就可以进入 Jython 的交互环境，这与 CPython（我们通常说的 Python）的命令行交互环境是一样的。</p>
+<pre><code class="language-fallback highlight-chroma">&gt; jython
+Jython 2.7.0 (default:9987c746f838， Apr 29 2015， 02:25:11)
+[Java HotSpot(TM) 64-Bit Server VM (Oracle Corporation)] on java1.8.0_121
+Type "help"， "copyright"， "credits" or "license" for more information.
+&gt;&gt;&gt; print("hello，world")
+hello，world
+&gt;&gt;&gt;
+</code></pre>
+<p>当然，我们还可以使用 jython 命令运行一个 Python 程序。</p>
+<pre><code class="language-fallback highlight-chroma">&gt; jython helloworld.py
+hello，world
+</code></pre>
+<p>helloworld.py:</p>
+<pre><code class="language-fallback highlight-chroma">import sys
+
+print("hello，world")
+</code></pre>
+<p>上面我们看到在 Jython 官网提供了 2 个 Jar 包，一个用于安装 Jython，执行 Python 程序。那么，<code>jython-standalone-${version}.jar</code>又有什么用途呢？<br>
+实际上，当我们需要在 Java 中调用 Python 程序时，除了直接使用 Java 的 Runtime 调用，还可以直接使用 Jython 的 API 进行调用，而且通过 Jython API 可以直接调用 Python 程序中的指定函数或者对象方法，粒度更加精细。<br>
+当我们需要调用 Jython 的 API 时有两种方式：<br>
+第一，如果项目使用 Maven 进行构建，可以直接添加 Jython 的依赖配置到 pom.xml 文件中，如：</p>
+<pre><code class="language-fallback highlight-chroma">&lt;dependency&gt;
+    &lt;groupId&gt;org.python&lt;/groupId&gt;
+    &lt;artifactId&gt;jython&lt;/artifactId&gt;
+    &lt;version&gt;2.7.0&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre>
+<p>第二，可以直接将<code>jython-standalone-${version}.jar</code>添加到项目 classpath 中，这样也可以调用 Jython 的相关 API 了。也就是说，<code>jython-standalone-${version}.jar</code>就是一个提供 Jython API 的 jar 独立 jar 包。</p>
+<h4 id="toc_h4_7">3.2 Java 调用 Python 程序实践</h4>
+<p>Java 通过 Jython API 调用 Python 程序，有几种用法：<br>
+（1）在 Java 中执行 Python 语句，相当于在 Java 中嵌入了 Python 程序，这种用法不常见，也没有太大的实际意义。</p>
+<pre><code class="language-fallback highlight-chroma">public static void main(String[] args) {
+    System.setProperty("python.home"， "D:\\jython2.7.0");
+    PythonInterpreter interp = new PythonInterpreter();
+    // 执行Python程序语句
+    interp.exec("import sys");
+    interp.set("a"， new PyInteger(42));
+    interp.exec("print a");
+    interp.exec("x = 2+2");
+    PyObject x = interp.get("x");
+    System.out.println("x: " + x);
+}
+</code></pre>
+<p>输出：</p>
+<pre><code class="language-fallback highlight-chroma">42
+x: 4
+</code></pre>
+<p>（2）在 Java 中简单调用 Python 程序，不需要传递参数，也不需要获取返回值。</p>
+<pre><code class="language-fallback highlight-chroma">public static void main(String[] args) throws IOException {
+    System.setProperty("python.home"， "D:\\jython2.7.0");
+    String python = "D:\\simple_python.py";
+    PythonInterpreter interp = new PythonInterpreter();
+    interp.execfile(python);
+    interp.cleanup();
+    interp.close();
+}
+</code></pre>
+<p>simple_python.py:</p>
+<pre><code class="language-fallback highlight-chroma"># coding=utf-8
+print("Do simple thing in Python")
+print("输出中文")
+</code></pre>
+<p>（3）在 Java 中单向调用 Python 程序中的方法，需要传递参数，并接收返回值。Python 既支持面向函数式编程，也支持面向对象编程。因此，调用 Python 程序中的方法也分别以面向函数式编程和面向对象式编程进行说明。</p>
+<pre><code class="language-fallback highlight-chroma">public static void main(String[] args) throws IOException {
+    System.setProperty("python.home"， "D:\\jython2.7.0");
+
+    // 1\. Python面向函数式编程: 在Java中调用Python函数
+    String pythonFunc = "D:\\calculator_func.py";
+
+    PythonInterpreter pi1 = new PythonInterpreter();
+    // 加载python程序
+    pi1.execfile(pythonFunc);
+    // 调用Python程序中的函数
+    PyFunction pyf = pi1.get("power", PyFunction.class);
+    PyObject dddRes = pyf.__call__(Py.newInteger(2), Py.newInteger(3));
+    System.out.println(dddRes);
+    pi1.cleanup();
+    pi1.close();
+
+    // 2\. 面向对象式编程: 在Java中调用Python对象实例的方法
+    String pythonClass = "D:\\calculator_clazz.py";
+    // python对象名
+    String pythonObjName = "cal";
+    // python类名
+    String pythonClazzName = "Calculator";
+    PythonInterpreter pi2 = new PythonInterpreter();
+    // 加载python程序
+    pi2.execfile(pythonClass);
+    // 实例化python对象
+    pi2.exec(pythonObjName + "=" + pythonClazzName + "()");
+    // 获取实例化的python对象
+    PyObject pyObj = pi2.get(pythonObjName);
+    // 调用python对象方法,传递参数并接收返回值
+    PyObject result = pyObj.invoke("power", new PyObject[] {Py.newInteger(2), Py.newInteger(3)}); 
+    double power = Py.py2double(result);
+    System.out.println(power);
+
+    pi2.cleanup();
+    pi2.close();
+}
+</code></pre>
+<p>输出：</p>
+<pre><code class="language-fallback highlight-chroma">8.0
+8.0
+</code></pre>
+<p>calculator_func.py：</p>
+<pre><code class="language-fallback highlight-chroma"># coding=utf-8
+import math
+
+# 面向函数式编程
+def power(x, y):
+    return math.pow(x, y)
+</code></pre>
+<p>calculator_clazz.py：</p>
+<pre><code class="language-fallback highlight-chroma"># coding=utf-8
+import math
+
+# 面向对象编程
+class Calculator(object):
+
+    # 计算x的y次方
+    def power(self, x, y):
+        return math.pow(x,y)
+</code></pre>
+<p>（4）高级调用，也是在 Java 中调用 Python 程序最常见的用法：Python 程序可以实现 Java 接口，在 Python 中也可以调用 Java 方法。</p>
+<pre><code class="language-fallback highlight-chroma">public static void main(String[] args) throws IOException {
+    System.setProperty("python.home"， "D:\\jython2.7.0");
+
+    // Python程序路径
+    String python = "D:\\python\\fruit_controller.py";
+    // Python实例对象名
+    String pyObjName = "pyController";
+    // Python类名
+    String pyClazzName = "FruitController";
+
+    Fruit apple = new Apple();
+    Fruit orange = new Orange();
+
+    PythonInterpreter interpreter = new PythonInterpreter();
+    // 如果在Python程序中引用了第三方库,需要将这些被引用的第三方库所在路径添加到系统环境变量中
+    // 否则,在执行Python程序时将会报错: ImportError: No module named xxx
+    PySystemState sys = interpreter.getSystemState();
+    sys.path.add("D:\\python");
+
+    // 加载Python程序
+    interpreter.execfile(python);
+    // 实例 Python对象
+    interpreter.exec(pyObjName + "=" + pyClazzName + "()");
+
+    // 1.在Java中获取Python对象,并将Python对象转换为Java对象
+    // 为什么能够转换? 因为Python类实现了Java接口,通过转换后的Java对象只能调用接口中定义的方法
+    GroovyController controller = (GroovyController) interpreter.get(pyObjName).__tojava__(GroovyController.class);
+    controller.controllFruit(apple);
+    controller.controllFruit(orange);
+
+    // 2.在Java直接通过Python对象调用其方法
+    // 既可以调用实现的Java接口方法,也可以调用Python类自定义的方法
+    PyObject pyObject = interpreter.get(pyObjName);
+    pyObject.invoke("controllFruit", Py.java2py(apple));
+    pyObject.invoke("controllFruit", Py.java2py(orange));
+    pyObject.invoke("printFruit", Py.java2py(apple));
+    pyObject.invoke("printFruit", Py.java2py(orange));
+
+    // 3.在Java中获取Python类进行实例化对象: 没有事先创建 Python对象
+    PyObject pyClass = interpreter.get("FruitController");
+    PyObject pyObj = pyClass.__call__();
+    pyObj.invoke("controllFruit", Py.java2py(apple));
+    pyObj.invoke("controllFruit", Py.java2py(orange));
+
+    PyObject power = pyObj.invoke("power", new PyObject[] {Py.newInteger(2), Py.newInteger(3)});
+    if(power != null) {
+        double p = Py.py2double(power);
+        System.out.println(p);
+    }
+
+    interpreter.cleanup();
+    interpreter.close();
+}
+</code></pre>
+<p>输出：</p>
+<pre><code class="language-fallback highlight-chroma">Show: I am a java apple.
+controllFruit Python Apple
+controllFruit END
+Show: I am a java orange.
+controllFruit Python Orange
+controllFruit END
+Show: I am a java apple.
+controllFruit Python Apple
+controllFruit END
+Show: I am a java orange.
+controllFruit Python Orange
+controllFruit END
+Show: I am a java apple.
+printFruit Python Apple
+printFruit END
+Show: I am a java orange.
+printFruit Python Orange
+printFruit END
+Show: I am a java apple.
+controllFruit Python Apple
+controllFruit END
+Show: I am a java orange.
+controllFruit Python Orange
+controllFruit END
+8.0
+</code></pre>
+<p>fruit_controller.py：</p>
+<pre><code class="language-fallback highlight-chroma"># coding=utf-8
+
+from calculator_clazz import Calculator
+from java.lang import String
+from org.test.inter import GroovyController
+from org.test.inter import Fruit
+
+# 在Python中实现Java接口: org.test.inter.GroovyController
+class FruitController(GroovyController):
+
+    # 实现接口方法
+    def controllFruit(self, fruit):
+        # 在Python中调用Java对象方法
+        fruit.show()
+
+        if(fruit.getType() == "apple"):
+            print ("controllFruit Python Apple")
+
+        if(fruit.getType() == "orange"):
+            print ("controllFruit Python Orange")
+
+        print ("controllFruit END")
+
+    # 自定义新方法    
+    def printFruit(self, fruit):
+        fruit.show()
+
+        if(fruit.getType() == "apple"):
+            print ("printFruit Python Apple")
+
+        if(fruit.getType() == "orange"):
+            print ("printFruit Python Orange")
+
+        print ("printFruit END")
+
+    # 引用第三方python程序
+    def power(self, x, y):
+        cal = Calculator()
+        return cal.power(x, y)
+</code></pre>
+<p>Java 接口和实现类：</p>
+<pre><code class="language-fallback highlight-chroma">// 该接口用于在Python中实现
+public interface GroovyController {
+    public void controllFruit(Fruit fruit);
+}
+
+// 在Java中使用的接口
+public interface Fruit {
+    public String getName();
+    public String getType();
+    public void show();
+}
+
+// Apple
+public class Apple implements Fruit {
+    public String getName() {
+        return "java apple";
+    }
+
+    public String getType() {
+        return "apple";
+    }
+
+    public void show() {
+        System.out.println("Show: I am a java apple.");
+    }
+}
+
+// Orange
+public class Orange implements Fruit {
+    public String getName() {
+        return "ava orange";
+    }
+
+    public String getType() {
+        return "orange";
+    }
+
+    public void show() {
+        System.out.println("Show: I am a java orange.");
+    }
+}
+</code></pre>
+<p>另外，对于在 eclipse 中运行时控制台报错：</p>
+<pre><code class="language-fallback highlight-chroma">Failed to install '': java.nio.charset.UnsupportedCharsetException: cp0
+</code></pre>
+<p>请添加 VM 参数：-Dpython.console.encoding=UTF-8，详见：<a href="http://blog.csdn.net/xfei365/article/details/50955731" target="_blank">http://blog.csdn.net/xfei365/article/details/50955731</a></p>
+<h2 id="toc_h2_8">总结</h2>
+<p>虽然在 Java 中调用 Python 可以有多种方式解决，甚至因为 Jython 的出现更显得非常便利。但是这种程序间嵌套调用的方式不可取，首先抛开调用性能不说，增加了耦合复杂度。更加有效的方式应该是通过 RCP 或者 RESTFul 接口进行解耦，这样各司其职，也便于扩展，良好的架构是一个项目能够健康发展的基础。在微服务架构大行其道的今天，这种程序间嵌套调用的方式将会逐渐被淘汰。</p>
+<p>【参考】<br>
+<a href="http://tonl.iteye.com/blog/1918245" target="_blank">http://tonl.iteye.com/blog/1918245</a> Java 调用 Python<br>
+<a href="http://blog.csdn.net/supermig/article/details/24005585" target="_blank">http://blog.csdn.net/supermig/article/details/24005585</a> Learning Python -- Java 通过 JyThon 调用 Python 实现的规则<br>
+<a href="http://blog.csdn.net/hpp1314520/article/details/72854011" target="_blank">http://blog.csdn.net/hpp1314520/article/details/72854011</a> Java 利用 Runtime.getRuntime().exec()调用 python 脚本并传参<br>
+<a href="http://blog.csdn.net/xingjiarong/article/details/49424253" target="_blank">http://blog.csdn.net/xingjiarong/article/details/49424253</a> Java 调用 python 方法总结<br>
+<a href="https://zh.wikipedia.org/wiki/Jython" target="_blank">https://zh.wikipedia.org/wiki/Jython</a> Jython<br>
+<a href="http://lib.csdn.net/article/python/1654" target="_blank">http://lib.csdn.net/article/python/1654</a> Jython 的安装及简单例子<br>
+<a href="https://coolshell.cn/articles/2631.html" target="_blank">https://coolshell.cn/articles/2631.html</a> 五大基于 JVM 的脚本语言<br>
+<a href="http://python.jobbole.com/82703/" target="_blank">http://python.jobbole.com/82703/</a> 各种 Python 实现的简单介绍与比较<br>
+<a href="https://www.oschina.net/translate/why-are-there-so-many-pythons" target="_blank">https://www.oschina.net/translate/why-are-there-so-many-pythons</a> 为什么有这么多 Python?</p>
+<p>该文章转自：<a href="http://www.cnblogs.com/nuccch/p/8435693.html" target="_blank">http://www.cnblogs.com/nuccch/p/8435693.html</a>，个人仅 Mark，感谢原作者。</p>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Java">
+                            Java</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Python">
+                            Python</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2018/09/08/1536376494775.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="开源博客Solo零基础搭建，以及Apache、Tomcat下多应用部署">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="在Java中调用Python"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2018/09/09/1536454673406.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2018/09/18/1537258285996.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="阿里Druid数据源配置数据库密码加密">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1536454673406"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+<ul class="article__toc">
+        <li class="toc__h2">
+            <a href="#toc_h2_0">写在前面</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_1">直接通过 Runtime 进行调用</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_2">通过 Jython 调用</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_3">1. 什么是 Jython</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_4">2. 使用 Jython 能做什么</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_5">3. 如何使用 Jython</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_6">3.1 安装 Jython</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_7">3.2 Java 调用 Python 程序实践</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_8">总结</a>
+        </li>
+</ul></aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1536454673406",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1536454673406",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("Java,Python", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1536454673406', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 24ms, 2020/11/29 22:19:06 -->

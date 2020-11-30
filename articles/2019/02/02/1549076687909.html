@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>Redis高可用集群、哨兵模式（Redis-Sentinel）搭建配置详解 - 随心笔客</title><meta name="description" content="由于本地环境的使用，所以搭建一个本地的 Redis 集群，本篇讲解 Redis 主从复制集群的搭建，使用的平台是 Windows。为了使得集群在一部分节点下线或者无法与集群的大多数节点进行通讯的情况下， 仍然可以正常运作， Redis 集群对节点使用了主从复制功能： 集群中的每个节点都有 1 个至 N 个复制品（replica）， 其中一个复制品为主节点（master）， 而其余的 N-1 个复制品为从节点（slave）。"/><meta property="og:description" content="由于本地环境的使用，所以搭建一个本地的 Redis 集群，本篇讲解 Redis 主从复制集群的搭建，使用的平台是 Windows。为了使得集群在一部分节点下线或者无法与集群的大多数节点进行通讯的情况下， 仍然可以正常运作， Redis 集群对节点使用了主从复制功能： 集群中的每个节点都有 1 个至 N 个复制品（replica）， 其中一个复制品为主节点（master）， 而其余的 N-1 个复制品为从节点（slave）。"/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="Redis高可用集群、哨兵模式（Redis-Sentinel）搭建配置详解 - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2019/02/02/1549076687909.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="Redis高可用集群、哨兵模式（Redis-Sentinel）搭建配置详解 - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2019/02/02/1549076687909.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title="Why Redis beats Memcached for caching" href="https://zxniuniu.github.io/articles/2019/02/02/1549069716678.html">
+            <link rel="next" title="Nginx第三方模块试用及十个参数性能优化" href="https://zxniuniu.github.io/articles/2019/02/19/1550554739444.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2019/02/02/1549076687909.html">
+                            Redis高可用集群、哨兵模式（Redis-Sentinel）搭建配置详解
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2019-10-15
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2019/02/02/1549076687909.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1549076687909">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2019/02/02/1549076687909.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <h2 id="toc_h2_0">Redis 主从复制简单介绍</h2>
+<p>为了使得集群在一部分节点下线或者无法与集群的大多数节点进行通讯的情况下， 仍然可以正常运作， Redis 集群对节点使用了主从复制功能： 集群中的每个节点都有 1 个至 N 个复制品（replica）， 其中一个复制品为主节点（master）， 而其余的 N-1 个复制品为从节点（slave）。[ 摘自 Redis 集群中的主从复制 ]</p>
+<p>那么上面是主从复制呢，简单的来说就是一个主节点 master 可以拥有一个甚至多个从节点的 slave，而一个 slave 又可以拥有多个 slave，如此下去，形成了强大的多级服务器集群架构。</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/50e32078a1424b76a63fa2ae8594bcc9_20180302150043481.png" alt="20180302150043481png"></p>
+<p>其中主节点以写为主(可写也可以读)，从节点只能读不可写入！【读写分离场景】<br>
+其中主节点写入的数据会同步（不是准实时的）到 salve 上，这样如果主节点出现故障，数据丢失，则可以通过 salve 进行恢复。【容灾恢复场景，注：因为数据不是实时同步的，可能会存在从 salve 恢复数据后有数据丢失问题】</p>
+<p>综上：下面是关于 Redis 主从复制的一些特点：</p>
+<pre><code class="language-fallback highlight-chroma">1. 一个master可以有多个slave 
+2. 除了多个slave连到相同的master外，slave也可以连接其他slave形成图状结构 
+3. 主从复制不会阻塞master。也就是说当一个或多个slave与master进行初次同步数据时，master可以继续处理client发来的请求。相反slave在初次同步数据时则会阻塞不能处理client的请求。 
+主从复制可以用来提高系统的可伸缩性,我们可以用多个slave 专门用于client的读请求，比如sort操作可以使用slave来处理。也可以用来做简单的数据冗余 
+4. 可以在master禁用数据持久化，只需要注释掉master 配置文件中的所有save配置，然后只在slave上配置数据持久化。 
+5. 可以用于读写分离和容灾恢复。
+</code></pre>
+<h2 id="toc_h2_1">Redis 主从复制的常用的几种方式</h2>
+<p>一主二仆 A(B、C) 一个 Master 两个 Slave<br>
+薪火相传（去中心化）A - B - C ，B 既是主节点（C 的主节点），又是从节点（A 的从节点）<br>
+反客为主（主节点 down 掉后，手动操作升级从节点为主节点） &amp; 哨兵模式（主节点 down 掉后，自动升级从节点为主节点）<br>
+本次主要介绍一主二仆，和反客为主的操作，薪火相传不做介绍。哨兵模式后面专门写一篇进行介绍！</p>
+<h2 id="toc_h2_2">Redis 主从复制的搭建（一主二仆）</h2>
+<p>1.下载 Windows 环境的 Redis 安装包，并解压，目录如下图：</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/789564e4836043a899ccbe1222fcdcc3_2018030215152380.png" alt="2018030215152380png"></p>
+<p>2.相关配置操作<br>
+（1）复制 redis.windows.conf 配置文件为 redis.windows.6380.conf，redis.windows.6381.conf</p>
+<pre><code class="language-fallback highlight-chroma">redis.windows.conf，不做修改！
+</code></pre>
+<p>redis.windows.6380.conf，修改如下：</p>
+<pre><code class="language-fallback highlight-chroma">port 6380
+
+# slaveof &lt;masterip&gt; &lt;masterport&gt;
+slaveof 127.0.0.1 6379
+</code></pre>
+<p>redis.windows.6381.conf，修改如下：</p>
+<pre><code class="language-fallback highlight-chroma">port 6381
+
+# slaveof &lt;masterip&gt; &lt;masterport&gt;
+slaveof 127.0.0.1 6379
+</code></pre>
+<p>3.启动测试<br>
+启动规则：先启动主节点，然后在启动从节点！先启动 Master。使用客户端登录，查看信息如图：<br>
+<img src="https://raw.githubusercontent.com/zxniuniu/solo/master/bfd89c71e3724ef1be59de68121b7813_20180302154642438.png" alt="20180302154642438png"></p>
+<p>然后启动 6380 和 6381，然后可以看到：如图<br>
+<img src="https://raw.githubusercontent.com/zxniuniu/solo/master/87b5af7eafe84ec9800fa8c807a05be6_20180302154856173.png" alt="20180302154856173png"></p>
+<p>在此查看 6378 的主从复制信息：如图<br>
+<img src="https://raw.githubusercontent.com/zxniuniu/solo/master/50bfa50d6e964413aa31457c7a272d71_20180302154931389.png" alt="20180302154931389png"></p>
+<p>在登录 6380 和 6381 的客户端，查看节点信息：如图<br>
+<img src="https://raw.githubusercontent.com/zxniuniu/solo/master/2d64b16b5ddf415a8f70364d87ee66ee_20180302154939839.png" alt="20180302154939839png"></p>
+<p>测试读写，【主节点可读可写，从节点只能读不可写】，如下图：<br>
+<img src="https://raw.githubusercontent.com/zxniuniu/solo/master/a7b4973fbff84d178a8310fcb90a86f2_20180302155138685.png" alt="20180302155138685png"></p>
+<p>测试当主节点 shutdown 后，从节点的状态【从节点可读，从节点也不会升级为主节点】。</p>
+<pre><code class="language-fallback highlight-chroma">127.0.0.1:6381&gt; info replication
+# Replication
+role:slave
+master_host:127.0.0.1
+master_port:6379
+master_link_status:up
+master_last_io_seconds_ago:1
+master_sync_in_progress:0
+slave_repl_offset:15
+slave_priority:100
+slave_read_only:1
+connected_slaves:0
+master_repl_offset:0
+repl_backlog_active:0
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:0
+repl_backlog_histlen:0
+127.0.0.1:6381&gt;
+127.0.0.1:6381&gt; get hello
+"world"
+</code></pre>
+<p>测试当主节点重新启动后，从节点的状态【从节点依然可以连接主节点】：</p>
+<pre><code class="language-fallback highlight-chroma">127.0.0.1:6379&gt; info replication
+# Replication
+role:master
+connected_slaves:2
+slave0:ip=127.0.0.1,port=6380,state=online,offset=43,lag=0
+slave1:ip=127.0.0.1,port=6381,state=online,offset=43,lag=0
+master_repl_offset:43
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:2
+repl_backlog_histlen:42
+127.0.0.1:6379&gt;
+</code></pre>
+<p>小插曲【反客为主】<br>
+测试当主节点 shutdown 后，使用 slaveof no one 是的 6380 成为主节点,但是也只是主节点，没有任何从节点！：如图</p>
+<pre><code class="language-fallback highlight-chroma">127.0.0.1:6381&gt; info replication
+# Replication
+role:slave
+master_host:127.0.0.1
+master_port:6379
+master_link_status:down
+master_last_io_seconds_ago:-1
+master_sync_in_progress:0
+slave_repl_offset:155
+master_link_down_since_seconds:jd
+slave_priority:100
+slave_read_only:1
+connected_slaves:0
+master_repl_offset:0
+repl_backlog_active:0
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:0
+repl_backlog_histlen:0
+127.0.0.1:6381&gt;
+127.0.0.1:6381&gt;
+127.0.0.1:6381&gt; slave no one
+(error) ERR unknown command 'slave'
+127.0.0.1:6381&gt; slaveof no one
+OK
+127.0.0.1:6381&gt; info replication
+# Replication
+role:master
+connected_slaves:0
+master_repl_offset:0
+repl_backlog_active:0
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:0
+repl_backlog_histlen:0
+127.0.0.1:6381&gt; set test 11
+OK
+127.0.0.1:6381&gt; get test
+"11"
+127.0.0.1:6381&gt;
+</code></pre>
+<h2 id="toc_h2_3">Redis 主从复制的原理</h2>
+<h3 id="toc_h3_4">第一种介绍</h3>
+<p>当设置好 slave 服务器后,slave 会建立和 master 的连接，然后发送 sync 命令。<br>
+Master 接到命令启动后台的存盘进程，同时收集所有接收到的用于修改数据集命令，在后台进程执行完毕之后，master 将传送整个数据文件到 slave,以完成一次完全同步。<br>
+全量复制：而 slave 服务在接收到数据库文件数据后，将其存盘并加载到内存中。（第一次全量）<br>
+增量复制：Master 继续将新的所有收集到的修改命令依次传给 slave,完成同步。（之后增量）<br>
+但是只要是重新连接 master,一次完全同步（全量复制)将被自动执行。<br>
+当设置好 slave 服务器后，slave 会建立和 master 的连接，然后发送 sync 命令。无论是第一次同步建立的连接还是连接断开后的重新连接，master 都会启动一个后台进程，将数据库快照保存到文件中，同时 master 主进程会开始收集新的写命令并缓存起来。后台进程完成写文件 后，master 就发送文件给 slave，slave 将文件保存到磁盘上，然后加载到内存恢复数据库快照到 slave 上。接着 master 就会把缓存的命令转发给 slave。而且后续 master 收到的写命令都会通过开始建立的连接发送给 slave。从 master 到 slave 的同步数据的命令和从 client 发送的命令使用相同的协议格式。当 master 和 slave 的连接断开时 slave 可以自动重新建立连接。如果 master 同时收到多个 slave 发来的同步连接命令，只会使用启动一个进程来写数据库镜像，然后发送给所有 slave。</p>
+<h3 id="toc_h3_5">第二种介绍：</h3>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/cde135cb26554b29a53a8a8c58ec9472_20180302164003590.png" alt="20180302164003590png"></p>
+<h3 id="toc_h3_6">第三种介绍：</h3>
+<p>Redis 主从同步有两种方式（或者所两个阶段）：全同步和部分同步。<br>
+主从刚刚连接的时候，进行全同步；全同步结束后，进行部分同步。当然，如果有需要，Slave 在任何时候都可以发起全同步。Redis 策略是，无论如何，首先会尝试进行部分同步，如不成功，要求从机进行全同步，并启动 BGSAVE……BGSAVE 结束后，传输 RDB 文件；如果成功，允许从机进行部分同步，并传输积压空间中的数据。<br>
+<img src="https://raw.githubusercontent.com/zxniuniu/solo/master/807b1e329290418889f72c4a654e9ca7_wKiom1N3nPbS5JMAAHj5MGbf50000.jpg" alt="wKiom1N3nPbS5JMAAHj5MGbf50000jpg"></p>
+<h2 id="toc_h2_7">Redis 主从复制（一主两从/一主多从）的分析</h2>
+<ul>
+<li>
+<p>IO 剧增<br>
+每次 slave 断开以后（无论是主动断开，还是网路故障）再连接 master 都要将 master 全部 dump 出来 rdb，在 aof，即同步的过程都要重新执行一遍；所以要记住多台 slave 不要一下都启动起来，否则 master 可能 IO 剧增（间隔 1-2 分）</p>
+</li>
+<li>
+<p>复制延迟<br>
+由于所有的写操作都是先在 Master 上操作，然后同步更新到 Slave 上，所以从 Master 同步到 Slave 机器有一定的延迟，当系统很繁忙的时候，延迟问题会更加严重，Slave 机器数量的增加也会使这个问题更加严重。</p>
+</li>
+<li>
+<p>可用性不高<br>
+当有主节点发生异常情况，就会导致不能写入，导致业务出错！解决方法是可以使用 Redis-Sentinel 模式，参见下方。</p>
+</li>
+</ul>
+<p>Redis 哨兵模式，用现在流行的话可以说就是一个“哨兵机器人”，给“哨兵机器人”进行相应的配置之后，这个"机器人"可以 7*24 小时工作，它能能够自动帮助你做一些事情，如监控，提醒，自动处理故障等。</p>
+<h2 id="toc_h2_8">Redis-sentinel 简介</h2>
+<p>Redis-sentinel 是 Redis 的作者 antirez，因为 Redis 集群的被各大公司使用，每个公司要写自己的集群管理工具，于是 antirez 花了几个星期写出了 Redis-sentinel。</p>
+<p>Redis 的 Sentinel 系统用于管理多个 Redis 服务器（instance），Redis 的 Sentinel 为 Redis 提供了高可用性。使用哨兵模式创建一个可以不用人为干预而应对各种故障的 Redis 部署。</p>
+<p>该系统执行以下三个任务：</p>
+<ul>
+<li>监控（Monitoring）：Sentinel 会不断地检查你的主服务器和从服务器是否允许正常。</li>
+<li>提醒（Notification）：当被监控的某个 Redis 服务器出现问题时，Sentinel 可以通过 API 向管理员或者其他应用程序发送通知。</li>
+<li>自动故障迁移（Automatic failover）: （1）当一个主服务器不能正常工作时，Sentinel 会开始一次自动故障迁移操作，他会将失效主服务器的其中一个从服务器升级为新的主服务器，并让失效主服务器的其他从服务器改为复制新的主服务器；<br>
+（2）客户端试图连接失败的主服务器时，集群也会向客服端返回新主服务器的地址，是的集群可以使用新主服务器代替失效服务器。</li>
+</ul>
+<h2 id="toc_h2_9">Sentinel 的分布式特性</h2>
+<p>Redis Sentinel 是一个分布式系统， 你可以在一个架构中运行多个 Sentinel 进程（progress）， 这些进程使用流言协议（gossip protocols)来接收关于主服务器是否下线的信息， 并使用投票协议（agreement protocols）来决定是否执行自动故障迁移， 以及选择哪个从服务器作为新的主服务器。</p>
+<p>单个 sentinel 进程来监控 Redis 集群是不可靠的，当 sentinel 进程宕掉后(sentinel 本身也有单点问题，single-point-of-failure)整个集群系统将无法按照预期的方式运行。所以有必要将 sentinel 集群，这样有几个好处：</p>
+<ul>
+<li>
+<p>有一些 sentinel 进程宕掉了，依然可以进行 Redis 集群的主备切换；</p>
+</li>
+<li>
+<p>如果只有一个 sentinel 进程，如果这个进程运行出错，或者是网络堵塞，那么将无法实现 Redis 集群的主备切换（单点问题）;</p>
+</li>
+<li>
+<p>如果有多个 sentinel，Redis 的客户端可以随意地连接任意一个 sentinel 来获得关于 Redis 集群中的信息</p>
+</li>
+</ul>
+<p>一个健壮的部署至少需要三个哨兵实例。</p>
+<p>三个哨兵实例应该放置在客户使用独立方式确认故障的计算机或虚拟机中。例如不同的物理机或不同可用区域的虚拟机。【本次讲解是一个机器上进行搭建，和多级是一个道理】</p>
+<h2 id="toc_h2_10">Redis-sentinel 搭建</h2>
+<pre><code class="language-fallback highlight-chroma">本次搭建说明：
+master：127.0.0.1:6379 【初始化master】
+
+slave：127.0.0.1:6380  127.0.0.1:6381
+sentinel：127.0.0.1:26379  127.0.0.1:26380  127.0.0.1:26381
+</code></pre>
+<h3 id="toc_h3_11">Sentinel 配置</h3>
+<p>根据安装和基本配置，已经有了主从配置 ，对应文件夹 Redis6379~Redis6381。然后在每个文件夹下面新增 一个名为 sentinel.conf 的文件。配置内容如下：</p>
+<pre><code class="language-fallback highlight-chroma"># 这个是Redis6379配置内容，其他文件同理新增然后改一下端口即可，26380，和 26381。
+
+#当前Sentinel服务运行的端口
+port 26379  
+# 哨兵监听的主服务器 
+sentinel monitor mymaster 127.0.0.1 6379 2
+# 3s内mymaster无响应，则认为mymaster宕机了
+sentinel down-after-milliseconds mymaster 3000
+#如果10秒后,mysater仍没启动过来，则启动failover  
+sentinel failover-timeout mymaster 10000  
+# 执行故障转移时， 最多有1个从服务器同时对新的主服务器进行同步
+sentinel parallel-syncs mymaster 1
+</code></pre>
+<p>配置文件只需要配置 master 的信息就好啦，不用配置 slave 的信息，因为 slave 能够被自动检测到(master 节点中有关于 slave 的消息)。</p>
+<p>为了更清楚每一行配置的含义，对每个选项的含义进行简单介绍：</p>
+<pre><code class="language-fallback highlight-chroma">sentinel monitor [master-group-name] [ip] [port] [quorum]
+</code></pre>
+<ul>
+<li>master-group-name：master 名称（可以自定义）</li>
+<li>ip port : IP 地址和端口号</li>
+<li>quorun：票数，Sentinel 需要协商同意 master 是否可到达的数量。</li>
+</ul>
+<p>第一行配置指示 Sentinel 去监视一个名为 mymaster 的主服务器， 这个主服务器的 IP 地址为 127.0.0.1 ， 端口号为 6379 ， 而将这个主服务器判断为失效至少需要 2 个 Sentinel 同意 （只要同意 Sentinel 的数量不达标，自动故障迁移就不会执行）。<br>
+票数在本文中：Redis 集群中有 3 个 sentinel 实例，其中 master 挂掉啦，这里设置票数为 2，表示有 2 个 sentinel 认为 master 挂掉啦，才能被认为是正真的挂掉啦。</p>
+<pre><code class="language-fallback highlight-chroma">sentinel &lt;选项的名字&gt; &lt;主服务器的名字&gt; &lt;选项的值&gt;
+</code></pre>
+<ul>
+<li>
+<p>down-after-milliseconds 选项指定了 Sentinel 认为服务器已经断线所需的毫秒数。<br>
+如果服务器在给定的毫秒数之内， 没有返回 Sentinel 发送的 PING 命令的回复， 或者返回一个错误， 那么 Sentinel 将这个服务器标记为主观下线（subjectively down，简称 SDOWN ）。<br>
+不过只有一个 Sentinel 将服务器标记为主观下线并不一定会引起服务器的自动故障迁移： 只有在足够数量的 Sentinel 都将一个服务器标记为主观下线之后， 服务器才会被标记为客观下线（objectively down， 简称 ODOWN ）， 这时自动故障迁移才会执行。<br>
+将服务器标记为客观下线所需的 Sentinel 数量由对主服务器的配置决定。</p>
+</li>
+<li>
+<p>parallel-syncs 选项指定了在执行故障转移时， 最多可以有多少个从服务器同时对新的主服务器进行同步， 这个数字越小， 完成故障转移所需的时间就越长。</p>
+</li>
+</ul>
+<h3 id="toc_h3_12">启动 Sentinel 实例</h3>
+<pre><code class="language-fallback highlight-chroma">哨兵启动命令 redis-server.exe sentinel.conf --sentinel
+</code></pre>
+<ul>
+<li>
+<p>第一步：点击 startRedis.cmd ，启动 Redis 集群</p>
+</li>
+<li>
+<p>第二步：点击 startRedisSentinel.cmd ，启动哨兵实例</p>
+</li>
+</ul>
+<p>查看 Sentinel 启动日志，看到 ```<br>
+生成哨兵 ID（Sentinel ID），并自动识别主服务器和从服务器！</p>
+<pre><code class="language-fallback highlight-chroma">[114252] 03 Mar 13:32:57.896 # Sentinel ID is 89f521b40a803495472c0457b0396473c4bfb100
+[114252] 03 Mar 13:32:57.896 # +monitor master mymaster 127.0.0.1 6379 quorum 2
+[114252] 03 Mar 13:32:57.909 * +slave slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6379
+[114252] 03 Mar 13:32:57.917 * +slave slave 127.0.0.1:6381 127.0.0.1 6381 @ mymaster 127.0.0.1 6379
+</code></pre>
+<p>查看主服务器 6379（Master）信息：</p>
+<pre><code class="language-fallback highlight-chroma">F:\nosql_learn\Redis-Sentinel\Redis6379&gt;redis-cli -p 6379
+127.0.0.1:6379&gt; info replication
+# Replication
+role:master
+connected_slaves:2
+slave0:ip=127.0.0.1,port=6380,state=online,offset=54148,lag=1
+slave1:ip=127.0.0.1,port=6381,state=online,offset=54148,lag=1
+master_repl_offset:54414
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:2
+repl_backlog_histlen:54413
+127.0.0.1:6379&gt;
+</code></pre>
+<p>查看主服务器 6380（Slave）信息：</p>
+<pre><code class="language-fallback highlight-chroma">127.0.0.1:6380&gt; info replication
+# Replication
+role:slave
+master_host:127.0.0.1
+master_port:6379
+master_link_status:up
+master_last_io_seconds_ago:0
+master_sync_in_progress:0
+slave_repl_offset:80531
+slave_priority:100
+slave_read_only:1
+connected_slaves:0
+master_repl_offset:0
+repl_backlog_active:0
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:0
+repl_backlog_histlen:0
+127.0.0.1:6380&gt;
+</code></pre>
+<h2 id="toc_h2_13">Redis-Sentinel 高可用场景演示</h2>
+<h3 id="toc_h3_14">场景 1：主服务器 master 宕机</h3>
+<p>当主服务器 master 宕机，那么 Sentinel 会通过选举（算法）机制，从 Salve 中选出一个作为新 Master。<br>
+大概原理是当选出一个 Slave 要作为 Master 的时候，会发送命令 slaveofno one 来取消选中的这个 slave，使其成为 Master。哨兵会发送给其他从服务器 Slave 配置选中的这个为新主服务器 Master，并删除监听列表中出现故障的 Master 服务器。<br>
+(1)关闭掉 6379 主服务器</p>
+<pre><code class="language-fallback highlight-chroma">127.0.0.1:6379&gt; shutdown
+not connected&gt;
+</code></pre>
+<p>(2)查看观察选举新的 master 的过程和显示了 failover 的过程，整个日志信息还是比较完整的。最后选举了 6381 为主服务器！</p>
+<pre><code class="language-fallback highlight-chroma">[114252] 03 Mar 13:32:59.945 * +sentinel sentinel 926e67646440b200ee41bb224bacf9e0314e3b32 127.0.0.1 26379 @ mymaster 127.0.0.1 6379
+[114252] 03 Mar 13:33:00.018 * +sentinel sentinel 7fc21e38de0408ccaa06111e44638e2693794e08 127.0.0.1 26380 @ mymaster 127.0.0.1 6379
+[114252] 03 Mar 13:53:19.223 # +sdown master mymaster 127.0.0.1 6379
+[114252] 03 Mar 13:53:19.300 # +odown master mymaster 127.0.0.1 6379 #quorum 2/2
+[114252] 03 Mar 13:53:19.300 # +new-epoch 1
+[114252] 03 Mar 13:53:19.300 # +try-failover master mymaster 127.0.0.1 6379
+[114252] 03 Mar 13:53:19.306 # +vote-for-leader 89f521b40a803495472c0457b0396473c4bfb100 1
+[114252] 03 Mar 13:53:19.319 # 7fc21e38de0408ccaa06111e44638e2693794e08 voted for 89f521b40a803495472c0457b0396473c4bfb100 1
+[114252] 03 Mar 13:53:19.369 # +elected-leader master mymaster 127.0.0.1 6379
+[114252] 03 Mar 13:53:19.370 # +failover-state-select-slave master mymaster 127.0.0.1 6379
+[114252] 03 Mar 13:53:19.428 # +selected-slave slave 127.0.0.1:6381 127.0.0.1 6381 @ mymaster 127.0.0.1 6379
+[114252] 03 Mar 13:53:19.428 * +failover-state-send-slaveof-noone slave 127.0.0.1:6381 127.0.0.1 6381 @ mymaster 127.0.0.1 6379
+[114252] 03 Mar 13:53:19.530 * +failover-state-wait-promotion slave 127.0.0.1:6381 127.0.0.1 6381 @ mymaster 127.0.0.1 6379
+[114252] 03 Mar 13:53:20.327 # +promoted-slave slave 127.0.0.1:6381 127.0.0.1 6381 @ mymaster 127.0.0.1 6379
+[114252] 03 Mar 13:53:20.328 # +failover-state-reconf-slaves master mymaster 127.0.0.1 6379
+[114252] 03 Mar 13:53:20.398 * +slave-reconf-sent slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6379
+[114252] 03 Mar 13:53:21.390 * +slave-reconf-inprog slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6379
+[114252] 03 Mar 13:53:21.390 * +slave-reconf-done slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6379
+[114252] 03 Mar 13:53:21.445 # +failover-end master mymaster 127.0.0.1 6379
+[114252] 03 Mar 13:53:21.445 # +switch-master mymaster 127.0.0.1 6379 127.0.0.1 6381
+[114252] 03 Mar 13:53:21.447 * +slave slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
+[114252] 03 Mar 13:53:21.449 * +slave slave 127.0.0.1:6379 127.0.0.1 6379 @ mymaster 127.0.0.1 6381
+[114252] 03 Mar 13:53:23.193 # +sdown sentinel 926e67646440b200ee41bb224bacf9e0314e3b32 127.0.0.1 26379 @ mymaster 127.0.0.1 6381
+[114252] 03 Mar 13:53:24.451 # +sdown slave 127.0.0.1:6379 127.0.0.1 6379 @ mymaster 127.0.0.1 6381
+</code></pre>
+<p>(3)查看 6381 服务器信息,角色为主，从服务器 6380！</p>
+<pre><code class="language-fallback highlight-chroma">127.0.0.1:6381&gt; info replication
+# Replication
+role:master
+connected_slaves:1
+slave0:ip=127.0.0.1,port=6380,state=online,offset=33358,lag=1
+master_repl_offset:33505
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:2
+repl_backlog_histlen:33504
+127.0.0.1:6381&gt;
+</code></pre>
+<h3 id="toc_h3_15">场景 2：之前故障的 6379 master 重新启动</h3>
+<p>（1）启动 6379 服务，发现 6379 成为 6381 的从服务器！</p>
+<pre><code class="language-fallback highlight-chroma">F:\nosql_learn\Redis-Sentinel\Redis6379&gt;redis-server.exe redis.windows.conf
+
+[116640] 03 Mar 13:59:25.753 * The server is now ready to accept connections on port 6379
+[116640] 03 Mar 13:59:48.315 * SLAVE OF 127.0.0.1:6381 enabled (user request from 'id=2 addr=127.0.0.1:61677 fd=7 name=sentinel-7fc21e38-cmd age=10 idle=0 flags=x db=0 sub=0 psub=0 multi=3 qbuf=0 qbuf-free=32768 obl=36 oll=0 omem=0 events=r cmd=exec')
+[116640] 03 Mar 13:59:48.326 # CONFIG REWRITE executed with success.
+[116640] 03 Mar 13:59:48.826 * Connecting to MASTER 127.0.0.1:6381
+[116640] 03 Mar 13:59:48.851 * MASTER &lt;-&gt; SLAVE sync started
+</code></pre>
+<p>（2）查看 6381 服务器状态信息：原来的 master 自动切换成 slave，不会自动恢复成 master。</p>
+<pre><code class="language-fallback highlight-chroma">127.0.0.1:6381&gt; info replication
+# Replication
+role:master
+connected_slaves:2
+slave0:ip=127.0.0.1,port=6380,state=online,offset=73183,lag=0
+slave1:ip=127.0.0.1,port=6379,state=online,offset=73183,lag=0
+master_repl_offset:73183
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:2
+repl_backlog_histlen:73182
+127.0.0.1:6381&gt;
+</code></pre>
+<h3 id="toc_h3_16">场景 3：从服务器 Slave 宕机和重启</h3>
+<p>（1）关闭 6380 从服务器：</p>
+<pre><code class="language-fallback highlight-chroma">127.0.0.1:6380&gt; shutdown
+not connected&gt;
+</code></pre>
+<p>（2）Sentinel 日志：</p>
+<pre><code class="language-fallback highlight-chroma">[113488] 03 Mar 14:06:50.143 # +sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
+</code></pre>
+<p>（3）查看住服务器 6381 状态信息：</p>
+<pre><code class="language-fallback highlight-chroma">127.0.0.1:6381&gt; info replication
+# Replication
+role:master
+connected_slaves:1
+slave0:ip=127.0.0.1,port=6379,state=online,offset=111361,lag=1
+master_repl_offset:111361
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:2
+repl_backlog_histlen:111360
+127.0.0.1:6381&gt;
+</code></pre>
+<p>（4）启动从服务器 6380</p>
+<pre><code class="language-fallback highlight-chroma">Connecting to MASTER 127.0.0.1:6381
+</code></pre>
+<p>（5）查看住服务器 6381 状态信息：6380 又回来了！</p>
+<pre><code class="language-fallback highlight-chroma">role:master
+connected_slaves:2
+slave0:ip=127.0.0.1,port=6379,state=online,offset=141232,lag=0
+slave1:ip=127.0.0.1,port=6380,state=online,offset=141232,lag=1
+master_repl_offset:141232
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:2
+repl_backlog_histlen:141231
+127.0.0.1:6381&gt;
+</code></pre>
+<h2 id="toc_h2_17">Jedis 客户端使用 Sentinel</h2>
+<pre><code class="language-fallback highlight-chroma">import java.util.HashSet;
+import java.util.Set;
+
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.JedisSentinelPool;
+
+public class RedisManagerUtil {
+
+	private static JedisSentinelPool pool = null;
+	// 自带的哨兵模式 JedisSentinelPool, 并在一开始初始化连接池
+	static {
+		try {
+			JedisPoolConfig config = new JedisPoolConfig();
+			// 控制一个pool可分配多少个jedis实例，通过pool.getResource()来获取；
+			// 如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted(耗尽)。
+			config.setMaxTotal(Integer.valueOf(1000));
+			// 控制一个pool最多有多少个状态为idle(空闲的)的jedis实例。
+			config.setMaxIdle(Integer.valueOf(20));
+			// 表示当borrow(引入)一个jedis实例时，最大的等待时间，如果超过等待时间，则直接抛出JedisConnectionException；
+			config.setMinEvictableIdleTimeMillis(Integer.valueOf(-1));
+			// 在borrow一个jedis实例时，是否提前进行validate操作；如果为true，则得到的jedis实例均是可用的；
+			config.setTestOnBorrow(Boolean.valueOf(true));
+
+			// master名称和配置文件中配置的要一样
+			String master = "mymaster";
+			//setinel客户端提供了master自动发现功能
+			Set&lt;String&gt; sentinels = new HashSet&lt;String&gt;();
+			sentinels.add("127.0.0.1:26379");
+			sentinels.add("127.0.0.1:26380");
+			sentinels.add("127.0.0.1:26381");
+
+			pool = new JedisSentinelPool(master, sentinels, config);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * 构建redis连接池
+	 * 
+	 * @return JedisPool
+	 */
+	public static JedisSentinelPool getPool() {
+		return pool;
+	}
+
+	/**
+	 * 返还到连接池
+	 * 
+	 * @param pool
+	 * @param redis
+	 */
+	public static void returnResource(JedisSentinelPool pool, Jedis redis) {
+		if (redis != null) {
+			try {
+				pool.returnResource(redis);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	 * 测试redis线程池是否正常
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		JedisSentinelPool pool = RedisPoolAPIManager.getPool();
+		Jedis redis = pool.getResource();
+		System.out.println("redis = " + redis);
+
+		if(redis != null){
+			returnResource(pool,redis);
+		}
+	}
+}
+</code></pre>
+<p>总结<br>
+Redis-Sentinel 是 Redis 官方推荐的高可用性(HA) 解决方案，Redis-sentinel 本身也是一个独立运行的进程，它能监控多个 master-slave 集群，发现 master 宕机后能进行自动切换。Sentinel 可以监视任意多个主服务器（复用），以及主服务器属下的从服务器，并在被监视的主服务器下线时，自动执行故障转移操作。</p>
+<p>为了防止 sentinel 的单点故障，可以对 sentinel 进行集群化，创建多个 sentinel。</p>
+<h2 id="toc_h2_18">redis.conf 配置文件介绍</h2>
+<pre><code class="language-fallback highlight-chroma">1: Redis默认不是以守护进程的方式运行，可以通过该配置项修改，使用yes启用守护进程
+    daemonize no
+
+2: 当Redis以守护进程方式运行时，Redis默认会把pid写入/var/run/redis.pid文件，可以通过pidfile指定
+    pidfile /var/run/redis.pid
+
+3: 指定Redis监听端口，默认端口为6379，作者在自己的一篇博文中解释了为什么选用6379作为默认端口，
+因为6379在手机按键上MERZ对应的号码，而MERZ取自意大利歌女Alessia Merz的名字
+  port 6379
+
+4: 绑定的主机地址
+  bind 127.0.0.1
+
+5: 当 客户端闲置多长时间后关闭连接，如果指定为0，表示关闭该功能
+  timeout 300
+
+6: 指定日志记录级别，Redis总共支持四个级别：debug、verbose、notice、warning，
+默认为verbose
+  loglevel verbose
+
+7: 日志记录方式，默认为标准输出，如果配置Redis为守护进程方式运行，而这里又配置为日志
+记录方式为标准输出，则日志将会发送给/dev/null
+  logfile stdout
+
+8: 设置数据库的数量，默认数据库为0，可以使用SELECT &lt;dbid&gt;命令在连接上指定数据库id
+  databases 16
+
+9: 指定在多长时间内，有多少次更新操作，就将数据同步到数据文件，可以多个条件配合
+  save &lt;seconds&gt; &lt;changes&gt;
+  Redis默认配置文件中提供了三个条件：
+  save 900 1
+  save 300 10
+  save 60 10000
+  分别表示900秒（15分钟）内有1个更改，300秒（5分钟）内有10个更改以及60秒内有10000个更改。
+
+10: 指定存储至本地数据库时是否压缩数据，默认为yes，Redis采用LZF压缩，如果为了节省CPU时间，
+可以关闭该选项，但会导致数据库文件变的巨大
+  rdbcompression yes
+
+11: 指定本地数据库文件名，默认值为dump.rdb
+  dbfilename dump.rdb
+
+12: 指定本地数据库存放目录
+  dir ./
+
+13: 设置当本机为slav服务时，设置master服务的IP地址及端口，在Redis启动时，它会自动从master进行数据同步
+  slaveof &lt;masterip&gt; &lt;masterport&gt;
+
+14: 当master服务设置了密码保护时，slav服务连接master的密码
+  masterauth &lt;master-password&gt;
+
+15: 设置Redis连接密码，如果配置了连接密码，客户端在连接Redis时需要通过AUTH &lt;password&gt;命令提供密码，默认关闭
+  requirepass foobared
+
+16: 设置同一时间最大客户端连接数，默认无限制，Redis可以同时打开的客户端连接数为Redis进程可以打开的最大文件描述符数，
+如果设置 maxclients 0，表示不作限制。当客户端连接数到达限制时，Redis会关闭新的连接并向客户端
+返回max number of clients reached错误信息
+  maxclients 128
+
+17: 指定Redis最大内存限制，Redis在启动时会把数据加载到内存中，达到最大内存后，Redis会先尝试清除已到期或即将到期的Key，
+当此方法处理 后，仍然到达最大内存设置，将无法再进行写入操作，但仍然可以进行读取操作。Redis新的vm机制，会把Key存放内存，
+Value会存放在swap区
+  maxmemory &lt;bytes&gt;
+
+18: 指定是否在每次更新操作后进行日志记录，Redis在默认情况下是异步的把数据写入磁盘，如果不开启，可能会在断电时导致一段时间内的数据丢失。
+因为 redis本身同步数据文件是按上面save条件来同步的，所以有的数据会在一段时间内只存在于内存中。默认为no
+  appendonly no
+
+19: 指定更新日志文件名，默认为appendonly.aof
+   appendfilename appendonly.aof
+
+20: 指定更新日志条件，共有3个可选值： 
+  no：表示等操作系统进行数据缓存同步到磁盘（快） 
+  always：表示每次更新操作后手动调用fsync()将数据写到磁盘（慢，安全） 
+  everysec：表示每秒同步一次（折衷，默认值）
+  appendfsync everysec
+
+21: 指定是否启用虚拟内存机制，默认值为no，简单的介绍一下，VM机制将数据分页存放，由Redis将访问量较少的页即冷数据swap到磁盘上，
+访问多的页面由磁盘自动换出到内存中（在后面的文章我会仔细分析Redis的VM机制）
+   vm-enabled no
+
+22: 虚拟内存文件路径，默认值为/tmp/redis.swap，不可多个Redis实例共享
+   vm-swap-file /tmp/redis.swap
+
+23: 将所有大于vm-max-memory的数据存入虚拟内存,无论vm-max-memory设置多小,所有索引数据都是内存存储的(Redis的索引数据 就是keys),
+也就是说,当vm-max-memory设置为0的时候,其实是所有value都存在于磁盘。默认值为0
+   vm-max-memory 0
+
+24: Redis swap文件分成了很多的page，一个对象可以保存在多个page上面，但一个page上不能被多个对象共享，
+vm-page-size是要根据存储的 数据大小来设定的，作者建议如果存储很多小对象，page大小最好设置为32或者64bytes；
+如果存储很大大对象，则可以使用更大的page，如果不 确定，就使用默认值
+   vm-page-size 32
+
+25: 设置swap文件中的page数量，由于页表（一种表示页面空闲或使用的bitmap）是在放在内存中的，，在磁盘上每8个pages将消耗1byte的内存。
+   vm-pages 134217728
+
+26: 设置访问swap文件的线程数,最好不要超过机器的核数,如果设置为0,那么所有对swap文件的操作都是串行的，
+可能会造成比较长时间的延迟。默认值为4
+   vm-max-threads 4
+
+27: 设置在向客户端应答时，是否把较小的包合并为一个包发送，默认为开启
+  glueoutputbuf yes
+
+28: 指定在超过一定的数量或者最大的元素超过某一临界值时，采用一种特殊的哈希算法
+  hash-max-zipmap-entries 64
+  hash-max-zipmap-value 512
+
+29: 指定是否激活重置哈希，默认为开启（后面在介绍Redis的哈希算法时具体介绍）
+  activerehashing yes
+
+30: 指定包含其它的配置文件，可以在同一主机上多个Redis实例之间使用同一份配置文件，而同时各个实例又拥有自己的特定配置文件
+  include /path/to/local.conf
+</code></pre>
+<p>配置实例：</p>
+<pre><code class="language-fallback highlight-chroma">
+daemonize yes
+
+#  当 redis 在后台运行的时候， Redis 默认会把 pid 文件放在 /var/run/redis.pid ，你可以配置到其他地址。
+
+#  当运行多个 redis 服务时，需要指定不同的 pid 文件和端口
+
+pidfile /var/run/redis_6379.pid
+
+#  指定 redis 运行的端口，默认是 6379
+
+port 6379
+
+#  在高并发的环境中，为避免慢客户端的连接问题，需要设置一个高速后台日志
+
+tcp-backlog 511
+
+#  指定 redis 只接收来自于该 IP 地址的请求，如果不进行设置，那么将处理所有请求
+
+# bind 192.168.1.100 10.0.0.1
+
+# bind 127.0.0.1
+
+#  设置客户端连接时的超时时间，单位为秒。当客户端在这段时间内没有发出任何指令，那么关闭该连接
+
+# 0 是关闭此设置
+
+timeout 0
+
+# TCP keepalive
+
+#  在 Linux 上，指定值（秒）用于发送 ACKs 的时间。注意关闭连接需要双倍的时间。默认为 0 。
+
+tcp-keepalive 0
+
+#  指定日志记录级别，生产环境推荐 notice
+
+# Redis 总共支持四个级别： debug 、 verbose 、 notice 、 warning ，默认为 verbose
+
+# debug     记录很多信息，用于开发和测试
+
+# varbose   有用的信息，不像 debug 会记录那么多
+
+# notice    普通的 verbose ，常用于生产环境
+
+# warning   只有非常重要或者严重的信息会记录到日志
+
+loglevel notice
+
+#  配置 log 文件地址
+
+#  默认值为 stdout ，标准输出，若后台模式会输出到 /dev/null 。
+
+logfile /var/log/redis/redis.log
+
+#  可用数据库数
+
+#  默认值为 16 ，默认数据库为 0 ，数据库范围在 0- （ database-1 ）之间
+
+databases 16
+
+################################ 快照#################################
+
+#  保存数据到磁盘，格式如下 :
+
+#   save  
+
+#    指出在多长时间内，有多少次更新操作，就将数据同步到数据文件 rdb 。
+
+#    相当于条件触发抓取快照，这个可以多个条件配合
+
+#    比如默认配置文件中的设置，就设置了三个条件
+
+#   save 900 1  900 秒内至少有 1 个 key 被改变
+
+#   save 300 10  300 秒内至少有 300 个 key 被改变
+
+#   save 60 10000  60 秒内至少有 10000 个 key 被改变
+
+# save 900 1
+
+# save 300 10
+
+# save 60 10000
+
+#  后台存储错误停止写。
+
+stop-writes-on-bgsave-error yes
+
+#  存储至本地数据库时（持久化到 rdb 文件）是否压缩数据，默认为 yes
+
+rdbcompression yes
+
+# 对rdb数据进行校验,耗费CPU资源,默认为yes
+
+rdbchecksum yes
+
+#  本地持久化数据库文件名，默认值为 dump.rdb
+
+dbfilename dump.rdb
+
+#  工作目录
+
+#  数据库镜像备份的文件放置的路径。
+
+#  这里的路径跟文件名要分开配置是因为 redis 在进行备份时，先会将当前数据库的状态写入到一个临时文件中，等备份完成，
+
+#  再把该该临时文件替换为上面所指定的文件，而这里的临时文件和上面所配置的备份文件都会放在这个指定的路径当中。
+
+# AOF 文件也会存放在这个目录下面
+
+#  注意这里必须制定一个目录而不是文件
+
+dir /var/lib/redis-server/
+
+################################# 复制 #################################
+
+#  主从复制 . 设置该数据库为其他数据库的从数据库 .
+
+#  设置当本机为 slav 服务时，设置 master 服务的 IP 地址及端口，在 Redis 启动时，它会自动从 master 进行数据同步
+
+# slaveof 
+
+#  当 master 服务设置了密码保护时 ( 用 requirepass 制定的密码 )
+
+# slave 服务连接 master 的密码
+
+# masterauth 
+
+#  当从库同主机失去连接或者复制正在进行，从机库有两种运行方式：
+
+# 1)  如果 slave-serve-stale-data 设置为 yes( 默认设置 ) ，从库会继续响应客户端的请求
+
+# 2)  如果 slave-serve-stale-data 是指为 no ，出去 INFO 和 SLAVOF 命令之外的任何请求都会返回一个
+
+#     错误 "SYNC with master in progress"
+
+slave-serve-stale-data yes
+
+#  配置 slave 实例是否接受写。写 slave 对存储短暂数据（在同 master 数据同步后可以很容易地被删除）是有用的，但未配置的情况下，客户端写可能会发送问题。
+
+#  从 Redis2.6 后，默认 slave 为 read-only
+
+slaveread-only yes
+
+#  从库会按照一个时间间隔向主库发送 PINGs. 可以通过 repl-ping-slave-period 设置这个时间间隔，默认是 10 秒
+
+# repl-ping-slave-period 10
+
+# repl-timeout  设置主库批量数据传输时间或者 ping 回复时间间隔，默认值是 60 秒
+
+#  一定要确保 repl-timeout 大于 repl-ping-slave-period
+
+# repl-timeout 60
+
+#  在 slave socket 的 SYNC 后禁用 TCP_NODELAY
+
+#  如果选择“ yes ” ,Redis 将使用一个较小的数字 TCP 数据包和更少的带宽将数据发送到 slave ， 但是这可能导致数据发送到 slave 端会有延迟 , 如果是 Linux kernel 的默认配置，会达到 40 毫秒 .
+
+#  如果选择 "no" ，则发送数据到 slave 端的延迟会降低，但将使用更多的带宽用于复制 .
+
+repl-disable-tcp-nodelay no
+
+#  设置复制的后台日志大小。
+
+#  复制的后台日志越大， slave 断开连接及后来可能执行部分复制花的时间就越长。
+
+#  后台日志在至少有一个 slave 连接时，仅仅分配一次。
+
+# repl-backlog-size 1mb
+
+#  在 master 不再连接 slave 后，后台日志将被释放。下面的配置定义从最后一个 slave 断开连接后需要释放的时间（秒）。
+
+# 0 意味着从不释放后台日志
+
+# repl-backlog-ttl 3600
+
+#  如果 master 不能再正常工作，那么会在多个 slave 中，选择优先值最小的一个 slave 提升为 master ，优先值为 0 表示不能提升为 master 。
+
+slave-priority 100
+
+#  如果少于 N 个 slave 连接，且延迟时间 &lt;=M 秒，则 master 可配置停止接受写操作。
+
+#  例如需要至少 3 个 slave 连接，且延迟 &lt;=10 秒的配置：
+
+# min-slaves-to-write 3
+
+# min-slaves-max-lag 10
+
+#  设置 0 为禁用
+
+#   默认 min-slaves-to-write 为 0 （禁用）， min-slaves-max-lag 为 10
+
+################################## 安全 ###################################
+
+#  设置客户端连接后进行任何其他指定前需要使用的密码。
+
+#  警告：因为 redis 速度相当快，所以在一台比较好的服务器下，一个外部的用户可以在一秒钟进行 150K 次的密码尝试，这意味着你需要指定非常非常强大的密码来防止暴力破解
+
+# requirepass foobared
+
+#  命令重命名 .
+
+#  在一个共享环境下可以重命名相对危险的命令。比如把 CONFIG 重名为一个不容易猜测的字符。
+
+#  举例 :
+
+# rename-command CONFIG b840fc02d524045429941cc15f59e41cb7be6c52
+
+#  如果想删除一个命令，直接把它重命名为一个空字符 "" 即可，如下：
+
+# rename-command CONFIG ""
+
+################################### 约束###################################
+
+#设置同一时间最大客户端连接数，默认无限制， 
+
+#Redis 可以同时打开的客户端连接数为 Redis 进程可以打开的最大文件描述符数，
+
+#如果设置  maxclients 0 ，表示不作限制。
+
+#当客户端连接数到达限制时， Redis 会关闭新的连接并向客户端返回 max number of clients reached 错误信息
+
+# maxclients 10000
+
+#  指定 Redis 最大内存限制， Redis 在启动时会把数据加载到内存中，达到最大内存后， Redis 会按照清除策略尝试清除已到期的 Key
+
+#  如果 Redis 依照策略清除后无法提供足够空间，或者策略设置为 ”noeviction” ，则使用更多空间的命令将会报错，例如 SET, LPUSH 等。但仍然可以进行读取操作
+
+#  注意： Redis 新的 vm 机制，会把 Key 存放内存， Value 会存放在 swap 区
+
+#  该选项对 LRU 策略很有用。
+
+# maxmemory 的设置比较适合于把 redis 当作于类似 memcached 的缓存来使用，而不适合当做一个真实的 DB 。
+
+#  当把 Redis 当做一个真实的数据库使用的时候，内存使用将是一个很大的开销
+
+# maxmemory 
+
+#  当内存达到最大值的时候 Redis 会选择删除哪些数据？有五种方式可供选择
+
+# volatile-lru -&gt;  利用 LRU 算法移除设置过过期时间的 key (LRU: 最近使用  Least RecentlyUsed )
+
+# allkeys-lru -&gt;  利用 LRU 算法移除任何 key
+
+# volatile-random -&gt;  移除设置过过期时间的随机 key
+
+# allkeys-&gt;random -&gt; remove a randomkey, any key
+
+# volatile-ttl -&gt;  移除即将过期的 key(minor TTL)
+
+# noeviction -&gt;  不移除任何可以，只是返回一个写错误
+
+#  注意：对于上面的策略，如果没有合适的 key 可以移除，当写的时候 Redis 会返回一个错误
+
+#  默认是 :  volatile-lru
+
+# maxmemory-policy volatile-lru  
+
+# LRU  和  minimal TTL 算法都不是精准的算法，但是相对精确的算法 ( 为了节省内存 ) ，随意你可以选择样本大小进行检测。
+
+# Redis 默认的灰选择 3 个样本进行检测，你可以通过 maxmemory-samples 进行设置
+
+# maxmemory-samples 3
+
+############################## AOF###############################
+
+#  默认情况下， redis 会在后台异步的把数据库镜像备份到磁盘，但是该备份是非常耗时的，而且备份也不能很频繁，如果发生诸如拉闸限电、拔插头等状况，那么将造成比较大范围的数据丢失。
+
+#  所以 redis 提供了另外一种更加高效的数据库备份及灾难恢复方式。
+
+#  开启 append only 模式之后， redis 会把所接收到的每一次写操作请求都追加到 appendonly.aof 文件中，当 redis 重新启动时，会从该文件恢复出之前的状态。
+
+#  但是这样会造成 appendonly.aof 文件过大，所以 redis 还支持了 BGREWRITEAOF 指令，对 appendonly.aof 进行重新整理。
+
+#  你可以同时开启 asynchronous dumps 和  AOF
+
+appendonly no
+
+# AOF 文件名称  ( 默认 : "appendonly.aof")
+
+# appendfilename appendonly.aof
+
+# Redis 支持三种同步 AOF 文件的策略 :
+
+# no:  不进行同步，系统去操作  . Faster.
+
+# always: always 表示每次有写操作都进行同步 . Slow, Safest.
+
+# everysec:  表示对写操作进行累积，每秒同步一次 . Compromise.
+
+#  默认是 "everysec" ，按照速度和安全折中这是最好的。
+
+#  如果想让 Redis 能更高效的运行，你也可以设置为 "no" ，让操作系统决定什么时候去执行
+
+#  或者相反想让数据更安全你也可以设置为 "always"
+
+#  如果不确定就用  "everysec".
+
+# appendfsync always
+
+appendfsync everysec
+
+# appendfsync no
+
+# AOF 策略设置为 always 或者 everysec 时，后台处理进程 ( 后台保存或者 AOF 日志重写 ) 会执行大量的 I/O 操作
+
+#  在某些 Linux 配置中会阻止过长的 fsync() 请求。注意现在没有任何修复，即使 fsync 在另外一个线程进行处理
+
+#  为了减缓这个问题，可以设置下面这个参数 no-appendfsync-on-rewrite
+
+no-appendfsync-on-rewrite no
+
+# AOF  自动重写
+
+#  当 AOF 文件增长到一定大小的时候 Redis 能够调用  BGREWRITEAOF  对日志文件进行重写
+
+#  它是这样工作的： Redis 会记住上次进行些日志后文件的大小 ( 如果从开机以来还没进行过重写，那日子大小在开机的时候确定 )
+
+#  基础大小会同现在的大小进行比较。如果现在的大小比基础大小大制定的百分比，重写功能将启动
+
+#  同时需要指定一个最小大小用于 AOF 重写，这个用于阻止即使文件很小但是增长幅度很大也去重写 AOF 文件的情况
+
+#  设置  percentage 为 0 就关闭这个特性
+
+auto-aof-rewrite-percentage 100
+
+auto-aof-rewrite-min-size 64mb
+
+################################ LUASCRIPTING #############################
+
+# 一个 Lua 脚本最长的执行时间为 5000 毫秒（ 5 秒），如果为 0 或负数表示无限执行时间。
+
+lua-time-limit 5000
+
+################################LOW LOG################################
+
+# Redis Slow Log  记录超过特定执行时间的命令。执行时间不包括 I/O 计算比如连接客户端，返回结果等，只是命令执行时间
+
+#  可以通过两个参数设置 slow log ：一个是告诉 Redis 执行超过多少时间被记录的参数 slowlog-log-slower-than( 微妙 ) ，
+
+#  另一个是 slow log 的长度。当一个新命令被记录的时候最早的命令将被从队列中移除
+
+#  下面的时间以微妙为单位，因此 1000000 代表一秒。
+
+#  注意指定一个负数将关闭慢日志，而设置为 0 将强制每个命令都会记录
+
+slowlog-log-slower-than 10000
+
+#  对日志长度没有限制，只是要注意它会消耗内存
+
+#  可以通过  SLOWLOG RESET 回收被慢日志消耗的内存
+
+#  推荐使用默认值 128 ，当慢日志超过 128 时，最先进入队列的记录会被踢出
+
+slowlog-max-len 128
+
+################################  事件通知  #############################
+
+#  当事件发生时， Redis 可以通知 Pub/Sub 客户端。
+
+#  可以在下表中选择 Redis 要通知的事件类型。事件类型由单个字符来标识：
+
+# K     Keyspace 事件，以 _keyspace@_ 的前缀方式发布
+
+# E     Keyevent 事件，以 _keysevent@_ 的前缀方式发布
+
+# g     通用事件（不指定类型），像 DEL, EXPIRE, RENAME, …
+
+# $     String 命令
+
+# s     Set 命令
+
+# h     Hash 命令
+
+# z     有序集合命令
+
+# x     过期事件（每次 key 过期时生成）
+
+# e     清除事件（当 key 在内存被清除时生成）
+
+# A     g$lshzxe 的别称，因此 ”AKE” 意味着所有的事件
+
+# notify-keyspace-events 带一个由 0 到多个字符组成的字符串参数。空字符串意思是通知被禁用。
+
+#  例子：启用 list 和通用事件：
+
+# notify-keyspace-events Elg
+
+#  默认所用的通知被禁用，因为用户通常不需要改特性，并且该特性会有性能损耗。
+
+#  注意如果你不指定至少 K 或 E 之一，不会发送任何事件。
+
+notify-keyspace-events “”
+
+##############################  高级配置  ###############################
+
+#  当 hash 中包含超过指定元素个数并且最大的元素没有超过临界时，
+
+# hash 将以一种特殊的编码方式（大大减少内存使用）来存储，这里可以设置这两个临界值
+
+# Redis Hash 对应 Value 内部实际就是一个 HashMap ，实际这里会有 2 种不同实现，
+
+#  这个 Hash 的成员比较少时 Redis 为了节省内存会采用类似一维数组的方式来紧凑存储，而不会采用真正的 HashMap 结构，对应的 valueredisObject 的 encoding 为 zipmap,
+
+#  当成员数量增大时会自动转成真正的 HashMap, 此时 encoding 为 ht 。
+
+hash-max-zipmap-entries 512
+
+hash-max-zipmap-value 64  
+
+#  和 Hash 一样，多个小的 list 以特定的方式编码来节省空间。
+
+# list 数据类型节点值大小小于多少字节会采用紧凑存储格式。
+
+list-max-ziplist-entries 512
+
+list-max-ziplist-value 64
+
+# set 数据类型内部数据如果全部是数值型，且包含多少节点以下会采用紧凑格式存储。
+
+set-max-intset-entries 512
+
+#  和 hashe 和 list 一样 , 排序的 set 在指定的长度内以指定编码方式存储以节省空间
+
+# zsort 数据类型节点值大小小于多少字节会采用紧凑存储格式。
+
+zset-max-ziplist-entries 128
+
+zset-max-ziplist-value 64
+
+# Redis 将在每 100 毫秒时使用 1 毫秒的 CPU 时间来对 redis 的 hash 表进行重新 hash ，可以降低内存的使用
+
+#  当你的使用场景中，有非常严格的实时性需要，不能够接受 Redis 时不时的对请求有 2 毫秒的延迟的话，把这项配置为 no 。
+
+#  如果没有这么严格的实时性要求，可以设置为 yes ，以便能够尽可能快的释放内存
+
+activerehashing yes
+
+# 客户端的输出缓冲区的限制，因为某种原因客户端从服务器读取数据的速度不够快，
+
+# 可用于强制断开连接（一个常见的原因是一个发布 / 订阅客户端消费消息的速度无法赶上生产它们的速度）。
+
+#  可以三种不同客户端的方式进行设置：
+
+# normal -&gt;  正常客户端
+
+# slave  -&gt; slave 和 MONITOR 客户端
+
+# pubsub -&gt;  至少订阅了一个 pubsub channel 或 pattern 的客户端
+
+#  每个 client-output-buffer-limit 语法 :
+
+# client-output-buffer-limit   
+
+#  一旦达到硬限制客户端会立即断开，或者达到软限制并保持达成的指定秒数（连续）。
+
+#  例如，如果硬限制为 32 兆字节和软限制为 16 兆字节 /10 秒，客户端将会立即断开
+
+#  如果输出缓冲区的大小达到 32 兆字节，客户端达到 16 兆字节和连续超过了限制 10 秒，也将断开连接。
+
+#  默认 normal 客户端不做限制，因为他们在一个请求后未要求时（以推的方式）不接收数据，
+
+#  只有异步客户端可能会出现请求数据的速度比它可以读取的速度快的场景。
+
+#  把硬限制和软限制都设置为 0 来禁用该特性
+
+client-output-buffer-limit normal 0 0 0
+
+client-output-buffer-limit slave 256mb 64mb60
+
+client-output-buffer-limit pubsub 32mb 8mb60
+
+# Redis 调用内部函数来执行许多后台任务，如关闭客户端超时的连接，清除过期的 Key ，等等。
+
+#  不是所有的任务都以相同的频率执行，但 Redis 依照指定的“ Hz ”值来执行检查任务。
+
+#  默认情况下，“ Hz ”的被设定为 10 。
+
+#  提高该值将在 Redis 空闲时使用更多的 CPU 时，但同时当有多个 key 同时到期会使 Redis 的反应更灵敏，以及超时可以更精确地处理。
+
+#  范围是 1 到 500 之间，但是值超过 100 通常不是一个好主意。
+
+#  大多数用户应该使用 10 这个预设值，只有在非常低的延迟的情况下有必要提高最大到 100 。
+
+hz 10  
+
+#  当一个子节点重写 AOF 文件时，如果启用下面的选项，则文件每生成 32M 数据进行同步。
+
+aof-rewrite-incremental-fsync yes
+</code></pre>
+<p>参见：</p>
+<ul>
+<li>Redis Sentinel 集群部署：<a href="http://www.yunweipai.com/archives/20444.html" target="_blank">http://www.yunweipai.com/archives/20444.html</a></li>
+<li>Redis Sentinel：<a href="https://segmentfault.com/a/1190000010905025" target="_blank">https://segmentfault.com/a/1190000010905025</a></li>
+</ul>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Java">
+                            Java</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Redis">
+                            Redis</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93">
+                            数据库</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2019/02/02/1549069716678.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="Why Redis beats Memcached for caching">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="Redis高可用集群、哨兵模式（Redis-Sentinel）搭建配置详解"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2019/02/02/1549076687909.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2019/02/19/1550554739444.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="Nginx第三方模块试用及十个参数性能优化">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1549076687909"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+<ul class="article__toc">
+        <li class="toc__h2">
+            <a href="#toc_h2_0">Redis 主从复制简单介绍</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_1">Redis 主从复制的常用的几种方式</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_2">Redis 主从复制的搭建（一主二仆）</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_3">Redis 主从复制的原理</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_4">第一种介绍</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_5">第二种介绍：</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_6">第三种介绍：</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_7">Redis 主从复制（一主两从/一主多从）的分析</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_8">Redis-sentinel 简介</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_9">Sentinel 的分布式特性</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_10">Redis-sentinel 搭建</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_11">Sentinel 配置</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_12">启动 Sentinel 实例</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_13">Redis-Sentinel 高可用场景演示</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_14">场景 1：主服务器 master 宕机</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_15">场景 2：之前故障的 6379 master 重新启动</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_16">场景 3：从服务器 Slave 宕机和重启</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_17">Jedis 客户端使用 Sentinel</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_18">redis.conf 配置文件介绍</a>
+        </li>
+</ul></aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1549076687909",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1549076687909",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("Java,Redis,数据库", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1549076687909', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 27ms, 2020/11/29 22:19:05 -->

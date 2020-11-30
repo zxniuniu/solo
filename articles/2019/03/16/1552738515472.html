@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>MySQL InnoDB Cluser 多主模式实现高可用负载均衡 - 随心笔客</title><meta name="description" content="MySQL 的 Group Replication 功能，可以在一组 MySQL 服务器之间实现自动主机选举，形成一主多从结构。经过高级配置后，可以实现多主多从结构。 MySQL Router 是一个轻量级透明中间件，可以自动获取上述集群的状态，规划 SQL 语句，分配到合理的 MySQL 后端进行执行。 MySQL Shell 是一个同时支持 JavaScript 和 SQL 的交互程序，可以快速配置 InnoDB Cluster。"/><meta property="og:description" content="MySQL 的 Group Replication 功能，可以在一组 MySQL 服务器之间实现自动主机选举，形成一主多从结构。经过高级配置后，可以实现多主多从结构。 MySQL Router 是一个轻量级透明中间件，可以自动获取上述集群的状态，规划 SQL 语句，分配到合理的 MySQL 后端进行执行。 MySQL Shell 是一个同时支持 JavaScript 和 SQL 的交互程序，可以快速配置 InnoDB Cluster。"/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="MySQL InnoDB Cluser 多主模式实现高可用负载均衡 - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2019/03/16/1552738515472.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="MySQL InnoDB Cluser 多主模式实现高可用负载均衡 - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2019/03/16/1552738515472.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title="JedisPool资源池优化及常见问题汇总" href="https://zxniuniu.github.io/articles/2019/03/12/1552377395451.html">
+            <link rel="next" title="Understanding – Group Replication and InnoDB Cluster" href="https://zxniuniu.github.io/articles/2019/03/16/1552743939239.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2019/03/16/1552738515472.html">
+                            MySQL InnoDB Cluser 多主模式实现高可用负载均衡
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2019-03-21
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2019/03/16/1552738515472.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1552738515472">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2019/03/16/1552738515472.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <h2 id="toc_h2_0">核心架构</h2>
+<ul>
+<li>MySQL 的 Group Replication 功能，可以在一组 MySQL 服务器之间实现自动主机选举，形成一主多从结构。经过高级配置后，可以实现多主多从结构。</li>
+<li>MySQL Router 是一个轻量级透明中间件，可以自动获取上述集群的状态，规划 SQL 语句，分配到合理的 MySQL 后端进行执行。</li>
+<li>MySQL Shell 是一个同时支持 JavaScript 和 SQL 的交互程序，可以快速配置 InnoDB Cluster。<br>
+<img src="https://img.hacpai.com/file/2019/03/1493998183242301b-2c2c8312.png?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="1493998183242301b.png"></li>
+</ul>
+<h2 id="toc_h2_1">准备工作</h2>
+<p>te</p>
+<ul>
+<li>本次共 5 台机器，服务器均采用 Windows Server 2012，服务器地址如下：</li>
+</ul>
+<pre><code class="language-fallback highlight-chroma">172.16.220.10
+172.16.220.11
+172.16.220.12
+172.16.220.13
+172.16.220.14
+</code></pre>
+<p><img src="https://img.hacpai.com/file/2019/03/2552519c29a6d4d4bb76a61-0e75beb2.png?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="2552519c29a6d4d4bb76a61.png"></p>
+<h3 id="toc_h3_2">下载 MySQL、Shell、Router 软件</h3>
+<pre><code class="language-fallback highlight-chroma">https://cdn.mysql.com/Downloads/MySQL-8.0/mysql-8.0.15-winx64.zip
+https://cdn.mysql.com/Downloads/MySQL-Router/mysql-router-8.0.15-winx64.zip
+https://cdn.mysql.com/Downloads/MySQL-Shell/mysql-shell-8.0.15-windows-x86-64bit.zip
+</code></pre>
+<h3 id="toc_h3_3">安装 MySQL</h3>
+<p>首先配置 my.ini，以下 my.ini 为 172.16.2201.10 上的配置：</p>
+<pre><code class="language-fallback highlight-chroma"># Other default tuning values
+
+# MySQL Server Instance Configuration File
+# ----------------------------------------------------------------------
+# Generated by the MySQL Server Instance Configuration Wizard
+#
+#
+# Installation Instructions
+# ----------------------------------------------------------------------
+#
+# On Linux you can copy this file to /etc/my.cnf to set global options,
+# mysql-data-dir/my.cnf to set server-specific options
+# (@localstatedir@ for this installation) or to
+# ~/.my.cnf to set user-specific options.
+#
+# On Windows you should keep this file in the installation directory 
+# of your server (e.g. C:\Program Files\MySQL\MySQL Server X.Y). To
+# make sure the server reads the config file use the startup option 
+# "--defaults-file". 
+#
+# To run the server from the command line, execute this in a 
+# command line shell, e.g.
+# mysqld --defaults-file="C:\Program Files\MySQL\MySQL Server X.Y\my.ini"
+#
+# To install the server as a Windows service manually, execute this in a 
+# command line shell, e.g.
+# mysqld --install MySQLXY --defaults-file="C:\Program Files\MySQL\MySQL Server X.Y\my.ini"
+#
+# And then execute this in a command line shell to start the server, e.g.
+# net start MySQLXY
+#
+#
+# Guidelines for editing this file
+# ----------------------------------------------------------------------
+#
+# In this file, you can use all long options that the program supports.
+# If you want to know the options a program supports, start the program
+# with the "--help" option.
+#
+# More detailed information about the individual options can also be
+# found in the manual.
+#
+# For advice on how to change settings please see
+# https://dev.mysql.com/doc/refman/8.0/en/server-configuration-defaults.html
+#
+#
+# CLIENT SECTION
+# ----------------------------------------------------------------------
+#
+# The following options will be read by MySQL client applications.
+# Note that only client applications shipped by MySQL are guaranteed
+# to read this section. If you want your own MySQL client program to
+# honor these values, you need to specify it as an option during the
+# MySQL client library initialization.
+#
+[client]
+
+# pipe=
+
+socket=MYSQL
+
+port=3346
+
+# ----------------------------------------------------------------------
+# 1、替换PCSS为PCSS10，PCSS11，PCSS12，PCSS13，PCSS14等
+# 2、server-id 为指定值，需要不同
+# 3、report-host 为指定值，需要不同
+# ----------------------------------------------------------------------
+[mysql]
+no-beep
+
+default-character-set=UTF-8
+
+# SERVER SECTION
+# ----------------------------------------------------------------------
+#
+# The following options will be read by the MySQL Server. Make sure that
+# you have installed the server correctly (see above) so it reads this 
+# file.
+#
+# server_type=1
+[mysqld]
+
+# The next three options are mutually exclusive to SERVER_PORT below.
+# skip-networking
+enable-named-pipe
+shared-memory
+
+shared-memory-base-name=MYSQL
+
+# The Pipe the MySQL Server will use
+socket=MYSQL
+
+# The TCP/IP Port the MySQL Server will listen on
+port=3346
+
+# Path to installation directory. All paths are usually resolved relative to this.
+# basedir="C:/Program Files/MySQL/MySQL Server 8.0/"
+
+# Path to the database root
+basedir=D:/PhpWamp/phpwamp/server/mysql-8.1
+datadir=D:/PhpWamp/phpwamp/server/mysql-8.1/data
+
+# The default character set that will be used when a new schema or table is
+# created and no character set is defined
+# character-set-server=
+
+# The default authentication plugin to be used when connecting to the server
+default_authentication_plugin=mysql_native_password
+
+# The default storage engine that will be used when create new tables when
+default-storage-engine=INNODB
+
+# Set the SQL mode to strict
+# sql-mode="STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION"
+
+# General and Slow logging.
+log-output=FILE
+general-log=0
+general_log_file="PCSS.log"
+slow-query-log=1
+slow_query_log_file="PCSS-slow.log"
+long_query_time=5
+
+report-host=172.16.220.10
+report-password=123456
+report-port=3346
+report-user=root
+
+
+# relay-log
+relay-log=PCSS-relay-bin
+
+# Binary Logging.
+log-bin="PCSS-bin"
+
+# Error Logging.
+log-error="PCSS.err"
+
+# Server Id.
+server-id=310
+
+# Indicates how table and database names are stored on disk and used in MySQL.
+# Value = 0: Table and database names are stored on disk using the lettercase specified in the
+#            CREATE TABLE or CREATE DATABASE statement. Name comparisons are case sensitive.
+#            You should not set this variable to 0 if you are running MySQL on a system that has
+#            case-insensitive file names (such as Windows or macOS).
+# Value = 1: Table names are stored in lowercase on disk and name comparisons are not
+#            case-sensitive. MySQL converts all table names to lowercase on storage and lookup.
+#            This behavior also applies to database names and table aliases.
+# Value = 3, Table and database names are stored on disk using the lettercase specified in the
+#            CREATE TABLE or CREATE DATABASE statement, but MySQL converts them to lowercase on
+#            lookup. Name comparisons are not case sensitive. This works only on file systems
+#            that are not case-sensitive! InnoDB table names and view names are stored in
+#            lowercase, as for Value = 1.
+# NOTE: lower_case_table_names can only be configured when initializing the server.
+#       Changing the lower_case_table_names setting after the server is initialized is prohibited.
+lower_case_table_names=1
+
+# Secure File Priv.
+secure-file-priv="D:/PhpWamp/phpwamp/server/mysql-8.1/uploads"
+
+# The maximum amount of concurrent sessions the MySQL server will
+# allow. One of these connections will be reserved for a user with
+# SUPER privileges to allow the administrator to login even if the
+# connection limit has been reached.
+max_connections=2000
+
+# The number of open tables for all threads. Increasing this value
+# increases the number of file descriptors that mysqld requires.
+# Therefore you have to make sure to set the amount of open files
+# allowed to at least 4096 in the variable "open-files-limit" in
+# section [mysqld_safe]
+table_open_cache=200000
+
+# Maximum size for internal (in-memory) temporary tables. If a table
+# grows larger than this value, it is automatically converted to disk
+# based table This limitation is for a single table. There can be many
+# of them.
+tmp_table_size=2048M
+
+# How many threads we should keep in a cache for reuse. When a client
+# disconnects, the client's threads are put in the cache if there aren't
+# more than thread_cache_size threads from before.  This greatly reduces
+# the amount of thread creations needed if you have a lot of new
+# connections. (Normally this doesn't give a notable performance
+# improvement if you have a good thread implementation.)
+thread_cache_size=1000
+
+#*** MyISAM Specific options
+# The maximum size of the temporary file MySQL is allowed to use while
+# recreating the index (during REPAIR, ALTER TABLE or LOAD DATA INFILE.
+# If the file-size would be bigger than this, the index will be created
+# through the key cache (which is slower).
+myisam_max_sort_file_size=100G
+
+# If the temporary file used for fast index creation would be bigger
+# than using the key cache by the amount specified here, then prefer the
+# key cache method.  This is mainly used to force long character keys in
+# large tables to use the slower key cache method to create the index.
+myisam_sort_buffer_size=512M
+
+# Size of the Key Buffer, used to cache index blocks for MyISAM tables.
+# Do not set it larger than 30% of your available memory, as some memory
+# is also required by the OS to cache rows. Even if you're not using
+# MyISAM tables, you should still set it to 8-64M as it will also be
+# used for internal temporary disk tables.
+key_buffer_size=1024M
+
+# Size of the buffer used for doing full table scans of MyISAM tables.
+# Allocated per thread, if a full scan is needed.
+read_buffer_size=512M
+
+read_rnd_buffer_size=256M
+
+#*** INNODB Specific options ***
+# innodb_data_home_dir=
+
+# Use this option if you have a MySQL server with InnoDB support enabled
+# but you do not plan to use it. This will save memory and disk space
+# and speed up some things.
+# skip-innodb
+
+# If set to 1, InnoDB will flush (fsync) the transaction logs to the
+# disk at each commit, which offers full ACID behavior. If you are
+# willing to compromise this safety, and you are running small
+# transactions, you may set this to 0 or 2 to reduce disk I/O to the
+# logs. Value 0 means that the log is only written to the log file and
+# the log file flushed to disk approximately once per second. Value 2
+# means the log is written to the log file at each commit, but the log
+# file is only flushed to disk approximately once per second.
+innodb_flush_log_at_trx_commit=1
+
+# The size of the buffer InnoDB uses for buffering log data. As soon as
+# it is full, InnoDB will have to flush it to disk. As it is flushed
+# once per second anyway, it does not make sense to have it very large
+# (even with long transactions).
+innodb_log_buffer_size=1024M
+
+# InnoDB, unlike MyISAM, uses a buffer pool to cache both indexes and
+# row data. The bigger you set this the less disk I/O is needed to
+# access data in tables. On a dedicated database server you may set this
+# parameter up to 80% of the machine physical memory size. Do not set it
+# too large, though, because competition of the physical memory may
+# cause paging in the operating system.  Note that on 32bit systems you
+# might be limited to 2-3.5G of user level memory per process, so do not
+# set it too high.
+innodb_buffer_pool_size=1024M
+
+# Size of each log file in a log group. You should set the combined size
+# of log files to about 25%-100% of your buffer pool size to avoid
+# unneeded buffer pool flush activity on log file overwrite. However,
+# note that a larger logfile size will increase the time needed for the
+# recovery process.
+innodb_log_file_size=48M
+
+# Number of threads allowed inside the InnoDB kernel. The optimal value
+# depends highly on the application, hardware as well as the OS
+# scheduler properties. A too high value may lead to thread thrashing.
+innodb_thread_concurrency=17
+
+# The increment size (in MB) for extending the size of an auto-extend InnoDB system tablespace file when it becomes full.
+innodb_autoextend_increment=64
+
+# The number of regions that the InnoDB buffer pool is divided into.
+# For systems with buffer pools in the multi-gigabyte range, dividing the buffer pool into separate instances can improve concurrency,
+# by reducing contention as different threads read and write to cached pages.
+innodb_buffer_pool_instances=8
+
+# Determines the number of threads that can enter InnoDB concurrently.
+innodb_concurrency_tickets=500000
+
+# Specifies how long in milliseconds (ms) a block inserted into the old sublist must stay there after its first access before
+# it can be moved to the new sublist.
+innodb_old_blocks_time=1000
+
+# It specifies the maximum number of .ibd files that MySQL can keep open at one time. The minimum value is 10.
+innodb_open_files=30000
+
+# When this variable is enabled, InnoDB updates statistics during metadata statements.
+innodb_stats_on_metadata=0
+
+# When innodb_file_per_table is enabled (the default in 5.6.6 and higher), InnoDB stores the data and indexes for each newly created table
+# in a separate .ibd file, rather than in the system tablespace.
+innodb_file_per_table=1
+
+# Use the following list of values: 0 for crc32, 1 for strict_crc32, 2 for innodb, 3 for strict_innodb, 4 for none, 5 for strict_none.
+innodb_checksum_algorithm=0
+
+# The number of outstanding connection requests MySQL can have.
+# This option is useful when the main MySQL thread gets many connection requests in a very short time.
+# It then takes some time (although very little) for the main thread to check the connection and start a new thread.
+# The back_log value indicates how many requests can be stacked during this short time before MySQL momentarily
+# stops answering new requests.
+# You need to increase this only if you expect a large number of connections in a short period of time.
+back_log=80
+
+# If this is set to a nonzero value, all tables are closed every flush_time seconds to free up resources and
+# synchronize unflushed data to disk.
+# This option is best used only on systems with minimal resources.
+flush_time=0
+
+# The minimum size of the buffer that is used for plain index scans, range index scans, and joins that do not use
+# indexes and thus perform full table scans.
+join_buffer_size=256K
+
+# The maximum size of one packet or any generated or intermediate string, or any parameter sent by the
+# mysql_stmt_send_long_data() C API function.
+max_allowed_packet=1024M
+
+# If more than this many successive connection requests from a host are interrupted without a successful connection,
+# the server blocks that host from performing further connections.
+max_connect_errors=10000
+
+# Changes the number of file descriptors available to mysqld.
+# You should try increasing the value of this option if mysqld gives you the error "Too many open files".
+open_files_limit=41610
+
+# If you see many sort_merge_passes per second in SHOW GLOBAL STATUS output, you can consider increasing the
+# sort_buffer_size value to speed up ORDER BY or GROUP BY operations that cannot be improved with query optimization
+# or improved indexing.
+sort_buffer_size=256M
+
+# The number of table definitions (from .frm files) that can be stored in the definition cache.
+# If you use a large number of tables, you can create a large table definition cache to speed up opening of tables.
+# The table definition cache takes less space and does not use file descriptors, unlike the normal table cache.
+# The minimum and default values are both 400.
+table_definition_cache=1400
+
+# Specify the maximum size of a row-based binary log event, in bytes.
+# Rows are grouped into events smaller than this size if possible. The value should be a multiple of 256.
+binlog_row_event_max_size=8M
+
+# If the value of this variable is greater than 0, a replication slave synchronizes its master.info file to disk.
+# (using fdatasync()) after every sync_master_info events.
+sync_master_info=10000
+
+# If the value of this variable is greater than 0, the MySQL server synchronizes its relay log to disk.
+# (using fdatasync()) after every sync_relay_log writes to the relay log.
+sync_relay_log=10000
+
+# If the value of this variable is greater than 0, a replication slave synchronizes its relay-log.info file to disk.
+# (using fdatasync()) after every sync_relay_log_info transactions.
+sync_relay_log_info=10000
+
+# Load mysql plugins at start."plugin_x ; plugin_y".
+# plugin_load
+
+# The TCP/IP Port the MySQL Server X Protocol will listen on.
+loose_mysqlx_port=33460
+
+# https://dev.mysql.com/doc/refman/8.0/en/group-replication-configuring-instances.html
+gtid_mode=ON
+enforce_gtid_consistency=ON
+binlog_checksum=NONE
+</code></pre>
+<p>其它电脑上的配置，需要修改<code>server-id</code>，<code>report-host</code>，其它参数与上面相同。</p>
+<h3 id="toc_h3_4">配置 MySQL 数据库</h3>
+<pre><code class="language-fallback highlight-chroma">D:/PhpWamp/phpwamp/server/mysql-8.1/bin/mysqld.exe --defaults-file=D:/PhpWamp/phpwamp/server/mysql-8.1/my.ini --initialize-insecure --user=root --basedir=D:/PhpWamp/phpwamp/server/mysql-8.1 --datadir=D:/PhpWamp/phpwamp/server/mysql-8.1/data
+</code></pre>
+<p>进入 MySQL 后，修改密码及配置权限：</p>
+<pre><code class="language-fallback highlight-chroma">RENAME USER `root`@`localhost` TO `root`@`%`;
+
+ALTER USER 'root'@'%' IDENTIFIED BY '123456';
+
+SET SQL_LOG_BIN=0;
+CREATE USER rpl_user@'%' IDENTIFIED BY '123456';
+GRANT REPLICATION SLAVE ON *.* TO rpl_user@'%';
+FLUSH PRIVILEGES;
+SET SQL_LOG_BIN=1;
+
+CHANGE MASTER TO MASTER_USER='rpl_user', MASTER_PASSWORD='123456' FOR CHANNEL 'group_replication_recovery';
+</code></pre>
+<h3 id="toc_h3_5">安装配置 MySQL 服务</h3>
+<pre><code class="language-fallback highlight-chroma">D:/PhpWamp/phpwamp/server/mysql-8.1/bin/mysqld.exe --install .MySQL.InnoDB.Cluster --defaults-file=D:/PhpWamp/phpwamp/server/mysql-8.1/my.ini
+</code></pre>
+<h2 id="toc_h2_6">配置 Shell</h2>
+<p>打开 mysqlsh.exe，运行以下命令，5 台服务器均需要运行，注意修改连接地址：</p>
+<pre><code class="language-fallback highlight-chroma"># 检查mysql 配置文件   (5台主机都要操作此步骤)
+dba.checkInstanceConfiguration('root@172.16.220.10:3346')
+</code></pre>
+<pre><code class="language-fallback highlight-chroma">+----------------------------------+---------------+----------------+--------------------------------------------------+
+| Variable                         | Current Value | Required Value | Note                                             |
++----------------------------------+---------------+----------------+--------------------------------------------------+
+| binlog_checksum                  | CRC32         | NONE           | Update the server variable or restart the server |
+| binlog_format                    | MIXED         | ROW            | Update the server variable or restart the server |
+| enforce_gtid_consistency         | OFF           | ON             | Restart the server                               |
+| gtid_mode                        | OFF           | ON             | Restart the server                               |
+| log_slave_updates                | 0             | ON             | Restart the server                               |
+| master_info_repository           | FILE          | TABLE          | Restart the server                               |
+| relay_log_info_repository        | FILE          | TABLE          | Restart the server                               |
+| transaction_write_set_extraction | OFF           | XXHASH64       | Restart the server                               |
++----------------------------------+---------------+----------------+--------------------------------------------------+
+</code></pre>
+<pre><code class="language-fallback highlight-chroma"># 修复mysql 配置文件，必须用 root(5台主机都要操作此步骤)
+dba.configureLocalInstance('root@172.16.220.10:3346')
+
+Please provide the password for 'root@172.16.220.10:3346':
+Detecting the configuration file...
+Found configuration file at standard location: /etc/my.cnf
+Do you want to modify this file? [Y|n]:  [Y|n]: Y
+</code></pre>
+<pre><code class="language-fallback highlight-chroma"># 重启mysql
+
+# 重新检查  (5台主机都要操作此步骤)            
+dba.checkInstanceConfiguration('root@db1:3306')    
+Please provide the password for 'root@db1:3306':
+Validating instance...
+
+The instance 'db1:3306' is valid for Cluster usage
+{
+    "status": "ok"
+}
+</code></pre>
+<p>其中一台电脑上运行：</p>
+<pre><code class="language-fallback highlight-chroma"># 连接MySQL
+shell.connect('root@172.16.220.10:3346')
+
+# 创建集群
+# var cluster = dba.createCluster('mycluster')
+var cluster = dba.createCluster('mycluster', {multiPrimary: true, force: true})
+
+A new InnoDB cluster will be created on instance 'root@172.16.220.10:3346'.
+
+Creating InnoDB cluster 'main' on 'root@172.16.220.10:3346'...
+Adding Seed Instance...
+
+Cluster successfully created. Use Cluster.addInstance() to add MySQL instances.
+At least 3 instances are needed for the cluster to be able to withstand up to
+one server failure.
+
+# 添加子节点
+cluster.addInstance('root@172.16.220.11:3346')
+cluster.addInstance('root@172.16.220.12:3346')
+cluster.addInstance('root@172.16.220.13:3346')
+cluster.addInstance('root@172.16.220.14:3346')
+
+# 查看节点信息
+cluster.status()
+
+# 查看基本信息
+cluster.describe();
+
+# 退出之后，再查看节点信息
+var cluster = dba.getCluster();
+cluster.status();
+</code></pre>
+<pre><code class="language-fallback highlight-chroma">MySQL [172.16.220.10 ssl] JS&gt; cluster.status()
+{
+    "clusterName": "mycluster",
+    "defaultReplicaSet": {
+        "name": "default",
+        "ssl": "REQUIRED",
+        "status": "OK",
+        "statusText": "Cluster is ONLINE and can tolerate up to 2 failures.",
+        "topology": {
+            "172.16.220.10:3346": {
+                "address": "172.16.220.10:3346",
+                "mode": "R/W",
+                "readReplicas": {},
+                "role": "HA",
+                "status": "ONLINE"
+            },
+            "172.16.220.11:3346": {
+                "address": "172.16.220.11:3346",
+                "mode": "R/W",
+                "readReplicas": {},
+                "role": "HA",
+                "status": "ONLINE"
+            },
+            "172.16.220.12:3346": {
+                "address": "172.16.220.12:3346",
+                "mode": "R/W",
+                "readReplicas": {},
+                "role": "HA",
+                "status": "ONLINE"
+            },
+            "172.16.220.13:3346": {
+                "address": "172.16.220.13:3346",
+                "mode": "R/W",
+                "readReplicas": {},
+                "role": "HA",
+                "status": "ONLINE"
+            },
+            "172.16.220.14:3346": {
+                "address": "172.16.220.14:3346",
+                "mode": "R/W",
+                "readReplicas": {},
+                "role": "HA",
+                "status": "ONLINE"
+            }
+        },
+        "topologyMode": "Multi-Primary"
+    },
+    "groupInformationSourceMember": "172.16.220.10:3346"
+}
+</code></pre>
+<p>查看最终状态</p>
+<pre><code class="language-fallback highlight-chroma">mysql&gt; SELECT * FROM performance_schema.replication_group_members;
++---------------------------+--------------------------------------+---------------+-------------+--------------+-------------+----------------+
+| CHANNEL_NAME              | MEMBER_ID                            | MEMBER_HOST   | MEMBER_PORT | MEMBER_STATE | MEMBER_ROLE | MEMBER_VERSION |
++---------------------------+--------------------------------------+---------------+-------------+--------------+-------------+----------------+
+| group_replication_applier | 6446e1da-4632-11e9-bc0a-4ccc6a123cdf | 172.16.220.10 |        3346 | ONLINE       | PRIMARY     | 8.0.15         |
+| group_replication_applier | 87112871-4613-11e9-a64e-4ccc6a123c66 | 172.16.220.12 |        3346 | ONLINE       | PRIMARY     | 8.0.15         |
+| group_replication_applier | 9020fd22-4612-11e9-bcbb-4ccc6a124138 | 172.16.220.13 |        3346 | ONLINE       | PRIMARY     | 8.0.15         |
+| group_replication_applier | a7785098-4633-11e9-8af6-4ccc6a123be0 | 172.16.220.11 |        3346 | ONLINE       | PRIMARY     | 8.0.15         |
+| group_replication_applier | f1883c54-4606-11e9-8e4a-4ccc6a1242e6 | 172.16.220.14 |        3346 | ONLINE       | PRIMARY     | 8.0.15         |
++---------------------------+--------------------------------------+---------------+-------------+--------------+-------------+----------------+
+5 rows in set (0.02 sec)
+</code></pre>
+<h3 id="toc_h3_7">配置 Router</h3>
+<pre><code class="language-fallback highlight-chroma">D:/PhpWamp/phpwamp/server/mysql-8.1/bin/mysqlrouter.exe --bootstrap root@172.16.220.10:3346
+</code></pre>
+<pre><code class="language-fallback highlight-chroma">Please enter MySQL password for root:
+
+WARNING: The MySQL server does not have SSL configured and metadata used by the router may be transmitted unencrypted.
+
+Bootstrapping system MySQL Router instance...
+MySQL Router  has now been configured for the InnoDB cluster 'main'.
+
+The following connection information can be used to connect to the cluster.
+
+Classic MySQL protocol connections to cluster 'main':
+- Read/Write Connections: localhost:6446    读写
+- Read/Only Connections: localhost:6447     只读
+
+X protocol connections to cluster 'main':
+- Read/Write Connections: localhost:64460
+- Read/Only Connections: localhost:64470
+
+Existing configurations backed up to /etc/mysqlrouter/mysqlrouter.conf.bak
+</code></pre>
+<pre><code class="language-fallback highlight-chroma"># File automatically generated during MySQL Router bootstrap
+
+[DEFAULT]
+name=system
+keyring_path=D:/PhpWamp/phpwamp/server/mysql-8.1/var/lib/mysqlrouter/keyring
+master_key_path=D:/PhpWamp/phpwamp/server/mysql-8.1/mysqlrouter.key
+connect_timeout=15
+read_timeout=30
+dynamic_state=D:/PhpWamp/phpwamp/server/mysql-8.1/var/lib/mysqlrouter/state.json
+
+[logger]
+level = INFO
+
+[metadata_cache:mycluster]
+router_id=6
+user=mysql_router6_gl0rrazm7cya
+metadata_cluster=mycluster
+ttl=0.5
+
+[routing:mycluster_default_rw]
+bind_address=0.0.0.0
+bind_port=6446
+destinations=metadata-cache://mycluster/default?role=PRIMARY
+routing_strategy=round-robin
+protocol=classic
+
+[routing:mycluster_default_x_rw]
+bind_address=0.0.0.0
+bind_port=64460
+destinations=metadata-cache://mycluster/default?role=PRIMARY
+routing_strategy=round-robin
+protocol=x
+</code></pre>
+<h3 id="toc_h3_8">故障模拟</h3>
+<h3 id="toc_h3_9">在 Java 中的连接配置</h3>
+<pre><code class="language-fallback highlight-chroma"># 多主模式：loadbalance&nbsp;&nbsp;
+jdbc.url=jdbc:mysql:loadbalance://172.16.220.10:3346,172.16.220.11:3346,172.16.220.12:3346,172.16.220.13:3346,172.16.220.14:3346/eis?loadBalanceBlacklistTimeout=5000&amp;useUnicode=true&amp;characterEncoding=utf-8&amp;allowMultiQueries=true
+
+# 主从模式:replication&nbsp;&nbsp;
+jdbc.url=jdbc:mysql:replication://172.16.220.10:3346,172.16.220.11:3346,172.16.220.12:3346,172.16.220.13:3346,172.16.220.14:3346/eis?useUnicode=true&amp;characterEncoding=utf-8&amp;allowMultiQueries=true
+</code></pre>
+<h3 id="toc_h3_10">备注信息</h3>
+<pre><code class="language-fallback highlight-chroma">var cluster = dba.rebootClusterFromCompleteOutage(); # 如果需要重启集群
+
+dba.dropMetadataSchema(); # 删除schema
+
+cluster.rejoinInstance("root@172.16.220.10:3346"); # 重新加入节点，我本地测试的时候发现rejoin一直无效
+
+cluster.dissolve({force:true});  # 解散集群
+
+cluster.addInstance("root@172.16.220.10:3346"); # 增加节点
+
+cluster.removeInstance("root@172.16.220.10:3346"); # 删除节点
+
+cluster.removeInstance('root@172.16.220.10:3346',{force:true}); # 强制删除节点
+
+cluster.describe(); # 集群描述
+</code></pre>
+<pre><code class="language-fallback highlight-chroma"># 集群节点状态
+* ONLINE: The instance is online and participating in the cluster.
+* OFFLINE: The instance has lost connection to the other instances.
+* RECOVERING: The instance is attempting to synchronize with the cluster by retrieving transactions it needs before it can become an ONLINE member.
+* UNREACHABLE: The instance has lost communication with the cluster.
+* ERROR: The instance has encountered an error during the recovery phase or while applying a transaction.
+
+# 集群有哪些状态
+* OK – 所有节点处于online状态，有冗余节点。
+* OK_PARTIAL – 有节点不可用，但仍有冗余节点。
+* OK_NO_TOLERANCE – 有足够的online节点，但没有冗余，例如：两个节点的Cluster，其中一个挂了，集群就不可用了。
+* NO_QUORUM – 有节点处于online状态，但达不到法定节点数，此状态下Cluster无法写入，只能读取。
+* UNKNOWN – 不是online或recovering状态，尝试连接其他实例查看状态。
+* UNAVAILABLE – 组内节点全是offline状态，但实例在运行，可能实例刚重启还没加入Cluster
+</code></pre>
+<pre><code class="language-fallback highlight-chroma"># 如果失败原因如下：
+ERROR: Group Replication join failed.
+
+ERROR: Error joining instance to cluster: '172.16.220.10:3346' - Query failed. 3092 (HY000): The server is not configured properly to be an active member of the group. Please see more details on error log.. Query: START group_replication (RuntimeError)
+after I run cluster.checkInstanceState('root@172.16.220.10:3346');
+
+The instance '172.16.220.10:3346' is invalid for the cluster.
+The instance contains additional transactions in relation to the cluster.
+{
+    "reason": "diverged", 
+    "state": "error"
+}
+I know it is because the inconsistent state in different db. But I searched the internet but there's no documentation about how to resolve conflict in innodb cluster. Any advice would be helpful!
+
+I ended up partially wipe the database and resync it again by `reset master` and `drop database mysql_innodb_cluster_metadata`. 
+</code></pre>
+<pre><code class="language-fallback highlight-chroma"># 所有节点都重启了，重新加入
+mysqlsh --uri root@172.16.220.10:3346
+mysql-js&gt; var cluster = dba.rebootClusterFromCompleteOutage();
+
+Reconfiguring the default cluster from complete outage...
+
+The instance '172.16.220.10:3346' was part of the cluster configuration.
+Would you like to rejoin it to the cluster? [y|N]: y
+
+The instance '172.16.220.10:3346' was part of the cluster configuration.
+Would you like to rejoin it to the cluster? [y|N]: y
+
+The cluster was successfully rebooted.
+</code></pre>
+<pre><code class="language-fallback highlight-chroma">#重启节点后，需要手动加入
+cluster.rejoinInstance('root@172.16.220.10:3346')
+
+"172.16.220.10:3346": {
+                "address": "172.16.220.10:3346",
+                "mode": "R/O",
+                "readReplicas": {},
+                "role": "HA",
+                "status": "(MISSING)"
+
+The instance '172.16.220.10:3346' was successfully added to the MySQL Cluster.  
+</code></pre>
+<pre><code class="language-fallback highlight-chroma">如果出现了   "status": "NO_QUORUM"     执行修复，重新加入   
+
+cluster.forceQuorumUsingPartitionOf("172.16.220.10:3346")
+
+mysql-js&gt; cluster.rejoinInstance('root@172.16.220.10:3346')
+</code></pre>
+<pre><code class="language-fallback highlight-chroma"># 如何重置实验环境，主节点：
+    dba.dropMetadataSchema()   mysqlshell 清空集群
+    mysql&gt; stop group_replication;
+    mysql&gt; reset master;               （清空日志，确保和从库的表没有冲突奥，）
+    mysql&gt; reset slave
+
+# 其他节点，主要清理和主库的主从信息， 确保主库和从库的表没有冲突奥
+    mysql&gt; stop group_replication;
+    mysql&gt; reset master;
+    mysql&gt; reset slave
+</code></pre>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96">
+                            性能优化</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/MariaDB">
+                            MariaDB</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93">
+                            数据库</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2019/03/12/1552377395451.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="JedisPool资源池优化及常见问题汇总">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="MySQL InnoDB Cluser 多主模式实现高可用负载均衡"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2019/03/16/1552738515472.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2019/03/16/1552743939239.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="Understanding – Group Replication and InnoDB Cluster">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1552738515472"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+<ul class="article__toc">
+        <li class="toc__h2">
+            <a href="#toc_h2_0">核心架构</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_1">准备工作</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_2">下载 MySQL、Shell、Router 软件</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_3">安装 MySQL</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_4">配置 MySQL 数据库</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_5">安装配置 MySQL 服务</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_6">配置 Shell</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_7">配置 Router</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_8">故障模拟</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_9">在 Java 中的连接配置</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_10">备注信息</a>
+        </li>
+</ul></aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1552738515472",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1552738515472",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("性能优化,MariaDB,数据库", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1552738515472', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 29ms, 2020/11/29 22:19:05 -->

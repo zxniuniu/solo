@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>JedisPool资源池优化及常见问题汇总 - 随心笔客</title><meta name="description" content="合理的 JedisPool 资源池参数设置能为业务使用 Redis 保驾护航，本文将对 JedisPool 的使用、资源池的参数进行详细说明，最后给出“最合理”配置。 并同时对 Jedis 使用中常见的问题进行了汇总，以方便后期查看。"/><meta property="og:description" content="合理的 JedisPool 资源池参数设置能为业务使用 Redis 保驾护航，本文将对 JedisPool 的使用、资源池的参数进行详细说明，最后给出“最合理”配置。 并同时对 Jedis 使用中常见的问题进行了汇总，以方便后期查看。"/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="JedisPool资源池优化及常见问题汇总 - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2019/03/12/1552377395451.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="JedisPool资源池优化及常见问题汇总 - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2019/03/12/1552377395451.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title="黑客派（HacPai）图片处理 imageView2 接口使用，可用于摘要图片" href="https://zxniuniu.github.io/articles/2019/02/25/1551085983283.html">
+            <link rel="next" title="MySQL InnoDB Cluser 多主模式实现高可用负载均衡" href="https://zxniuniu.github.io/articles/2019/03/16/1552738515472.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2019/03/12/1552377395451.html">
+                            JedisPool资源池优化及常见问题汇总
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2019-10-15
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2019/03/12/1552377395451.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1552377395451">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2019/03/12/1552377395451.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <h3 id="toc_h3_0">背景</h3>
+<p>合理的 JedisPool 资源池参数设置能为业务使用 Redis 保驾护航，本文将对 JedisPool 的使用、资源池的参数进行详细说明，最后给出“最合理”配置。</p>
+<h3 id="toc_h3_1">一、使用方法</h3>
+<p>以官方的 3.0.1 为例子(<a href="https://github.com/xetorthio/jedis/releases" target="_blank">Jedis Release</a>)，Maven 依赖如下：</p>
+<pre><code class="language-fallback highlight-chroma">&lt;dependency&gt;
+    &lt;groupId&gt;redis.clients&lt;/groupId&gt;
+    &lt;artifactId&gt;jedis&lt;/artifactId&gt;
+    &lt;version&gt;3.0.1&lt;/version&gt;
+    &lt;scope&gt;compile&lt;/scope&gt;
+&lt;/dependency&gt;
+</code></pre>
+<p>Jedis 使用 apache commons-pool2 对 Jedis 资源池进行管理，所以在定义 JedisPool 时一个很重要的参数就是资源池 GenericObjectPoolConfig，使用方式如下，其中有很多资源管理和使用的参数(具体看第二节)。注意：后面会提到建议用 JedisPoolConfig 代替 GenericObjectPoolConfig</p>
+<pre><code class="language-fallback highlight-chroma">GenericObjectPoolConfig jedisPoolConfig = new GenericObjectPoolConfig();
+jedisPoolConfig.setMaxTotal(..);
+jedisPoolConfig.setMaxIdle(..);
+jedisPoolConfig.setMinIdle(..);
+jedisPoolConfig.setMaxWaitMillis(..);
+</code></pre>
+<p>JedisPool 的初始化如下：</p>
+<pre><code class="language-fallback highlight-chroma">// redisHost和redisPort是实例的IP和端口，redisPassword是实例的密码
+// timeout，这里既是连接超时又是读写超时，从Jedis 2.8开始有区分connectionTimeout和soTimeout的构造函数
+JedisPool jedisPool = new JedisPool(jedisPoolConfig, redisHost, redisPort, timeout, redisPassword);
+
+Jedis jedis = null;
+try {
+     jedis = jedisPool.getResource();
+     //具体的命令
+     jedis.executeCommand()
+ } catch (Exception e) {
+     logger.error(e.getMessage(), e);
+ } finally {
+     //注意这里不是关闭连接，在JedisPool模式下，Jedis会被归还给资源池。
+     if (jedis != null) 
+         jedis.close();
+ }
+</code></pre>
+<h3 id="toc_h3_2">二、参数说明</h3>
+<p>JedisPool 保证资源在一个可控范围内，并且提供了线程安全，但是一个合理的 GenericObjectPoolConfig 配置能为应用使用 Redis 保驾护航，下面将对它的一些重要参数进行说明和建议：<br>
+在当前环境下，Jedis 连接就是资源，JedisPool 管理的就是 Jedis 连接。</p>
+<h4 id="toc_h4_3">1. 资源设置和使用</h4>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>参数名</th>
+<th>含义</th>
+<th>默认值</th>
+<th>使用建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>maxTotal</td>
+<td>资源池中最大连接数</td>
+<td>8</td>
+<td>设置建议见下节</td>
+</tr>
+<tr>
+<td>2</td>
+<td>maxIdle</td>
+<td>资源池允许最大空闲的连接数</td>
+<td>8</td>
+<td>设置建议见下节</td>
+</tr>
+<tr>
+<td>3</td>
+<td>minIdle</td>
+<td>资源池确保最少空闲的连接数</td>
+<td>0</td>
+<td>设置建议见下节</td>
+</tr>
+<tr>
+<td>4</td>
+<td>blockWhenExhausted</td>
+<td>当资源池用尽后，调用者是否要等待。只有当为 true 时，下面的 maxWaitMillis 才会生效</td>
+<td>true</td>
+<td>建议使用默认值</td>
+</tr>
+<tr>
+<td>5</td>
+<td>maxWaitMillis</td>
+<td>当资源池连接用尽后，调用者的最大等待时间(单位为毫秒)</td>
+<td>-1：表示永不超时</td>
+<td>不建议使用默认值</td>
+</tr>
+<tr>
+<td>6</td>
+<td>testOnBorrow</td>
+<td>向资源池借用连接时是否做连接有效性检测(ping)，无效连接会被移除</td>
+<td>false</td>
+<td>业务量很大时候建议设置为 false(多一次 ping 的开销)。</td>
+</tr>
+<tr>
+<td>7</td>
+<td>testOnReturn</td>
+<td>向资源池归还连接时是否做连接有效性检测(ping)，无效连接会被移除</td>
+<td>false</td>
+<td>业务量很大时候建议设置为 false(多一次 ping 的开销)。</td>
+</tr>
+<tr>
+<td>8</td>
+<td>jmxEnabled</td>
+<td>是否开启 jmx 监控，可用于监控</td>
+<td>true</td>
+<td>建议开启，但应用本身也要开启</td>
+</tr>
+</tbody>
+</table>
+<h4 id="toc_h4_4">2.空闲资源监测</h4>
+<p>空闲 Jedis 对象检测，下面四个参数组合来完成，testWhileIdle 是该功能的开关。</p>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>参数名</th>
+<th>含义</th>
+<th>默认值</th>
+<th>使用建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>testWhileIdle</td>
+<td>是否开启空闲资源监测</td>
+<td>false</td>
+<td>true</td>
+</tr>
+<tr>
+<td>2</td>
+<td>timeBetweenEvictionRunsMillis</td>
+<td>空闲资源的检测周期(单位为毫秒)</td>
+<td>-1：不检测</td>
+<td>建议设置，周期自行选择，也可以默认也可以使用下面 JedisPoolConfig 中的配置</td>
+</tr>
+<tr>
+<td>3</td>
+<td>minEvictableIdleTimeMillis</td>
+<td>资源池中资源最小空闲时间(单位为毫秒)，达到此值后空闲资源将被移除</td>
+<td>1000 * 60 * 30 = 30 分钟</td>
+<td>可根据自身业务决定，大部分默认值即可，也可以考虑使用下面 JeidsPoolConfig 中的配置</td>
+</tr>
+<tr>
+<td>4</td>
+<td>numTestsPerEvictionRun</td>
+<td>做空闲资源检测时，每次的采样数</td>
+<td>3</td>
+<td>可根据自身应用连接数进行微调,如果设置为-1，就是对所有连接做空闲监测</td>
+</tr>
+</tbody>
+</table>
+<p>为了方便使用，Jedis 提供了 JedisPoolConfig，它本身继承了 GenericObjectPoolConfig 设置了一些空闲监测设置</p>
+<pre><code class="language-fallback highlight-chroma">public class  JedisPoolConfig  extends  GenericObjectPoolConfig {
+  public JedisPoolConfig() {
+    // defaults to make your life with connection pool easier :)
+    setTestWhileIdle(true);
+    //
+    setMinEvictableIdleTimeMillis(60000);
+    //
+    setTimeBetweenEvictionRunsMillis(30000);
+    setNumTestsPerEvictionRun(-1);
+     }
+ }
+</code></pre>
+<p>所有默认值可以从 org.apache.commons.pool2.impl.BaseObjectPoolConfig 中看到。</p>
+<h3 id="toc_h3_5">三、资源池大小(maxTotal)、空闲(maxIdle minIdle)设置建议</h3>
+<h4 id="toc_h4_6">1.maxTotal：最大连接数</h4>
+<p>实际上这个是一个很难回答的问题，考虑的因素比较多：</p>
+<ul>
+<li>业务希望 Redis 并发量</li>
+<li>客户端执行命令时间</li>
+<li>Redis 资源：例如 nodes(例如应用个数) * maxTotal 是不能超过 Redis 的最大连接数。</li>
+<li>资源开销：例如虽然希望控制空闲连接，但是不希望因为连接池的频繁释放创建连接造成不必靠开销。</li>
+</ul>
+<p>以一个例子说明，假设:</p>
+<ul>
+<li>一次命令时间（borrow|return resource + Jedis 执行命令(含网络) ）的平均耗时约为 1ms，一个连接的 QPS 大约是 1000</li>
+<li>业务期望的 QPS 是 50000</li>
+</ul>
+<p>那么理论上需要的资源池大小是 50000 / 1000 = 50 个。但事实上这是个理论值，还要考虑到要比理论值预留一些资源，通常来讲 maxTotal 可以比理论值大一些。</p>
+<p>但这个值不是越大越好，一方面连接太多占用客户端和服务端资源，另一方面对于 Redis 这种高 QPS 的服务器，一个大命令的阻塞即使设置再大资源池仍然会无济于事。</p>
+<h4 id="toc_h4_7">2. maxIdle minIdle</h4>
+<p>maxIdle 实际上才是业务需要的最大连接数，maxTotal 是为了给出余量，所以 maxIdle 不要设置过小，否则会有 new Jedis(新连接)开销，而 minIdle 是为了控制空闲资源监测。</p>
+<p>连接池的最佳性能是 maxTotal = maxIdle ,这样就避免连接池伸缩带来的性能干扰。但是如果并发量不大或者 maxTotal 设置过高，会导致不必要的连接资源浪费。<br>
+可以根据实际总 OPS 和调用 Redis 客户端的规模整体评估每个节点所使用的连接池。</p>
+<h4 id="toc_h4_8">3.监控</h4>
+<p>实际上最靠谱的值是通过监控来得到“最佳值”的，可以考虑通过一些手段(例如 jmx)实现监控，找到合理值。</p>
+<h3 id="toc_h3_9">四、常见问题</h3>
+<h4 id="toc_h4_10">1.资源“不足"</h4>
+<pre><code class="language-fallback highlight-chroma">redis.clients.jedis.exceptions.JedisConnectionException: Could not get a resource from the pool
+…
+Caused by: java.util.NoSuchElementException: Timeout waiting for idle object
+at org.apache.commons.pool2.impl.GenericObjectPool.borrowObject(GenericObjectPool.java:449) 
+</code></pre>
+<p>或者</p>
+<pre><code class="language-fallback highlight-chroma">redis.clients.jedis.exceptions.JedisConnectionException: Could not get a resource from the pool
+…
+Caused by: java.util.NoSuchElementException: Pool exhausted
+at org.apache.commons.pool2.impl.GenericObjectPool.borrowObject(GenericObjectPool.java:464)
+</code></pre>
+<p>两种情况均属于无法从资源池获取到资源，但第一种是超时，第二种是因为 blockWhenExhausted 为 false 根本就不等。</p>
+<p>遇到此类异常，不要盲目的认为资源池不够大，第三节已经进行了分析。具体原因可以排查：网络、资源池参数设置、资源池监控(如果对 jmx 监控)、代码(例如没执行 jedis.close())、慢查询、DNS 等问题。</p>
+<h4 id="toc_h4_11">2. 预热 JedisPool</h4>
+<p>由于一些原因(例如超时时间设置较小原因)，有的项目在启动成功后会出现超时。JedisPool 定义最大资源数、最小空闲资源数时，不会真的把 Jedis 连接放到池子里，第一次使用时，池子没有资源使用，会 new Jedis，使用后放到池子里，可能会有一定的时间开销，所以也可以考虑在 JedisPool 定义后，为 JedisPool 提前进行预热，例如以最小空闲数量为预热数量</p>
+<pre><code class="language-fallback highlight-chroma">List&lt;Jedis&gt; minIdleJedisList = new ArrayList&lt;Jedis&gt;(jedisPoolConfig.getMinIdle());
+for (int i = 0; i &lt; jedisPoolConfig.getMinIdle(); i++) {
+   Jedis jedis = null;
+   try {
+       jedis = pool.getResource();
+       minIdleJedisList.add(jedis);
+       jedis.ping();
+    } catch (Exception e) {
+        logger.error(e.getMessage(), e);
+    } finally {
+        if (jedis != null)
+           jedis.close();
+    }
+}
+    
+for (int i = 0; i &lt; jedisPoolConfig.getMinIdle(); i++) {
+    Jedis jedis = null;
+    try {
+        jedis = minIdleJedisList.get(i);
+        jedis.close();
+    } catch (Exception e) {
+        logger.error(e.getMessage(), e);
+    } finally {
+
+        if (jedis != null)
+           jedis.close();    
+    }
+}
+</code></pre>
+<h2 id="toc_h2_12">常见问题汇总</h2>
+<p>Jedis 虽然使用起来比较简单，但是如果不能根据使用场景设置合理的参数(例如连接池参数)，不合理的使用一些功能(例如 Lua 和事务)也会产生很多问题，本文对这些问题逐个说明：</p>
+<h3 id="toc_h3_13">详细目录：</h3>
+<ul>
+<li>一、redis.clients.jedis.exceptions.JedisConnectionException: Could not get a resource from the pool</li>
+<li>二、redis.clients.jedis.exceptions.JedisConnectionException: Unexpected end of stream</li>
+<li>三、redis.clients.jedis.exceptions.JedisDataException: ERR illegal address</li>
+<li>四、redis.clients.jedis.exceptions.JedisDataException: ERR max number of clients reached</li>
+<li>五、redis.clients.jedis.exceptions.JedisConnectionException: java.net.SocketTimeoutException: Read timed out</li>
+<li>六、redis.clients.jedis.exceptions.JedisDataException: NOAUTH Authentication required</li>
+<li>七、redis.clients.jedis.exceptions.JedisDataException: EXECABORT Transaction discarded because of previous errors</li>
+<li>八、java.lang.ClassCastException: java.lang.Long cannot be cast to java.util.List</li>
+<li>九、redis.clients.jedis.exceptions.JedisDataException: WRONGTYPE Operation against a key holding the wrong kind of value</li>
+<li>十、redis.clients.jedis.exceptions.JedisDataException: OOM command not allowed when used memory &gt; 'maxmemory'</li>
+<li>十一、redis.clients.jedis.exceptions.JedisDataException: LOADING Redis is loading the dataset in memory</li>
+<li>十二、redis.clients.jedis.exceptions.JedisDataException: BUSY Redis is busy running a script. You can only call SCRIPT KILL or SHUTDOWN NOSAVE.</li>
+<li>十三、redis.clients.jedis.exceptions.JedisConnectionException: java.net.SocketTimeoutException: connect timed out</li>
+<li>十四、UNKILLABLE Sorry the script already executed write commands against the dataset. You can either wait the script termination or kill the server in a hard way using the SHUTDOWN NOSAVE command.</li>
+<li>十五、java.lang.NoClassDefFoundError</li>
+<li>十六、redis.clients.jedis.exceptions.JedisDataException: ERR unknown command</li>
+<li>十七、redis.clients.jedis.exceptions.JedisDataException: Please close pipeline or multi block before calling this method.</li>
+<li>十八、redis.clients.jedis.exceptions.JedisDataException: ERR command role not support for normal user.</li>
+</ul>
+<h3 id="toc_h3_14">一.无法从连接池获取到 Jedis 连接</h3>
+<h4 id="toc_h4_15">1.异常堆栈</h4>
+<p>(1) 连接池参数 blockWhenExhausted = true(默认)</p>
+<p>如果连接池没有可用 Jedis 连接，会等待 maxWaitMillis(毫秒)，依然没有获取到可用 Jedis 连接，会抛出如下异常：</p>
+<pre><code class="language-fallback highlight-chroma">redis.clients.jedis.exceptions.JedisConnectionException: Could not get a resource from the pool
+    …
+Caused by: java.util.NoSuchElementException: Timeout waiting for idle object
+    at org.apache.commons.pool2.impl.GenericObjectPool.borrowObject(GenericObjectPool.java:449)
+</code></pre>
+<p>(2) 连接池参数 blockWhenExhausted = false</p>
+<p>设置如果连接池没有可用 Jedis 连接，立即抛出异常：</p>
+<pre><code class="language-fallback highlight-chroma">redis.clients.jedis.exceptions.JedisConnectionException: Could not get a resource from the pool
+    …
+Caused by: java.util.NoSuchElementException: Pool exhausted
+    at org.apache.commons.pool2.impl.GenericObjectPool.borrowObject(GenericObjectPool.java:464)
+</code></pre>
+<h4 id="toc_h4_16">2.异常描述</h4>
+<p><img src="https://img.hacpai.com/file/2019/03/2b92a64590ccc47930f55b2a0b689aa9a97f4b5f-9707451b.png?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="1"></p>
+<p>上述异常是客户端没有从连接池(最大 maxTotal 个)拿到可用 Jedis 连接造成的，具体可能有如下原因：</p>
+<p>(1) 连接泄露 (较为常见)</p>
+<p>JedisPool 默认的 maxTotal=8，下面的代码从 JedisPool 中借了 8 次 Jedis，但是没有归还，当第 9 次(jedisPool.getResource().ping())</p>
+<pre><code class="language-fallback highlight-chroma">GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+JedisPool jedisPool = new JedisPool(poolConfig, "127.0.0.1;
+
+//向JedisPool借用8次连接，但是没有执行归还操作。
+for (int i = 0; i &lt; 8; i++) {
+    Jedis jedis = null;
+    try {
+        jedis = jedisPool.getResource();
+        jedis.ping();
+    } catch (Exception e) {
+         logger.error(e.getMessage(), e);
+     }
+ }
+ jedisPool.getResource().ping();
+</code></pre>
+<p>所以推荐使用的代码规范是：</p>
+<pre><code class="language-fallback highlight-chroma">Jedis jedis = null;
+try {
+    jedis = jedisPool.getResource();
+    //具体的命令
+    jedis.executeCommand()
+} catch (Exception e) {
+    //如果命令有key最好把key也在错误日志打印出来，对于集群版来说通过key可以帮助定位到具体节点。
+    logger.error(e.getMessage(), e);
+ } finally {
+     //注意这里不是关闭连接，在JedisPool模式下，Jedis会被归还给资源池。
+     if (jedis != null) 
+         jedis.close();
+ }
+</code></pre>
+<p>(2) 业务并发量大，maxTotal 确实设置小了。</p>
+<p>举个例子：</p>
+<ul>
+<li>一次命令时间（borrow|return resource + Jedis 执行命令(含网络) ）的平均耗时约为 1ms，一个连接的 QPS 大约是 1000</li>
+<li>业务期望的 QPS 是 50000</li>
+</ul>
+<p>那么理论上需要的资源池大小是 50000 / 1000 = 50 个，实际 maxTotal 可以根据理论值进行微调。</p>
+<p>(3) Jedis 连接还的太慢</p>
+<p>例如 Redis 发生了阻塞(例如慢查询等原因)，所有连接在超时时间范围内等待，并发量较大时，会造成连接池资源不足。</p>
+<p>(4) 其他问题</p>
+<p>例如丢包、DNS、客户端 TCP 参数配置。</p>
+<h4 id="toc_h4_17">3.解决方法：</h4>
+<p>可以看到这个问题稍微复杂一些，不要被异常的表象所迷惑，简单地认为连接池不够就盲目加大 maxTotal，要具体问题具体分析。</p>
+<h4 id="toc_h4_18">4.处理人</h4>
+<p>客户先确认，如解决不了，需要借助工单解决</p>
+<p>还有一种情况是：从池子里拿连接，由于没有空闲连接，需要重新生成一个 Jedis 连接，但是连接被拒绝：</p>
+<pre><code class="language-fallback highlight-chroma">redis.clients.jedis.exceptions.JedisConnectionException: Could not get a resource from the pool
+    at redis.clients.util.Pool.getResource(Pool.java:50)
+    at redis.clients.jedis.JedisPool.getResource(JedisPool.java:99)
+    at TestAdmin.main(TestAdmin.java:14)
+Caused by: redis.clients.jedis.exceptions.JedisConnectionException: java.net.ConnectException: Connection refused
+    at redis.clients.jedis.Connection.connect(Connection.java:164)
+    at redis.clients.jedis.BinaryClient.connect(BinaryClient.java:80)
+    at redis.clients.jedis.BinaryJedis.connect(BinaryJedis.java:1676)
+    at redis.clients.jedis.JedisFactory.makeObject(JedisFactory.java:87)
+     at org.apache.commons.pool2.impl.GenericObjectPool.create(GenericObjectPool.java:861)
+     at org.apache.commons.pool2.impl.GenericObjectPool.borrowObject(GenericObjectPool.java:435)
+     at org.apache.commons.pool2.impl.GenericObjectPool.borrowObject(GenericObjectPool.java:363)
+     at redis.clients.util.Pool.getResource(Pool.java:48)
+     ... 2 more
+ Caused by: java.net.ConnectException: Connection refused
+     at java.net.PlainSocketImpl.socketConnect(Native Method)
+     at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:339)
+     at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:200)
+     at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:182)
+     at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+     at java.net.Socket.connect(Socket.java:579)
+     at redis.clients.jedis.Connection.connect(Connection.java:158)
+     ... 9 more
+</code></pre>
+<p>可以从 at redis.clients.jedis.Connection.connect(Connection.java:158)看到实际是一个 Socket 连接：</p>
+<pre><code class="language-fallback highlight-chroma">socket.setSoLinger(true, 0); // Control calls close () method,
+      // the underlying socket is closed
+      // immediately
+      // &lt;-@wjw_add
+8:  socket.connect(new InetSocketAddress(host, port), connectionTimeout);
+</code></pre>
+<p>一般这种需要检查 Redis 的域名配置是否正确，排查该段时间网络是否正常</p>
+<h3 id="toc_h3_19">二、客户端缓冲区异常</h3>
+<h4 id="toc_h4_20">1.异常堆栈</h4>
+<pre><code class="language-fallback highlight-chroma">redis.clients.jedis.exceptions.JedisConnectionException: Unexpected end of stream.
+    at redis.clients.util.RedisInputStream.ensureFill(RedisInputStream.java:199)
+    at redis.clients.util.RedisInputStream.readByte(RedisInputStream.java:40)
+    at redis.clients.jedis.Protocol.process(Protocol.java:151)
+......
+</code></pre>
+<h4 id="toc_h4_21">2.异常描述：</h4>
+<p>这个异常是客户端缓冲区异常，产生这个问题可能有三个原因：</p>
+<p>(1) 常见原因：多个线程使用一个 Jedis 连接，正常的情况是一个线程使用一个 Jedis 连接，可以使用 JedisPool 管理 Jedis 连接，实现线程安全，防止出现这种情况，例如下面代码中两个线程用了一个 Jedis 连接：</p>
+<pre><code class="language-fallback highlight-chroma">new Thread(new Runnable() {
+    public  void  run() {
+        for (int i = 0; i &lt; 100; i++) {
+            jedis.get("hello");
+        }
+    }
+}).start();
+ new Thread(new Runnable() {
+     public  void  run() {
+         for (int i = 0; i &lt; 100; i++) {
+             jedis.hget("haskey", "f");
+         }
+     }
+ }).start();
+</code></pre>
+<p>(2) 客户端缓冲区满了</p>
+<p>Redis 有三种客户端缓冲区：</p>
+<ul>
+<li>普通客户端缓冲区(normal)：用于接受普通的命令，例如 get、set、mset、hgetall、zrange 等</li>
+<li>slave 客户端缓冲区(slave)：用于同步 master 节点的写命令，完成复制。</li>
+<li>发布订阅缓冲区(pubsub)：pubsub 不是普通的命令，因此有单独的缓冲区。</li>
+</ul>
+<p>![客户端缓冲区]<br>
+<img src="https://img.hacpai.com/file/2019/03/9dac508bb5669a6e690bdbbedf6e98c82581e1e1-69ab7474.png?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="9dac508bb5669a6e690bdbbedf6e98c82581e1e1.png"></p>
+<p>Redis 的客户端缓冲区配置具体格式是：</p>
+<p><code>client-output-buffer-limit &lt;class&gt; &lt;hard limit&gt; &lt;soft limit&gt; &lt;soft seconds&gt;</code></p>
+<p>(a) class: 客户端类型：(a) normal、(b) slave、(c) pubsub</p>
+<p>(b) hard limit: 如果客户端使用的输出缓冲区大于 hard limit，客户端会被立即关闭。</p>
+<p>(c) soft limit 和 soft seconds: 如果客户端使用的输出缓冲区超过了 soft limit 并且持续了 soft limit 秒，客户端会被立即关闭</p>
+<p>例如下面是一份 Redis 缓冲区的配置，所以当条件满足时，客户端连接会被关闭，就会出现 Unexpected end of stream。</p>
+<pre><code class="language-fallback highlight-chroma">redis&gt; config get client-output-buffer-limit
+1) "client-output-buffer-limit"
+2) "normal 524288000 0 0 slave 2147483648 536870912 480 pubsub 33554432 8388608 60"
+</code></pre>
+<p>(3) 长时间闲置连接被服务端主动断开，可以查询 timeout 配置的设置以及自身连接池配置是否需要做空闲检测。</p>
+<h4 id="toc_h4_22">3.解决方法和处理人：</h4>
+<p>客户：排查自身代码是否使用 JedisPool 管理 Jedis 连接，是否存在并发操作 Jedis 的情况。</p>
+<p>工单: 排查(2)(3)，阿里云 Redis 中 timeout=0，也就是不会主动关闭空闲连接，缓冲区设置为 0 0 0 也就是不会对客户端缓冲区进行限制，一般不会有问题</p>
+<h3 id="toc_h3_23">三、非法客户端地址 （阿里云 Redis 提供客户端白名单功能）</h3>
+<h4 id="toc_h4_24">1.异常堆栈</h4>
+<pre><code class="language-fallback highlight-chroma">Caused by: redis.clients.jedis.exceptions.JedisDataException: ERR illegal address
+    at redis.clients.jedis.Protocol.processError(Protocol.java:117)
+    at redis.clients.jedis.Protocol.process(Protocol.java:151)
+    at redis.clients.jedis.Protocol.read(Protocol.java:205)
+    ......
+</code></pre>
+<h4 id="toc_h4_25">2.异常描述：</h4>
+<p>Redis 实例配置了白名单，但当前访问 Redis 的客户端(IP)不在白名单中。</p>
+<h4 id="toc_h4_26">3.解决方法：</h4>
+<p>添加该客户端(IP)的白名单</p>
+<h4 id="toc_h4_27">4.处理人</h4>
+<p>客户或者工单都可以</p>
+<h3 id="toc_h3_28">四、客户端连接数达到最大值</h3>
+<h4 id="toc_h4_29">1.异常堆栈</h4>
+<p><code>redis.clients.jedis.exceptions.JedisDataException: ERR max number of clients reached</code></p>
+<h4 id="toc_h4_30">2.异常描述：</h4>
+<p>如果客户端连接数超过了 Redis 实例配置的最大 maxclients</p>
+<h4 id="toc_h4_31">3.解决方法：</h4>
+<p>提工单帮助临时调大最大连接数，并让客户找到连接数暴涨的原因(因为上述调整只是临时调整)，</p>
+<h4 id="toc_h4_32">4.处理人</h4>
+<ul>
+<li>工单：临时调整最大连接数，协助定位问题</li>
+<li>客户：定位自身问题(可以定位连接最多的客户端)，找到问题原因（例如连接池配置等）</li>
+</ul>
+<h3 id="toc_h3_33">五、客户端读写超时</h3>
+<h4 id="toc_h4_34">1.异常堆栈</h4>
+<p><code>redis.clients.jedis.exceptions.JedisConnectionException: java.net.SocketTimeoutException: Read timed out</code></p>
+<h4 id="toc_h4_35">2.异常描述：</h4>
+<p>该问题原因可能有如下几种：<br>
+(1) 读写超时设置的过短。<br>
+(2) 有慢查询或者 Redis 发生阻塞。<br>
+(3) 网络不稳定。</p>
+<h4 id="toc_h4_36">3.解决方法：</h4>
+<p>客户提供读写超时时间，提交工单定位相关原因</p>
+<h4 id="toc_h4_37">4.处理人：</h4>
+<p>工单。</p>
+<h3 id="toc_h3_38">六、密码相关的异常</h3>
+<h4 id="toc_h4_39">1.异常堆栈</h4>
+<p>Redis 设置了密码，客户端请求没传密码：</p>
+<pre><code class="language-fallback highlight-chroma">Exception in thread "main" redis.clients.jedis.exceptions.JedisDataException: NOAUTH Authentication required.
+     at redis.clients.jedis.Protocol.processError(Protocol.java:127)
+     at redis.clients.jedis.Protocol.process(Protocol.java:161)
+     at redis.clients.jedis.Protocol.read(Protocol.java:215)
+</code></pre>
+<p>Redis 没有设置密码，客户端传了密码：</p>
+<pre><code class="language-fallback highlight-chroma">Exception in thread "main" redis.clients.jedis.exceptions.JedisDataException: ERR Client sent AUTH, but no password is set
+     at redis.clients.jedis.Protocol.processError(Protocol.java:127)
+     at redis.clients.jedis.Protocol.process(Protocol.java:161)
+     at redis.clients.jedis.Protocol.read(Protocol.java:215)
+</code></pre>
+<p>客户端传了错误的密码：</p>
+<pre><code class="language-fallback highlight-chroma">redis.clients.jedis.exceptions.JedisDataException: ERR invalid password
+    at redis.clients.jedis.Protocol.processError(Protocol.java:117)
+    at redis.clients.jedis.Protocol.process(Protocol.java:151)
+    at redis.clients.jedis.Protocol.read(Protocol.java:205)
+</code></pre>
+<h4 id="toc_h4_40">2.解决方法：弄清楚到底有没有密码，密码是否正确。</h4>
+<h3 id="toc_h3_41">七、事务异常</h3>
+<h4 id="toc_h4_42">1.异常堆栈</h4>
+<p><code>redis.clients.jedis.exceptions.JedisDataException: EXECABORT Transaction discarded because of previous errors</code></p>
+<h4 id="toc_h4_43">2.异常描述：</h4>
+<p>这个是 Redis 的事务异常：事务中包含了错误的命令，例如如下 sett 是个不存在的命令。</p>
+<pre><code class="language-fallback highlight-chroma">127.0.0.1:6379&gt; multi
+OK
+127.0.0.1:6379&gt; sett key world
+(error) ERR unknown command 'sett'
+127.0.0.1:6379&gt; incr counter
+QUEUED
+127.0.0.1:6379&gt; exec
+(error) EXECABORT Transaction discarded because of previous errors.
+</code></pre>
+<h4 id="toc_h4_44">3.解决方法和处理人：</h4>
+<p>客户修复自身代码错误。</p>
+<h3 id="toc_h3_45">八、类转换错误</h3>
+<h4 id="toc_h4_46">1.异常堆栈</h4>
+<pre><code class="language-fallback highlight-chroma">java.lang.ClassCastException: java.lang.Long cannot be cast to java.util.List
+         at redis.clients.jedis.Connection.getBinaryMultiBulkReply(Connection.java:199)
+         at redis.clients.jedis.Jedis.hgetAll(Jedis.java:851)
+         at redis.clients.jedis.ShardedJedis.hgetAll(ShardedJedis.java:198) 
+</code></pre>
+<pre><code class="language-fallback highlight-chroma">java.lang.ClassCastException: java.util.ArrayList cannot be cast to [B
+         at redis.clients.jedis.Connection.getBinaryBulkReply(Connection.java:182)
+         at redis.clients.jedis.Connection.getBulkReply(Connection.java:171)
+         at redis.clients.jedis.Jedis.rpop(Jedis.java:1109)
+         at redis.clients.jedis.ShardedJedis.rpop(ShardedJedis.java:258)
+.......
+</code></pre>
+<h4 id="toc_h4_47">2.异常描述：</h4>
+<p>Jedis 正确的使用方法是：一个线程操作一个 Jedis，通常来讲产生该错误是由于没有使用 JedisPool 造成的，例如如下代码在两个线程并发使用了一个 Jedis。(get、hgetAll 返回类型也是不一样的)</p>
+<pre><code class="language-fallback highlight-chroma">new Thread(new Runnable() {
+   public  void  run() {
+       for (int i = 0; i &lt; 100; i++) {
+           jedis.set("hello", "world");
+           jedis.get("hello");
+       }
+   }
+}).start();
+new Thread(new Runnable() {
+    public  void  run() {
+        for (int i = 0; i &lt; 100; i++) {
+            jedis.hset("hashkey", "f", "v");
+            jedis.hgetAll("hashkey");
+        }
+    }
+}).start();
+</code></pre>
+<h4 id="toc_h4_48">3.解决方法和处理人：</h4>
+<p>客户排查自身代码是否存在上述问题</p>
+<h3 id="toc_h3_49">九、命令使用错误</h3>
+<h4 id="toc_h4_50">1.异常堆栈</h4>
+<pre><code class="language-fallback highlight-chroma">Exception in thread "main" redis.clients.jedis.exceptions.JedisDataException: WRONGTYPE Operation against a key holding the wrong kind of value
+    at redis.clients.jedis.Protocol.processError(Protocol.java:127)
+    at redis.clients.jedis.Protocol.process(Protocol.java:161)
+    at redis.clients.jedis.Protocol.read(Protocol.java:215)
+.....
+</code></pre>
+<h4 id="toc_h4_51">2.异常描述：</h4>
+<p>例如 key="hello"是字符串类型的键，而 hgetAll 是哈希类型的键，所以出现了错误。</p>
+<pre><code class="language-fallback highlight-chroma">jedis.set("hello","world");
+jedis.hgetAll("hello");
+</code></pre>
+<h4 id="toc_h4_52">3.解决方法和处理人：</h4>
+<p>请客户修改自身代码错误。</p>
+<h3 id="toc_h3_53">十、Redis 使用的内存超过 maxmemory 配置</h3>
+<h4 id="toc_h4_54">1.异常堆栈</h4>
+<p><code>redis.clients.jedis.exceptions.JedisDataException: OOM command not allowed when used memory &gt; 'maxmemory'.</code></p>
+<h4 id="toc_h4_55">2.异常描述：</h4>
+<p>Redis 节点(如果是集群，则是其中一个节点)使用大于该实例的内存规格(maxmemory 配置)。</p>
+<h4 id="toc_h4_56">3.解决方法：</h4>
+<p>原因可能有以下几个：</p>
+<ul>
+<li>业务数据正常增加</li>
+<li>客户端缓冲区异常：例如使用了 monitor、pub/sub 使用不当等等</li>
+<li>纯缓存使用场景，但是 maxmemory-policy 配置有误(例如没有过期键的业务配置 volatile-lru)</li>
+</ul>
+<p>紧急处理，可以临时提工单帮助临时调整 maxmeory，后续咨询用户是否升配或者调整配置。</p>
+<h4 id="toc_h4_57">4.处理人</h4>
+<ul>
+<li>客户：找到内存增大的原因。</li>
+<li>工单：协助临时调整 maxmeomry，如果客户需要，可以协助解决</li>
+</ul>
+<h3 id="toc_h3_58">十一、Redis 正在加载持久化文件</h3>
+<h4 id="toc_h4_59">1.异常堆栈</h4>
+<p><code>redis.clients.jedis.exceptions.JedisDataException: LOADING Redis is loading the dataset in memory</code></p>
+<h4 id="toc_h4_60">2.异常描述：</h4>
+<p>Jedis 调用 Redis 时，如果 Redis 正在加载持久化文件，无法进行正常的读写。</p>
+<h4 id="toc_h4_61">3.解决方法：</h4>
+<p>正常情况下，阿里云 Redis 不会出现这种情况，如果出现，则提交工单处理。</p>
+<h4 id="toc_h4_62">4.处理人：</h4>
+<p>工单。</p>
+<h3 id="toc_h3_63">十二、Lua 脚本超时</h3>
+<h4 id="toc_h4_64">1.异常堆栈</h4>
+<p><code>redis.clients.jedis.exceptions.JedisDataException: BUSY Redis is busy running a script. You can only call SCRIPT KILL or SHUTDOWN NOSAVE.</code></p>
+<h4 id="toc_h4_65">2.异常描述：</h4>
+<p>如果 Redis 当前正在执行 Lua 脚本，并且超过了 lua-time-limit，此时 Jedis 调用 Redis 时，会收到下面的异常</p>
+<h4 id="toc_h4_66">3.解决方法：</h4>
+<p>按照异常提示：You can only call SCRIPT KILL or SHUTDOWN NOSAVE. (使用 script kill:kill 掉 Lua 脚本)</p>
+<h4 id="toc_h4_67">4.处理人：</h4>
+<p>最好客户自己处理，如果解决不了，值班人员可以协助操作。</p>
+<h3 id="toc_h3_68">十三 连接超时</h3>
+<h4 id="toc_h4_69">1.异常堆栈</h4>
+<p><code>redis.clients.jedis.exceptions.JedisConnectionException: java.net.SocketTimeoutException: connect timed out</code></p>
+<h4 id="toc_h4_70">2.异常描述：</h4>
+<p>可能产生的原因：</p>
+<ul>
+<li>连接超时设置的过短。</li>
+<li>tcp-backlog 满，造成新的连接失败。</li>
+<li>客户端与服务端网络不正常。</li>
+</ul>
+<h4 id="toc_h4_71">3.解决方法：</h4>
+<p>客户提供连接超时时间，提交工单定位相关原因。</p>
+<h4 id="toc_h4_72">4.处理人：</h4>
+<p>工单。</p>
+<h3 id="toc_h3_73">十四 Lua 脚本写超时</h3>
+<h4 id="toc_h4_74">1.异常堆栈</h4>
+<p><code>(error) UNKILLABLE Sorry the script already executed write commands against the dataset. You can either wait the script termination or kill the server in a hard way using the SHUTDOWN NOSAVE command.</code></p>
+<h4 id="toc_h4_75">2.异常描述：</h4>
+<p>如果 Redis 当前正在执行 Lua 脚本，并且超过了 lua-time-limit，并且已经执行过写命令，此时 Jedis 调用 Redis 时，会收到上面的异常</p>
+<h4 id="toc_h4_76">3.解决方法：</h4>
+<p>提交工单做紧急处理，管理员要做重启或者切换 Redis 节点。</p>
+<h4 id="toc_h4_77">4.处理人：</h4>
+<p>工单。</p>
+<h3 id="toc_h3_78">十五、类加载错误</h3>
+<h4 id="toc_h4_79">1.异常堆栈</h4>
+<p>例如找不到类和方法：</p>
+<pre><code class="language-fallback highlight-chroma">Exception in thread "commons-pool-EvictionTimer" java.lang.NoClassDefFoundError: redis/clients/util/IOUtils
+    at redis.clients.jedis.Connection.disconnect(Connection.java:226)
+    at redis.clients.jedis.BinaryClient.disconnect(BinaryClient.java:941)
+    at redis.clients.jedis.BinaryJedis.disconnect(BinaryJedis.java:1771)
+    at redis.clients.jedis.JedisFactory.destroyObject(JedisFactory.java:91)
+    at         org.apache.commons.pool2.impl.GenericObjectPool.destroy(GenericObjectPool.java:897)
+    at org.apache.commons.pool2.impl.GenericObjectPool.evict(GenericObjectPool.java:793)
+    at org.apache.commons.pool2.impl.BaseGenericObjectPool$Evictor.run(BaseGenericObjectPool.java:1036)
+    at java.util.TimerThread.mainLoop(Timer.java:555)
+     at java.util.TimerThread.run(Timer.java:505)
+ Caused by: java.lang.ClassNotFoundException: redis.clients.util.IOUtils
+ ......
+</code></pre>
+<h4 id="toc_h4_80">2.异常描述：</h4>
+<p>运行时，Jedis 执行命令，抛出异常：某个类找不到。一般此类问题都是由于加载多个 jedis 版本(例如 jedis 2.9.0 和 jedis 2.6)，在编译期代码未出现问题，但类加载器在运行时加载了低版本的 Jedis，造成运行时找不到类。</p>
+<h4 id="toc_h4_81">3.解决方法：</h4>
+<p>通常此类问题，可以将重复的 jedis 排除掉，例如利用 maven 的依赖树，把无用的依赖去掉或者 exclusion 掉。</p>
+<h4 id="toc_h4_82">4.处理人</h4>
+<p>客户排查自身代码</p>
+<h3 id="toc_h3_83">十六、服务端命令不支持</h3>
+<h4 id="toc_h4_84">1.异常堆栈</h4>
+<p>例如客户端执行了 geoadd 命令，但是服务端返回不支持此命令</p>
+<p><code>redis.clients.jedis.exceptions.JedisDataException: ERR unknown command 'GEOADD'</code></p>
+<h4 id="toc_h4_85">2.异常描述：</h4>
+<p>该命令不能被 Redis 端识别，有可能有两个原因：</p>
+<ul>
+<li>社区版的一些命令，阿里云 Redis 的不支持，或者只在某些小版本上支持(例如 geoadd 是 Redis 3.2 添加的地理信息 api)。</li>
+<li>命令本身是错误的(不过对于 Jedis 来说还好，不支持直接组装命令，每个 API 都有固定的函数)。</li>
+</ul>
+<h4 id="toc_h4_86">3.解决方法：</h4>
+<p>咨询是否有 Redis 版本支持该命令，如支持可以让客户做小版本升级。</p>
+<h4 id="toc_h4_87">4.处理人</h4>
+<ul>
+<li>管理员：确认版本是否支持该命令</li>
+<li>客户：确认后，做小版本升级</li>
+</ul>
+<h3 id="toc_h3_88">十七、pipeline 错误使用</h3>
+<h4 id="toc_h4_89">1.异常堆栈</h4>
+<p><code>redis.clients.jedis.exceptions.JedisDataException: Please close pipeline or multi block before calling this method.</code></p>
+<h4 id="toc_h4_90">2.异常描述：</h4>
+<p>在 pipeline.sync()执行之前，通过 response.get()获取值，在 pipeline.sync()执行前，命令没有执行(可以通过 monitor 做验证)，下面代码就会引起上述异常</p>
+<pre><code class="language-fallback highlight-chroma">Jedis jedis = new Jedis("127.0.0.1", 6379);
+Pipeline pipeline = jedis.pipelined();
+pipeline.set("hello", "world"); 
+pipeline.set("java", "jedis");
+Response&lt;String&gt; pipeString = pipeline.get("java");
+//这个get必须在sync之后，如果是批量获取值建议直接用List&lt;Object&gt; objectList = pipeline.syncAndReturnAll();
+System.out.println(pipeString.get());
+//命令此时真正执行
+ pipeline.sync();
+</code></pre>
+<p>Jedis 中 Reponse 中 get()方法，有个判断:如果 set=false 就会报错，而 response 中的 set 初始化为 false.</p>
+<pre><code class="language-fallback highlight-chroma">public T get() {
+  //  if response has dependency response and dependency is  not built,
+  // build it first and  no more!!
+  if (dependency != null &amp;&amp; dependency.set &amp;&amp; !dependency.built) {
+    dependency.build();
+  }
+  if (!set) {
+    throw new JedisDataException(
+        "Please close pipeline or multi block before calling this method.");
+   }
+   if (!built) {
+     build();
+   }
+   if (exception != null) {
+     throw exception;
+   }
+   return response;
+ }
+</code></pre>
+<p>pipeline.sync()会每个结果设置 set=true。</p>
+<pre><code class="language-fallback highlight-chroma">public  void  sync() {
+  if (getPipelinedResponseLength() &gt; 0) {
+    List&lt;Object&gt; unformatted = client.getAll();
+    for (Object o : unformatted) {
+      generateResponse(o);
+    }
+  }
+}
+</code></pre>
+<p>其中 generateResponse(o):</p>
+<pre><code class="language-fallback highlight-chroma">protected Response&lt;?&gt; generateResponse(Object data) {
+  Response&lt;?&gt; response = pipelinedResponses.poll();
+  if (response != null) {
+    response.set(data);
+  }
+  return response;
+}
+</code></pre>
+<p>其中 response.set(data);</p>
+<pre><code class="language-fallback highlight-chroma">public  void  set(Object data) {
+    this.data = data;
+    set = true;
+}
+</code></pre>
+<h4 id="toc_h4_91">3.解决方法：</h4>
+<p>实际上对于批量结果的解析，建议使用 pipeline.syncAndReturnAll()来实现，下面操作模拟了批量 hgetAll</p>
+<pre><code class="language-fallback highlight-chroma">/**
+* pipeline模拟批量hgetAll
+* @param keyList
+* @return
+*/
+public Map&lt;String, Map&lt;String, String&gt;&gt; mHgetAll(List&lt;String&gt; keyList) {
+// 1.生成pipeline对象
+Pipeline pipeline = jedis.pipelined();
+ // 2.pipeline执行命令，注意此时命令并未真正执行
+ for (String key : keyList) {
+   pipeline.hgetAll(key);
+ }
+ 
+ // 3.执行命令 syncAndReturnAll()返回结果
+ List&lt;Object&gt; objectList = pipeline.syncAndReturnAll();
+ if (objectList == null || objectList.isEmpty()) {
+   return Collections.emptyMap();
+ }
+ 
+// 4.解析结果
+Map&lt;String,Map&lt;String, String&gt;&gt; resultMap = new HashMap&lt;String, Map&lt;String,String&gt;&gt;();
+for (int i = 0; i &lt; objectList.size(); i++) {
+  Object object = objectList.get(i);
+  Map&lt;String, String&gt; map = (Map&lt;String, String&gt;) object;
+  String key = keyList.get(i);
+  resultMap.put(key, map);
+}
+return resultMap;
+}
+</code></pre>
+<h4 id="toc_h4_92">4.处理人：</h4>
+<p>修改业务代码。</p>
+<h3 id="toc_h3_93">十八、管理员命令，普通用户不能执行</h3>
+<h4 id="toc_h4_94">1.异常堆栈</h4>
+<p>命令 role 不能被普通用户执行，可以参考<a href="https://help.aliyun.com/document_detail/26356.html" target="_blank">暂未开放的 Redis 命令</a></p>
+<p><code>redis.clients.jedis.exceptions.JedisDataException: ERR command role not support for normal user</code></p>
+<h4 id="toc_h4_95">2.异常描述：</h4>
+<p>改命令尚未开放</p>
+<h4 id="toc_h4_96">3.解决方法：</h4>
+<p>不能使用该命令，如果有需求或者疑问可以联系值班人员。</p>
+<h4 id="toc_h4_97">4.处理人</h4>
+<p>从文档中确认该命令是否开放</p>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96">
+                            性能优化</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Redis">
+                            Redis</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E5%B7%A5%E5%85%B7">
+                            工具</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2019/02/25/1551085983283.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="黑客派（HacPai）图片处理 imageView2 接口使用，可用于摘要图片">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="JedisPool资源池优化及常见问题汇总"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2019/03/12/1552377395451.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2019/03/16/1552738515472.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="MySQL InnoDB Cluser 多主模式实现高可用负载均衡">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1552377395451"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+<ul class="article__toc">
+        <li class="toc__h3">
+            <a href="#toc_h3_0">背景</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_1">一、使用方法</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_2">二、参数说明</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_3">1. 资源设置和使用</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_4">2.空闲资源监测</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_5">三、资源池大小(maxTotal)、空闲(maxIdle minIdle)设置建议</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_6">1.maxTotal：最大连接数</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_7">2. maxIdle minIdle</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_8">3.监控</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_9">四、常见问题</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_10">1.资源“不足"</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_11">2. 预热 JedisPool</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_12">常见问题汇总</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_13">详细目录：</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_14">一.无法从连接池获取到 Jedis 连接</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_15">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_16">2.异常描述</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_17">3.解决方法：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_18">4.处理人</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_19">二、客户端缓冲区异常</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_20">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_21">2.异常描述：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_22">3.解决方法和处理人：</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_23">三、非法客户端地址 （阿里云 Redis 提供客户端白名单功能）</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_24">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_25">2.异常描述：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_26">3.解决方法：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_27">4.处理人</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_28">四、客户端连接数达到最大值</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_29">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_30">2.异常描述：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_31">3.解决方法：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_32">4.处理人</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_33">五、客户端读写超时</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_34">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_35">2.异常描述：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_36">3.解决方法：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_37">4.处理人：</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_38">六、密码相关的异常</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_39">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_40">2.解决方法：弄清楚到底有没有密码，密码是否正确。</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_41">七、事务异常</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_42">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_43">2.异常描述：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_44">3.解决方法和处理人：</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_45">八、类转换错误</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_46">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_47">2.异常描述：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_48">3.解决方法和处理人：</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_49">九、命令使用错误</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_50">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_51">2.异常描述：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_52">3.解决方法和处理人：</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_53">十、Redis 使用的内存超过 maxmemory 配置</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_54">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_55">2.异常描述：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_56">3.解决方法：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_57">4.处理人</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_58">十一、Redis 正在加载持久化文件</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_59">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_60">2.异常描述：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_61">3.解决方法：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_62">4.处理人：</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_63">十二、Lua 脚本超时</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_64">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_65">2.异常描述：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_66">3.解决方法：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_67">4.处理人：</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_68">十三 连接超时</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_69">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_70">2.异常描述：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_71">3.解决方法：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_72">4.处理人：</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_73">十四 Lua 脚本写超时</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_74">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_75">2.异常描述：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_76">3.解决方法：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_77">4.处理人：</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_78">十五、类加载错误</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_79">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_80">2.异常描述：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_81">3.解决方法：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_82">4.处理人</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_83">十六、服务端命令不支持</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_84">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_85">2.异常描述：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_86">3.解决方法：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_87">4.处理人</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_88">十七、pipeline 错误使用</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_89">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_90">2.异常描述：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_91">3.解决方法：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_92">4.处理人：</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_93">十八、管理员命令，普通用户不能执行</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_94">1.异常堆栈</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_95">2.异常描述：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_96">3.解决方法：</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_97">4.处理人</a>
+        </li>
+</ul></aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1552377395451",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1552377395451",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("性能优化,Redis,工具", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1552377395451', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 31ms, 2020/11/29 22:19:05 -->

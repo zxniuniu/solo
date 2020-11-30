@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>Web性能优化：图片优化 - 随心笔客</title><meta name="description" content="HTTP Archieve有个统计，图片内容已经占到了互联网内容总量的 62% ，也就是说超过一半的流量和时间都用来下载图片。从性能优化的角度看，图片也绝对是优化的热点和重点之一，Google PageSpeed 或者 Yahoo 的 14 条性能优化规则无不把图片优化作为重要的优化手段，本文覆盖了 Web 图片优化的方方面面，从基本的图片格式选择、到尚未被广泛支持的响应式图片均有所提及。 Google Web Fundamentals 的说法我很喜欢： 图片优化既是一门艺术，也是一门科学，图片优化是一门艺术，是因为单个图片的压缩不存在最好的特定性方案，而图片优化之所以是一门科学，是因为许多开发得很出色的方法和算法可以明显减小图片的大小。要找到图片的最优设置，需要按照许多维度进行认真分析：格式能力、编码数据内容、像素尺寸等。"/><meta property="og:description" content="HTTP Archieve有个统计，图片内容已经占到了互联网内容总量的 62% ，也就是说超过一半的流量和时间都用来下载图片。从性能优化的角度看，图片也绝对是优化的热点和重点之一，Google PageSpeed 或者 Yahoo 的 14 条性能优化规则无不把图片优化作为重要的优化手段，本文覆盖了 Web 图片优化的方方面面，从基本的图片格式选择、到尚未被广泛支持的响应式图片均有所提及。 Google Web Fundamentals 的说法我很喜欢： 图片优化既是一门艺术，也是一门科学，图片优化是一门艺术，是因为单个图片的压缩不存在最好的特定性方案，而图片优化之所以是一门科学，是因为许多开发得很出色的方法和算法可以明显减小图片的大小。要找到图片的最优设置，需要按照许多维度进行认真分析：格式能力、编码数据内容、像素尺寸等。"/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="Web性能优化：图片优化 - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2018/10/21/1540107913766.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="Web性能优化：图片优化 - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2018/10/21/1540107913766.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title="16 Tips to Speed-up Your Website" href="https://zxniuniu.github.io/articles/2018/10/18/1539848872657.html">
+            <link rel="next" title="SS、SSR链接解析，查看对应密码、端口、协议" href="https://zxniuniu.github.io/articles/2018/10/24/1540351937866.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2018/10/21/1540107913766.html">
+                            Web性能优化：图片优化
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2019-10-15
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2018/10/21/1540107913766.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1540107913766">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2018/10/21/1540107913766.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <p><a href="http://httparchive.org/interesting.php#bytesperpage" target="_blank">HTTP Archieve</a>有个统计，图片内容已经占到了互联网内容总量的 62% ，也就是说超过一半的流量和时间都用来下载图片。从性能优化的角度看，图片也绝对是优化的热点和重点之一，Google PageSpeed 或者 Yahoo 的 14 条性能优化规则无不把图片优化作为重要的优化手段，本文覆盖了 Web 图片优化的方方面面，从基本的图片格式选择、到尚未被广泛支持的响应式图片均有所提及。</p>
+<p><img src="http://cabbit-me.qiniudn.com/res/2014-12-02-title.jpg" alt=""></p>
+<p>Google Web Fundamentals 的说法我很喜欢：</p>
+<blockquote>
+<p>图片优化既是一门艺术，也是一门科学，图片优化是一门艺术，是因为单个图片的压缩不存在最好的特定性方案，而图片优化之所以是一门科学，是因为许多开发得很出色的方法和算法可以明显减小图片的大小。要找到图片的最优设置，需要按照许多维度进行认真分析：格式能力、编码数据内容、像素尺寸等。</p>
+</blockquote>
+<h2 id="toc_h2_0">真的要用图片吗？</h2>
+<p>要实现需要的效果，真的需要图片吗？这是首先要问自己的问题。浏览器和 Web 标准的发展速度极快，记得数年前我在用微软 Silverlight 1.0 写视频播放器的时候，中文还不能使用自定义字体显示，所以那时候写了很多糟糕的代码把需要的文字在服务器上生成图片并缓存起来。用户下载起来很慢，搜索引擎也完全无法检索这些文字。</p>
+<p>但是现在不一样了，很多特效（渐变、阴影、圆角等等）都可以用纯粹的 HTML、CSS、SVG 等加以实现，实现这些效果少则寥寥数行代码，多则加载额外的库（一张普通的照片比<a href="http://daneden.github.io/animate.css/" target="_blank">非常强大的效果库</a>也大了许多）。这些效果不但需要的空间很小，而且在多设备、多分辨率下都能很好的工作，在低级浏览器上也可以实现较好的功能降级。因此在存在备选技术的情况下，应该首先选择这些技术，只有在不得不使用图片的时候才加入真正的图片。</p>
+<h3 id="toc_h3_1">备选技术</h3>
+<ul>
+<li>CSS 效果、CSS 动画。提供与分辨率无关的效果，在任何分辨率和缩放级别都可以显示得非常清晰，占用的空间也很小。</li>
+<li>网络字体。现在连很多图标库都是用字体方式提供，保持文字的可搜索性同时扩展显示的样式。</li>
+</ul>
+<p><strong>前端工程师最好能和设计师、产品经理保持沟通</strong>，帮助他们了解到什么样的效果比较“简洁、高效、可维护”，毕竟对于 CSS 来说改变圆角矩形的 Radius 可以实时看到效果，用图片的话至少要重新生成图片、切图并替换资源。Retina、高分辨率屏幕、多尺寸的设备，这些都加快了非图片特效的发展，想想在高分辨率屏幕下 Windows 7 的惨不忍睹，就知道原生的图片资源绝对不是多多益善。</p>
+<h2 id="toc_h2_2">图片格式的选择</h2>
+<p>如果效果真的需要图片来表现，那么选择图片格式是优化的第一步。我们经常听到的词语包括矢量图、标量图、SVG、有损压缩、无损压缩等等，我们首先说明各种图片格式的特点</p>
+<table>
+<thead>
+<tr>
+<th>图片格式</th>
+<th>压缩方式</th>
+<th>透明度</th>
+<th>动画</th>
+<th>浏览器兼容</th>
+<th>适应场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JPEG</td>
+<td>有损压缩</td>
+<td>不支持</td>
+<td>不支持</td>
+<td>所有</td>
+<td>复杂颜色及形状、尤其是照片</td>
+</tr>
+<tr>
+<td>GIF</td>
+<td>无损压缩</td>
+<td>支持</td>
+<td>支持</td>
+<td>所有</td>
+<td>简单颜色，动画</td>
+</tr>
+<tr>
+<td>PNG</td>
+<td>无损压缩</td>
+<td>支持</td>
+<td>不支持</td>
+<td>所有</td>
+<td>需要透明时</td>
+</tr>
+<tr>
+<td>APNG</td>
+<td>无损压缩</td>
+<td>支持</td>
+<td>支持</td>
+<td>Firefox、Safari、iOS Safari</td>
+<td>需要半透明效果的动画</td>
+</tr>
+<tr>
+<td>WebP</td>
+<td>有损压缩</td>
+<td>支持</td>
+<td>支持</td>
+<td>Chrome、Opera、Android Chrome、Android Browser</td>
+<td>复杂颜色及形状、浏览器平台可预知</td>
+</tr>
+<tr>
+<td>SVG</td>
+<td>无损压缩</td>
+<td>支持</td>
+<td>支持</td>
+<td>所有（IE8 以上）</td>
+<td>简单图形，需要良好的放缩体验、需要动态控制图片特效</td>
+</tr>
+</tbody>
+</table>
+<p>其中 APNG 和 WebP 格式出现的较晚，<a href="http://caniuse.com/#search=apng" target="_blank">尚未被 Web 标准所采纳</a>，只有在特定平台或浏览器环境可以预知的情况下加以采用，虽然均可以在不支持的环境中较好的功能降级，但本节暂不讨论这两种格式。图片格式选择过程如下：</p>
+<p><img src="http://cabbit-me.qiniudn.com/res/2014-12-02-step.jpg" alt=""></p>
+<h4 id="toc_h4_3">颜色丰富的照片，JPG 是通用的选择</h4>
+<ul>
+<li>人眼的结构很适合查看 JPG 压缩后的照片，可以充分的忽略并在脑中补齐细节</li>
+<li>JPG 在压缩率不高时保留的细节还是不错的</li>
+<li>WebP 能够比 JPG 减少 30% 的体积，但目前<a href="http://caniuse.com/#search=webp" target="_blank">兼容性较差</a></li>
+</ul>
+<h4 id="toc_h4_4">如果需要较通用的动画，GIF 是唯一可用的选择</h4>
+<ul>
+<li>GIF 支持的颜色范围为 256 色，而且仅支持完全透明/完全不透明</li>
+<li>GIF 在显示颜色丰富的动画时可能出现颜色不全、边缘锯齿等问题</li>
+</ul>
+<h4 id="toc_h4_5">如果图片由标准的几何图形组成，或需要使用程序动态控制其显示特效，可以考虑 SVG 格式</h4>
+<ul>
+<li>SVG 是使用 XML 定义的矢量图形，生成的图片在各种分辨率下均可自由放缩</li>
+<li>SVG 中可以通过 JavaScript 等接口自由变换图片特效，可以完成其中部分元素的自由旋转、移动、变换颜色等</li>
+</ul>
+<h4 id="toc_h4_6">如果需要清晰的显示颜色丰富的图片，PNG 比较好</h4>
+<ul>
+<li>PNG-8 能够显示 256 种颜色，但能够同时支持 256 阶透明，因此颜色数较少但需要半透明的情景（如微信动画大表情）可以考虑 PNG-8</li>
+<li>PNG-24 可以显示真彩色，但不支持透明，颜色丰富的图片推荐使用（如屏幕截图、界面设计图）</li>
+<li>PNG-32 可以显示真彩色，同时支持 256 阶透明，效果最好但尺寸也最大</li>
+</ul>
+<h2 id="toc_h2_7">图片尺寸的选择</h2>
+<p>尺寸，曾经是最不需要讨论的话题，但自从 Retina 出现之后世界就变得复杂多了。关于移动设备上的像素和尺寸，展开说足够写一篇论文，我建议想详细了解的同学参考下面的文章：</p>
+<p><a href="http://www.infoq.com/cn/articles/development-of-the-mobile-web-deep-concept" target="_blank">浅谈移动 Web 开发（上）：深入概念</a></p>
+<p>这里只说我们关心的部分和结论，我们需要分清不同类型的像素：CSS 像素和设备像素。一个 CSS 像素可能包含多个设备像素。对于图片来说，在高 DPI 的屏幕上需要使用分辨率更高的图片，如果我们讨论的是 Retina，那么就需要 2 倍分辨率（几乎 4 倍尺寸）的图片。这几乎没有取巧的空间，屏幕就是那么大，需要的图片也就是那么大。（鸽子为什么那么大？^_^）</p>
+<p><img src="http://cabbit-me.qiniudn.com/res/2014-12-02-pixel.png" alt=""></p>
+<p>我们能够控制的地方是“恰好”显示所需尺寸的图片。例如在屏幕中通过 CSS 或者标签的 wihth/height 属性，将一副 200x200 的图片调整为 100x100 大小，那么这其中就有(200x200)-(100x100)=30000 个像素是浪费的，这占到了图片尺寸的 75% ！</p>
+<p>之所以有这么大的浪费，是因为图片的尺寸与面积基本成正比，与宽高的平方成正比。因此良好的计算客户端实际显示的图片尺寸，能够大大减小图片的大小。即使只有长和宽都只有 10px 被浪费，但是当图片足够大时，这部分也将产生很大影响。</p>
+<h3 id="toc_h3_8">响应式图片</h3>
+<p>上面提到“恰好”显示客户端所需大小的图片，听上去很容易不是吗？但当响应式布局出现后，这就变得极其困难。我们要支持上至 1920 宽度，下至 320 宽度的无数种设备，如果使用 1920 宽度的图片，那么在小型设备（这类设备往往对网速和流量更加敏感）上每个用户都要付出额外的带宽和等待时间，如果使用 320 宽度的图片，那么在 1920 的屏幕上就像是在高清屏上使用 DOS 那么让人难以接受。</p>
+<p>很自然的，我们需要图片也能“响应式”加载，根据所在设备的不同，加载不同尺寸的图片。响应式图片尚没有写入 Web 标准，实现起来也有诸多不便和兼容性限制。我建议参考百度 EFE 团队的这篇文章：</p>
+<p><a href="http://efe.baidu.com/blog/responsive-images-in-practice/" target="_blank">实战响应式图片</a></p>
+<p>响应式图片虽然<a href="http://caniuse.com/#search=srcset" target="_blank">尚未成为标准</a>，但这是 Web 图片优化的一柄利器，一旦被广泛支持，再没有比缩小图片尺寸更有效的优化方法了。</p>
+<h2 id="toc_h2_9">优化 JPG 和 PNG</h2>
+<p>选择了正确的图片格式，按照正确的大小生成了图片后，我们还需要对图片进行进一步优化，这种优化一般分两步进行：</p>
+<ol>
+<li>有损优化，删除没有出现或极少出现过的颜色，合并相邻的相近颜色。这一步并不必须，如 PNG 格式就直接进入下一步</li>
+<li>无损优化，压缩数据，删除不必要的信息</li>
+</ol>
+<p>JPG 和 PNG 格式的图片生成后，一般还有进一步优化的空间，例如 JPG 格式的照片中，可能携带有相机的 Exif 信息，PNG 格式的图片中可能带有 Fireworks 等软件的图层信息等。去除这些额外信息后，还可以通过减小图片的调色板，去除没有出现过的颜色，以及合并相邻的相同颜色等手段来进行优化。原理性的内容这里不再赘述，仅介绍工程中可用的优化工具。</p>
+<p>不同格式的图片有一系列工具，这些工具有有更多种参数调节方案，常见的几种调节工具有：</p>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://jpegclub.org/jpegtran/" target="_blank">jpegtran</a></td>
+<td>优化 JPG 图片</td>
+</tr>
+<tr>
+<td><a href="http://optipng.sourceforge.net/" target="_blank">OptiPNG</a></td>
+<td>无损 PNG 优化</td>
+</tr>
+<tr>
+<td><a href="http://advancemame.sourceforge.net/doc-advpng.html" target="_blank">AdvPNG</a></td>
+<td>无损 PNG 优化</td>
+</tr>
+<tr>
+<td><a href="http://pngquant.org/" target="_blank">PNGQuant</a></td>
+<td>有损 PNG 优化</td>
+</tr>
+</tbody>
+</table>
+<p>如果你真的需要追求各种图片的极限压缩，可以参阅这些工具的文档，但是对于一般的 Web 应用，面对的图片种类多样，几乎不可能在工程中实现对每种工具的独立配置，因此推荐使用以下工具来进行优化。这些工具往往使用了上表中的一种或几种优化工具。</p>
+<h3 id="toc_h3_10">ImageOptim (Mac)</h3>
+<p>主页：<a href="https://imageoptim.com/" target="_blank">https://imageoptim.com/</a></p>
+<p>Mac 平台下非常赞的图片优化工具，只需要把需要优化的图片拖拽进 ImageOptim，就能够完成对图片的优化。设置选择的也很丰富，目前支持 JPG 和 PNG 的优化。这是我在写文章时最常用到的工具，把网站用到的图片拖进去，优化就完成了 ~</p>
+<p><img src="http://cabbit-me.qiniudn.com/res/2014-12-02-image-optim.png" alt=""></p>
+<h3 id="toc_h3_11">Kraken (Web)</h3>
+<p>主页：<a href="https://kraken.io/" target="_blank">https://kraken.io/</a></p>
+<p>在免费模式下可以上传图片，优化后打包下载，很多国外企业也选择了它的收费服务。亲自测试 Kraken 的图片优化结果比 ImageOptim 一般要小 3% 左右，效果不错，当然价格也不错。适合偶尔有图片优化需求，或者不在开发机上没有优化软件可以使用的情况。</p>
+<p><img src="http://cabbit-me.qiniudn.com/res/2014-12-02-kraken.png" alt=""></p>
+<h3 id="toc_h3_12">智图 (Web)</h3>
+<p>主页：<a href="http://zhitu.tencent.com/" target="_blank">http://zhitu.tencent.com/</a></p>
+<p>腾讯 ISUX 团队有篇文章介绍智图：<a href="http://isux.tencent.com/zhitu.html" target="_blank">http://isux.tencent.com/zhitu.html</a></p>
+<p>国货当自强，腾讯的智图工具推出不久，但实测效果很好，而且提供了<a href="https://www.npmjs.org/package/gulp-imageisux" target="_blank">Gulp 的自动化支持</a>，这部分会在后面自动优化章节介绍。只想建议一句，Kraken 的首页比智图美好几百倍…… 而且把压缩前的 PNG 和压缩后的 JPG 放在一起对比大小，真的没关系么 ~</p>
+<p><img src="http://cabbit-me.qiniudn.com/res/2014-12-02-zhitu.png" alt=""></p>
+<h2 id="toc_h2_13">优化 SVG</h2>
+<p><a href="http://caniuse.com/#search=svg" target="_blank">IE9 及以上的浏览器</a>都支持可缩放矢量图(SVG)，SVG 是基于 XML 的图片格式，适用于二维图片。可以将 SVG 标记直接嵌入网页，也可以作为外部资源嵌入。可以通过大多数基于矢量的绘图软件创建 SVG 文件。这是一段简单的 SVG 图形：</p>
+<p><img src="http://cabbit-me.qiniudn.com/res/2014-12-02-svg.png" alt=""></p>
+<p>这个圆形轮廓为黑色，背景为红色，从 Adobe Illustrator 直接导出。可以从中看到大量元数据，例如图层信息、注释和 XML 名称空间等等，在浏览器中呈现资源时，通常不需要这些数据。因此我们需要使用一些工具去除这些不必要的元数据，仅保留必须的标记。</p>
+<p><a href="https://github.com/svg/svgo" target="_blank">SVGO</a>工具可以缩减 SVG 文件的体积，在这个的例子中，SVGO 能够将 Illustrator 生成的 SVG 文件大小减小 58% ，从 470 字节缩减到 199 字节。</p>
+<p>在我自己的网站中，对于网站 Logo 一类的图标比较倾向于使用 SVG，而且由于 SVG 是基于 XML 的格式，本质上是纯文本，所以，还可以采用 GZIP 压缩来进一步减小传输大小，当然这需要一些服务器配置，例如在 apache 服务器中设置：</p>
+<pre><code class="language-fallback highlight-chroma">AddType image/svg+xml .svg
+AddOutputFilterByType DEFLATE image/svg+xml
+</code></pre>
+<p>来对 SVG 文件启用 GZip 压缩（当然你还需要先加载 deflate 模块并进行适当配置，GZip 的配置超出了本文的范畴，这部分内容请自行 Google）</p>
+<h2 id="toc_h2_14">优化 GIF 和 APNG</h2>
+<p>GIF 有很多好处，在颜色数较低的时候能够大幅减小图片体积，而且他也是唯一能够较为通用的展示动画的图片格式。关于 GIF 格式的优化原理我并不熟悉，只是在工程中直接使用成型的压缩工具，在后文<a href="https://www.cnblogs.com/wizcabbit/p/web-image-optimization.html#auto" target="_blank">自动优化</a>章节的 Grunt 中，会介绍通过 Grunt Task 进行自动优化的方法。</p>
+<p>关于 APNG，目前浏览器对他的支持还不够好，不过在支持 HTML5 的场景中，有成熟的开源工具<a href="https://github.com/davidmz/apng-canvas" target="_blank">apng-canvas</a>可以用于支持 APNG。</p>
+<p><img src="http://cabbit-me.qiniudn.com/res/2014-12-02-apng.gif" alt=""></p>
+<p>腾讯 ISUX 团队有篇文章介绍<a href="https://github.com/iSparta/iSparta" target="_blank">iSparta</a>工具：<a href="http://isux.tencent.com/introduction-of-apng.html" target="_blank">http://isux.tencent.com/introduction-of-apng.html</a>。这是目前几乎唯一能够批量处理 APNG 文件的工具，感兴趣的同学可以在那篇文章里得到更多地了解。</p>
+<h2 id="toc_h2_15">自动优化</h2>
+<p>前面说了太多关于如何优化各种不同格式图片的方法和工具，优化图片需要大量重复性的劳动，作为工程师显然不会忍受这一点，因此也产生出了很多工具对图片进行自动优化，这里主要介绍 CDN、Grunt/Gulp、Google PageSpeed 三种方式。</p>
+<h3 id="toc_h3_16">自动优化：CDN</h3>
+<p>使用 CDN 对图片自动进行优化，我在国外的 CDN 提供商处很少见到这类服务，倒是国内的两大新秀 CDN<a href="http://www.qiniu.com/" target="_blank">七牛</a>和<a href="https://www.upyun.com/index.html" target="_blank">又拍</a>在这方面都做了大量工作。其工作方式为，向 CDN 请求图片的 URL 参数中包含了图片处理的参数（格式、宽高等），CDN 服务器根据请求生成所需的图片，发送到用户浏览器。</p>
+<p>七牛云存储的<a href="http://developer.qiniu.com/docs/v6/api/reference/fop/image/" target="_blank">图片处理接口</a>极其丰富，覆盖了图片的大部分基本操作，例如：</p>
+<ul>
+<li>图片裁剪，支持多种裁剪方式（如按长边、短边、填充、拉伸等）</li>
+<li>图片格式转换，支持 JPG, GIF, PNG, WebP 等，支持不同的图片压缩率</li>
+<li>图片处理，支持图片水印、高斯模糊、重心处理等</li>
+</ul>
+<p>七牛云存储的图片处理接口使用并不复杂，例如下面这张原图：</p>
+<p><img src="http://cabbit-me.qiniudn.com/res/2014-12-02-gogopher.jpg" alt=""></p>
+<p>我们通过如下 URL 请求，裁剪正中部分，等比缩小生成 200x200 缩略图：</p>
+<pre><code class="language-fallback highlight-chroma">http://qiniuphotos.qiniudn.com/gogopher.jpg?imageView2/1/w/200/h/200
+</code></pre>
+<p><img src="http://cabbit-me.qiniudn.com/res/2014-12-02-gogopher_optim.jpg" alt=""></p>
+<h3 id="toc_h3_17">自动优化：Grunt/Gulp</h3>
+<p>这里介绍用于图片优化的 Grunt 组件：<a href="https://github.com/1000ch/grunt-image" target="_blank">grunt-image</a>。前端工程师的重复性工作，例如合并静态资源、压缩 JS 和 CSS 文件、编译 SASS 等都可以使用 Grunt 等自动化工具批量完成，图片优化也是如此。</p>
+<p>grunt-image 非常强大，按照作者的介绍，其内部加载的图片优化工具包括了 pngquant, optipng, advpng, zopflipng, pngcrush, pngout, mozjpeg, jpegRecompress, jpegoptim, gifsicle 和 svgo。支持批量自动优化 PNG, JPG, SVG 和 GIF，速度也不错，配置方式支持单图片优化和全目录优化：</p>
+<pre><code class="language-fallback highlight-chroma">module.exports = function (grunt) {
+  grunt.initConfig({
+    image: {
+      // 指定单独的图片优化
+      static: {
+        options: {
+          pngquant: true,
+          optipng: true,
+          advpng: true,
+          zopflipng: true,
+          pngcrush: true,
+          pngout: true,
+          mozjpeg: true,
+          jpegRecompress: true,
+          jpegoptim: true,
+          gifsicle: true,
+          svgo: true
+        },
+        files: {
+          'dist/img.png': 'src/img.png',
+          'dist/img.jpg': 'src/img.jpg',
+          'dist/img.gif': 'src/img.gif',
+          'dist/img.svg': 'src/img.svg'
+        }
+      },
+      // 指定图片目录进行优化
+      dynamic: {
+        files: [{
+          expand: true,
+          cwd: 'src/',
+          src: ['**/*.{png,jpg,gif,svg}'],
+          dest: 'dist/'
+        }]
+      }
+    }
+  });
+
+  grunt.loadNpmTasks('grunt-image');
+};
+</code></pre>
+<p><img src="http://cabbit-me.qiniudn.com/res/2014-12-02-grunt-image.png" alt=""></p>
+<h3 id="toc_h3_18">自动优化：Google PageSpeed</h3>
+<p>Google 做事风格比较彻底，看见哪个软件不好用就拿来直接 fork 出新版本或者干脆重写，对于 Web 优化，Google 发布了了<a href="https://developers.google.com/speed/pagespeed/module" target="_blank">Google PageSpeed</a>这个服务器模块，可以在 apache 或 ngnix 中加载，通过在服务器配置文件中进行设置来进行自动化的优化。对于图片格式转换、图片优化甚至图片 LazyLoad 都有相关选项。这部分展开会非常长，请感兴趣的同学参考 Google 的手册。</p>
+<p>感谢原作者，博客转自（墙外）：<a href="https://www.cnblogs.com/wizcabbit/p/web-image-optimization.html" target="_blank">https://www.cnblogs.com/wizcabbit/p/web-image-optimization.html</a></p>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E5%8A%A0%E5%AF%86%E5%AE%89%E5%85%A8">
+                            加密安全</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E5%B7%A5%E5%85%B7">
+                            工具</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96">
+                            性能优化</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2018/10/18/1539848872657.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="16 Tips to Speed-up Your Website">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="Web性能优化：图片优化"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2018/10/21/1540107913766.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2018/10/24/1540351937866.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="SS、SSR链接解析，查看对应密码、端口、协议">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1540107913766"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+<ul class="article__toc">
+        <li class="toc__h2">
+            <a href="#toc_h2_0">真的要用图片吗？</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_1">备选技术</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_2">图片格式的选择</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_3">颜色丰富的照片，JPG 是通用的选择</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_4">如果需要较通用的动画，GIF 是唯一可用的选择</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_5">如果图片由标准的几何图形组成，或需要使用程序动态控制其显示特效，可以考虑 SVG 格式</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_6">如果需要清晰的显示颜色丰富的图片，PNG 比较好</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_7">图片尺寸的选择</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_8">响应式图片</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_9">优化 JPG 和 PNG</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_10">ImageOptim (Mac)</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_11">Kraken (Web)</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_12">智图 (Web)</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_13">优化 SVG</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_14">优化 GIF 和 APNG</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_15">自动优化</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_16">自动优化：CDN</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_17">自动优化：Grunt/Gulp</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_18">自动优化：Google PageSpeed</a>
+        </li>
+</ul></aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1540107913766",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1540107913766",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("加密安全,工具,性能优化", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1540107913766', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 29ms, 2020/11/29 22:19:05 -->

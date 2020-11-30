@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>Apache Web Server Hardening and Security Guide - 随心笔客</title><meta name="description" content="The Web Server is a crucial part of web-based applications. Apache Web Server is often placed at the edge of the network hence it becomes one of the most vulnerable services to attack. Having default configuration supply much sensitive information which may help hacker to prepare for an attack the Web server. The majority of Web application attacks are through XSS, Info Leakage, Session Management and PHP Injection attacks which are due to weak programming code and failure to sanitize Web application infrastructure."/><meta property="og:description" content="The Web Server is a crucial part of web-based applications. Apache Web Server is often placed at the edge of the network hence it becomes one of the most vulnerable services to attack. Having default configuration supply much sensitive information which may help hacker to prepare for an attack the Web server. The majority of Web application attacks are through XSS, Info Leakage, Session Management and PHP Injection attacks which are due to weak programming code and failure to sanitize Web application infrastructure."/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="Apache Web Server Hardening and Security Guide - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2018/10/04/1538621106899.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="Apache Web Server Hardening and Security Guide - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2018/10/04/1538621106899.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title="Shadowsocks自定义PAC规则" href="https://zxniuniu.github.io/articles/2018/09/30/1538314978887.html">
+            <link rel="next" title="How to Run Java Program Automatically on Tomcat Startup" href="https://zxniuniu.github.io/articles/2018/10/09/1539064578164.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2018/10/04/1538621106899.html">
+                            Apache Web Server Hardening and Security Guide
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2019-10-15
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2018/10/04/1538621106899.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1538621106899">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2018/10/04/1538621106899.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <p>A practical guide to secure and harden Apache Web Server.</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/1c9d5bf5c9584b8784d2e2a607343c9d_apachesecurityhardeningguide.png" alt="apachesecurityhardeningguidepng"></p>
+<h2 id="toc_h2_0">1. Introduction</h2>
+<p>The Web Server is a crucial part of web-based applications. Apache Web Server is often placed at the edge of the network hence it becomes one of the most vulnerable services to attack.</p>
+<p>Having default configuration supply much sensitive information which may help hacker to prepare for an attack the Web server.</p>
+<p>The majority of Web application attacks are through XSS, Info Leakage, Session Management and PHP Injection attacks which are due to weak programming code and failure to sanitize Web application infrastructure.</p>
+<p>According to the security vendor <a href="https://www.acunetix.com/acunetix-web-application-vulnerability-report-2016/" target="_blank">Acunetix</a>, 84% of tested applications have one or more vulnerabilities.</p>
+<p><img src="https://geekflare.com/wp-content/uploads/2016/12/acunetix-vulnerability.png" alt=""></p>
+<p>This practical guide provides you the necessary skill set to secure Apache Web Server.</p>
+<p>In this course, we will talk about how to Harden &amp; Secure Apache Web Server on Unix platform.</p>
+<p>Following are tested on Apache 2.4.x version.</p>
+<ol>
+<li>This assumes you have installed Apache on UNIX platform. If not, you can go through <a href="https://geekflare.com/apache-2-4-6-installation-on-unix/" target="_blank">Installation guide</a>.</li>
+<li>We will call Apache installation directory /opt/apache as $Web_Server throughout this guide.</li>
+<li>You are advised to take a backup of existing configuration file before any modification.</li>
+</ol>
+<p>Contents</p>
+<ul>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#1-Introduction" target="_blank">1. Introduction</a>
+<ul>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#11-Audience" target="_blank">1.1 Audience</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#11-Notes" target="_blank">1.2 Notes</a></li>
+</ul>
+</li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#2-Information-Leakage" target="_blank">2. Information Leakage</a>
+<ul>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#21-Remove-Server-Version-Banner" target="_blank">2.1 Remove Server Version Banner</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#22-Disable-directory-browser-listing" target="_blank">2.2 Disable directory browser listing</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#23-Etag" target="_blank">2.3 Etag</a></li>
+</ul>
+</li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#3-Authorization" target="_blank">3. Authorization</a>
+<ul>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#31-Run-Apache-from-non-privileged-account" target="_blank">3.1 Run Apache from non-privileged account</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#32-Protect-binary-and-configuration-directory-permission" target="_blank">3.2 Protect binary and configuration directory permission</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#33-System-Settings-Protection" target="_blank">3.3 System Settings Protection</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#34-HTTP-Request-Methods" target="_blank">3.4 HTTP Request Methods</a></li>
+</ul>
+</li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#4-Web-Application-Security" target="_blank">4. Web Application Security</a>
+<ul>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#41-Cookies" target="_blank">4.1 Cookies</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#411-Disable-Trace-HTTP-Request" target="_blank">4.1.1 Disable Trace HTTP Request</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#412-Set-cookie-with-HttpOnly-and-Secure-flag" target="_blank">4.1.2 Set cookie with HttpOnly and Secure flag</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#42-Clickjacking-Attack" target="_blank">4.2 Clickjacking Attack</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#43-Server-Side-Include" target="_blank">4.3 Server Side Include</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#44-X-XSS-Protection" target="_blank">4.4 X-XSS Protection</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#45-Disable-HTTP-10-Protocol" target="_blank">4.5 Disable HTTP 1.0 Protocol</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#46-Timeout-value-configuration" target="_blank">4.6 Timeout value configuration</a></li>
+</ul>
+</li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#5-SSL" target="_blank">5. SSL</a>
+<ul>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#51-SSL-Key" target="_blank">5.1 SSL Key</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#52-SSL-Cipher" target="_blank">5.2 SSL Cipher</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#53-Disable-SSL-v2-v3" target="_blank">5.3 Disable SSL v2 &amp; v3</a></li>
+</ul>
+</li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#6-Mod-Security" target="_blank">6. Mod Security</a>
+<ul>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#61-Download-Installation" target="_blank">6.1 Download &amp; Installation</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#62-Configuration" target="_blank">6.2 Configuration</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#63-Getting-Started" target="_blank">6.3 Getting Started</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#631-Logging" target="_blank">6.3.1 Logging</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#632-Enable-Rule-Engine" target="_blank">6.3.2 Enable Rule Engine</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#633-Common-Attack-Type-Protection" target="_blank">6.3.3 Common Attack Type Protection</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#634-Change-Server-Banner" target="_blank">6.3.4 Change Server Banner</a></li>
+</ul>
+</li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#7-General-Configuration" target="_blank">7. General Configuration</a>
+<ul>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#71-Configure-Listen" target="_blank">7.1 Configure Listen</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#72-Access-Logging" target="_blank">7.2 Access Logging</a></li>
+<li><a href="http://niuniu.hicp.net/articles/2018/10/04/1538621106899.html#73-Disable-Loading-unwanted-modules" target="_blank">7.3 Disable Loading unwanted modules</a></li>
+</ul>
+</li>
+</ul>
+<h3 id="toc_h3_1">1.1 Audience</h3>
+<p>This is designed for Middleware Administrator, Application Support, System Analyst, or anyone working or eager to learn Hardening &amp; Security guidelines.</p>
+<p>Fair knowledge of Apache Web Server &amp; UNIX command is mandatory.</p>
+<p>****Bonus: ****<a href="https://geekflare.com/apache-web-server-hardening-security/javascript%3Avoid(0)" target="_blank">Click here to download</a> this guide in PDF format.</p>
+<h3 id="toc_h3_2">1.2 Notes</h3>
+<p>We require some tool to examine HTTP Headers for some of the implementation verification. There are two ways to do this.</p>
+<ol>
+<li>Use browser inbuilt developer tools to inspect the HTTP headers. Usually, it’s under Network tab</li>
+<li>Use online <a href="https://tools.geekflare.com/tools/http-header-test" target="_blank">HTTP response header checker tool</a></li>
+</ol>
+<h2 id="toc_h2_3">2. Information Leakage</h2>
+<p>In default Apache configuration you would have much sensitive information disclosures, which can be used to prepare for an attack.</p>
+<p>It’s one of the most critical tasks for an administrator to understand and secure them.</p>
+<h3 id="toc_h3_4">2.1 Remove Server Version Banner</h3>
+<p>I would say this is one of the first things to consider, as you don’t want to expose what Web server version you are using. Exposing version means you are helping hacker to speedy the reconnaissance process.</p>
+<p>The default configuration will expose Apache Version and OS type as shown below.</p>
+<p><img src="https://geekflare.com/wp-content/uploads/2015/02/apache-server-banner.png" alt=""></p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Go to $Web_Server/conf folder</li>
+<li>Modify httpd.conf by using vi editor</li>
+<li>Add the following directive and save the httpd.conf</li>
+</ul>
+<p>ServerTokens Prod<br>
+ServerSignature Off</p>
+<ul>
+<li>Restart apache</li>
+</ul>
+<p><code>ServerSignature</code> will remove the version information from the page generated by apache Web server.</p>
+<p><code>ServerTokens</code> will change Header to production only, i.e. Apache</p>
+<p><strong>Verification</strong></p>
+<p>As you can see below, version &amp; OS information is gone.</p>
+<p><img src="https://geekflare.com/wp-content/uploads/2015/02/apache-server-banner-masked.png" alt=""></p>
+<h3 id="toc_h3_5">2.2 Disable directory browser listing</h3>
+<p>Disable directory listing in a browser, so the visitor doesn’t see what all file and folders you have under root or subdirectory.</p>
+<p>Let’s test how does it look like in default settings.</p>
+<ul>
+<li>Go to $Web_Server/htdocs directory</li>
+<li>Create a folder and few files inside that</li>
+</ul>
+<h1 id="toc_h1_6">mkdir test</h1>
+<h1 id="toc_h1_7">touch hi</h1>
+<h1 id="toc_h1_8">touch hello</h1>
+<p>Now, let’s try to access Apache by <a href="http://localhost/test" target="_blank">http://localhost/test</a></p>
+<p><img src="https://geekflare.com/wp-content/uploads/2015/02/apache-directory-listing.png" alt=""></p>
+<p>As you could see it reveals what all file/folders you have and I am sure you don’t want to expose that.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Go to $Web_Server/conf directory</li>
+<li>Open httpd.conf using vi</li>
+<li>Search for Directory and change Options directive to <strong>None</strong> or <strong>–Indexes</strong></li>
+</ul>
+<p>Options -Indexes</p>
+<p>(or)</p>
+<p>Options None</p>
+<ul>
+<li>Restart Apache</li>
+</ul>
+<p><strong>Note:</strong> if you have multiple Directory directives in your environment, you should consider doing the same for all.</p>
+<p><strong>Verification</strong></p>
+<p>Now, let’s try to access Apache by <a href="http://localhost/test" target="_blank">http://localhost/test</a></p>
+<p><img src="https://geekflare.com/wp-content/uploads/2015/02/disabled-directory-listing.png" alt=""></p>
+<p>As you could see, it displays a forbidden error instead of showing test folder listing.</p>
+<h3 id="toc_h3_9">2.3 Etag</h3>
+<p>It allows remote attackers to obtain sensitive information like inode number, multipart MIME boundary, and child process through Etag header.</p>
+<p>To prevent this vulnerability, let’s implement it as below. This is required to fix for PCI compliance.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Go to $Web_Server/conf directory</li>
+<li>Add the following directive and save the httpd.conf</li>
+</ul>
+<p>FileETag None</p>
+<ul>
+<li>Restart apache</li>
+</ul>
+<h2 id="toc_h2_10">3. Authorization</h2>
+<h3 id="toc_h3_11">3.1 Run Apache from non-privileged account</h3>
+<p>Default apache configuration is to run as nobody or daemon. It’s good to use a separate non-privileged user for Apache.</p>
+<p>The idea here is to protect other services running in case of any security hole.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Create a user and group called apache</li>
+</ul>
+<h1 id="toc_h1_12">groupadd apache</h1>
+<h1 id="toc_h1_13">useradd –G apache apache</h1>
+<ul>
+<li>Change apache installation directory ownership to newly created non-privileged user</li>
+</ul>
+<h1 id="toc_h1_14">chown –R apache:apache /opt/apache</h1>
+<ul>
+<li>Go to $Web_Server/conf</li>
+<li>Modify httpd.conf using vi</li>
+<li>Search for User &amp; Group Directive and change as non-privileged account apache</li>
+</ul>
+<p>User apache<br>
+Group apache</p>
+<ul>
+<li>Save the httpd.conf</li>
+<li>Restart Apache</li>
+</ul>
+<p><strong>Verification</strong></p>
+<p>grep for running http process and ensure it’s running with apache user</p>
+<h1 id="toc_h1_15">ps –ef |grep http</h1>
+<p>You should see one process is running with root. That’s because Apache is listening on port 80 and it has to be started with root.</p>
+<h3 id="toc_h3_16">3.2 Protect binary and configuration directory permission</h3>
+<p>By default, permission for binary and configuration is 755 that mean any user on a server can view the configuration. You can disallow another user to get into conf and bin folder.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Go to $Web_Server directory</li>
+<li>Change permission of bin and conf folder</li>
+</ul>
+<h1 id="toc_h1_17">chmod –R 750 bin conf</h1>
+<h3 id="toc_h3_18">3.3 System Settings Protection</h3>
+<p>In a default installation, users can override apache configuration using .htaccess. if you want to stop users changing your apache server settings, you can add <code>AllowOverride</code> to None as shown below.</p>
+<p>This must be done at the root level.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Go to $Web_Server/conf directory</li>
+<li>Open httpd.conf using vi</li>
+<li>Search for Directory at root level</li>
+</ul>
+<p>Options -Indexes<br>
+AllowOverride None</p>
+<ul>
+<li>Save the httpd.conf</li>
+<li>Restart Apache</li>
+</ul>
+<h3 id="toc_h3_19">3.4 HTTP Request Methods</h3>
+<p>HTTP 1.1 protocol support many request methods which may not be required and some of them are having potential risk.</p>
+<p>Typically you may just need GET, HEAD, POST request methods in a Web application, which can be configured in the respective Directory directive.</p>
+<p>Default apache configuration support OPTIONS, GET, HEAD, POST, PUT, DELETE, TRACE, CONNECT method in HTTP 1.1 protocol.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Go to $Web_Server/conf directory</li>
+<li>Open httpd.conf using vi</li>
+<li>Search for Directory and add following</li>
+</ul>
+<p>deny from all</p>
+<ul>
+<li>Restart Apache</li>
+</ul>
+<h2 id="toc_h2_20">4. Web Application Security</h2>
+<p>Apache Web server misconfiguration or not hardened properly can exploit Web application. It’s critical to harden your Web server configuration.</p>
+<h3 id="toc_h3_21">4.1 Cookies</h3>
+<h3 id="toc_h3_22">4.1.1 Disable Trace HTTP Request</h3>
+<p>By default Trace method is enabled in Apache Web server.</p>
+<p>Having this enabled can allow Cross Site Tracing attack and potentially giving an option to a hacker to steal cookie information. Let’s see how it looks like in default configuration.</p>
+<ul>
+<li>Do a telnet Web server IP with listening port</li>
+<li>Make a TRACE request as shown below</li>
+</ul>
+<p>#telnet localhost 80<br>
+Trying 127.0.0.1...<br>
+Connected to localhost.<br>
+Escape character is '^]'.<br>
+<strong>TRACE / HTTP/1.1 Host: test</strong><br>
+HTTP/1.1 200 OK<br>
+Date: Sat, 31 Aug 2013 02:13:24 GMT<br>
+Server: Apache<br>
+Transfer-Encoding: chunked<br>
+Content-Type: message/http 20<br>
+TRACE / HTTP/1.1<br>
+Host: test<br>
+0<br>
+Connection closed by foreign host.#</p>
+<p>As you could see in above TRACE request, it has responded my query. Let’s disable it and test it.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Go to $Web_Server/conf directory</li>
+<li>Add the following directive and save the httpd.conf</li>
+</ul>
+<p><strong>TraceEnable off</strong></p>
+<ul>
+<li>Restart apache</li>
+</ul>
+<p><strong>Verification</strong></p>
+<ul>
+<li>Do a telnet Web server IP with listen port and make a TRACE request as shown below</li>
+</ul>
+<p>#telnet localhost 80<br>
+Trying 127.0.0.1...<br>
+Connected to localhost.<br>
+Escape character is '^]'.<br>
+TRACE / HTTP/1.1 Host: test<br>
+HTTP/1.1 405 Method Not Allowed<br>
+Date: Sat, 31 Aug 2013 02:18:27 GMT<br>
+Server: Apache Allow:Content-Length: 223Content-Type: text/html; charset=iso-8859-1<br>
+405 Method Not Allowed<br>
+Method Not Allowed<br>
+The requested method TRACE is not allowed for the URL /.<br>
+Connection closed by foreign host.#</p>
+<p>As you could see in above TRACE request, it has blocked my request with <strong>HTTP 405 Method Not Allowed</strong>.</p>
+<p>Now, this Web server doesn’t allow TRACE request and help in blocking Cross Site Tracing attack.</p>
+<h3 id="toc_h3_23">4.1.2 Set cookie with HttpOnly and Secure flag</h3>
+<p>You can mitigate most of the common Cross Site Scripting attack using HttpOnly and Secure flag in a cookie. Without having HttpOnly and Secure, it is possible to steal or manipulate Web application session and cookies and it’s dangerous.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Ensure mod_headers.so is enabled in your httpd.conf</li>
+<li>Go to $Web_Server/conf directory</li>
+<li>Add the following directive and save the httpd.conf</li>
+</ul>
+<p>Header edit Set-Cookie ^(.*)$ $1;HttpOnly;Secure</p>
+<ul>
+<li>Restart apache</li>
+</ul>
+<h3 id="toc_h3_24">4.2 Clickjacking Attack</h3>
+<p>Clickjacking is well-known Web application vulnerabilities.</p>
+<p><strong>Implementation:</strong></p>
+<ul>
+<li>Ensure mod_headers.so is enabled in your httpd.conf</li>
+<li>Go to $Web_Server/conf directory</li>
+<li>Add the following directive and save the httpd.conf</li>
+</ul>
+<p>Header always append X-Frame-Options SAMEORIGIN</p>
+<ul>
+<li>Restart apache</li>
+</ul>
+<p><strong>Verification</strong></p>
+<p><img src="https://geekflare.com/wp-content/uploads/2015/02/apache-x-frame-options.png" alt=""></p>
+<p>X-Frame-Options also support two more options which I explained <a href="https://geekflare.com/secure-apache-from-clickjacking-with-x-frame-options/" target="_blank">here</a>.</p>
+<h3 id="toc_h3_25">4.3 Server Side Include</h3>
+<p>Server Side Include (SSI) has a risk of increasing the load on the server. If you have shared the environment and heavy traffic Web applications you should consider disabling SSI by adding Includes in Options directive.</p>
+<p>SSI attack allows the exploitation of a Web application by injecting scripts in HTML pages or executing codes remotely.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Go to $Web_Server/conf directory</li>
+<li>Open httpd.conf using vi</li>
+<li>Search for Directory and add Includes in Options directive</li>
+</ul>
+<p>Options –Indexes -<strong>Includes</strong><br>
+Order allow,denyAllow from all</p>
+<ul>
+<li>Restart Apache</li>
+</ul>
+<p><strong>Note:</strong> if you have multiple Directory directives in your environment, you should consider doing the same for all.</p>
+<h3 id="toc_h3_26">4.4 X-XSS Protection</h3>
+<p>Cross Site Scripting (XSS) protection can be bypassed in many browsers. You can apply this protection for a Web application if it was disabled by the user. This is used by a majority of giant Web companies like Facebook, Twitter, Google, etc.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Go to $Web_Server/conf directory</li>
+<li>Open httpd.conf using vi and add following Header directive</li>
+</ul>
+<p>Header set X-XSS-Protection "1; mode=block"</p>
+<ul>
+<li>Restart Apache</li>
+</ul>
+<p><strong>Verification</strong></p>
+<p>As you can see, XSS-Protection is the injected in the response header.</p>
+<p><img src="https://geekflare.com/wp-content/uploads/2015/02/apache-xss.png" alt=""></p>
+<h3 id="toc_h3_27">4.5 Disable HTTP 1.0 Protocol</h3>
+<p>When we talk about security, we should protect as much we can. So why do we use older HTTP version of the protocol, let’s disable them as well?</p>
+<p>HTTP 1.0 has security weakness related to session hijacking. We can disable this by using the mod_rewrite module.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Ensure to load mod_rewrite module in httpd.conf file</li>
+<li>Enable RewriteEngine directive as following and add Rewrite condition to allow only HTTP 1.1</li>
+</ul>
+<p>RewriteEngine On<br>
+RewriteCond % {THE_REQUEST} !HTTP/1.1$<br>
+RewriteRule .* - [F]</p>
+<h3 id="toc_h3_28">4.6 Timeout value configuration</h3>
+<p>By default Apache time-out value is 300 seconds, which can be a victim of Slow Loris attack and DoS. To mitigate this you can lower the timeout value to maybe 60 seconds.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Go to $Web_Server/conf directory</li>
+<li>Open httpd.conf using vi</li>
+<li>Add following in httpd.conf</li>
+</ul>
+<p>Timeout 60</p>
+<h2 id="toc_h2_29">5. SSL</h2>
+<p>Having SSL is an additional layer of security you are adding into Web Application. However, default SSL configuration leads to certain vulnerabilities and you should consider tweaking those configurations.</p>
+<h3 id="toc_h3_30">5.1 SSL Key</h3>
+<p>Breaching SSL key is hard, but not impossible. It’s just matter of computational power and time.</p>
+<p>As you might know, using a 2009-era PC cracking away for around 73 days you can <a href="http://www.ticalc.org/archives/news/articles/14/145/145154.html" target="_blank">reverse engineer a 512-bit key</a>.</p>
+<p>So the higher key length you have, the more complicated it becomes to break SSL key. The majority of giant Web Companies use 2048 bit key, as below so why don’t we?</p>
+<ul>
+<li>Outlook.com</li>
+<li>Microsoft.com</li>
+<li>Live.com</li>
+<li>Skype.com</li>
+<li>Apple.com</li>
+<li>Yahoo.com</li>
+<li>Bing.com</li>
+<li>Hotmail.com</li>
+<li>Twitter.com</li>
+</ul>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>You can use openssl to generate CSR with 2048 bit as below.</li>
+</ul>
+<p>openssl req -out geekflare.csr -newkey rsa:2048 -nodes -keyout geekflare.key</p>
+<p>It will generate a CSR which you will need to send to a <a href="https://namecheap.pxf.io/c/245992/386170/5618?u=https%3A%2F%2Fwww.namecheap.com%2Fsecurity%2Fssl-certificates.aspx" target="_blank">certificate authority</a> to sign it. Once you receive the signed certificate file, you can add them in httpd-ssl.conf file</p>
+<p>SSLCertificateFile #Certificate signed by authority<br>
+SSLCertificateChainFile #Certificate signer given by authority<br>
+SSLCertificateKeyFile #Key file which you generated above</p>
+<ul>
+<li>Restart Apache Web server and try to access the URL with https</li>
+</ul>
+<h3 id="toc_h3_31">5.2 SSL Cipher</h3>
+<p>SSL Cipher is an encryption algorithm, which is used as a key between two computers over the Internet. Data encryption is the process of converting plain text into secret ciphered codes.</p>
+<p>It’s based on your Web server SSL Cipher configuration the data encryption will take place.</p>
+<p>So it’s important to configure SSL Cipher, which is stronger and not vulnerable.</p>
+<p><strong>Implementation:</strong></p>
+<ul>
+<li>Go to $Web_Server/conf/extra folder</li>
+<li>Modify <code>SSLCipherSuite</code> directive in httpd-ssl.conf as below to accept only higher encryption algorithms</li>
+</ul>
+<p>SSLCipherSuite HIGH:!MEDIUM:!aNULL:!MD5:!RC4</p>
+<ul>
+<li>Save the configuration file and restart apache server</li>
+</ul>
+<p><strong>Note:</strong> if you have many weak ciphers in your SSL auditing report, you can quickly reject them adding <code>!</code> at beginning.</p>
+<h3 id="toc_h3_32">5.3 Disable SSL v2 &amp; v3</h3>
+<p>SSL v2 &amp; v3 has many security flaws, and if you are working towards penetration test or PCI compliance, then you are expected to close security finding to disable SSL v2/v3.</p>
+<p>Any SSL v2/v3 communication may be vulnerable to a Man-in-The-Middle attack that could allow data tampering or disclosure.</p>
+<p>Let’s implement apache Web server to accept only latest TLS and reject SSL v2/v3 connection request.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Go to $Web_Server/conf/extra folder</li>
+<li>Modify SSLProtocol directive in httpd-ssl.conf as below to accept only TLS 1.2+</li>
+</ul>
+<p>SSLProtocol –ALL +TLSv1.2</p>
+<p>Once you are done with SSL configuration, it’s a good idea to test your Web application with <a href="https://geekflare.com/ssl-test-certificate/" target="_blank">online SSL/TLS Certificate tool</a> to find any configuration error.</p>
+<h2 id="toc_h2_33">6. Mod Security</h2>
+<p>Mod Security is an open-source Web Application Firewall, which you can use with Apache.</p>
+<p>It comes as a module which you have to compile and install. If you can’t afford a commercial Web application firewall, this would be a good choice to go for it.</p>
+<p>In order to provide generic Web applications protection, the Core Rules use the following techniques:</p>
+<ul>
+<li><strong>HTTP Protection</strong> – detecting violations of the HTTP protocol and a locally defined usage policy</li>
+<li><strong>Real-time Blacklist Lookups</strong> – utilizes 3rd Party IP Reputation</li>
+<li><strong>Web-based Malware Detection</strong> – identifies malicious Web content by check against the Google Safe Browsing API.</li>
+<li><strong>HTTP Denial of Service Protections</strong> – defense against HTTP Flooding and Slow HTTP DoS Attacks.</li>
+<li><strong>Common Web Attacks Protection</strong> – detecting common Web application security attack</li>
+<li><strong>Automation Detection</strong> – Detecting bots, crawlers, scanners, and another malicious surface activity</li>
+<li><strong>Integration with AV Scanning for File Uploads</strong> – identifies malicious files uploaded through the Web application.</li>
+<li><strong>Tracking Sensitive Data</strong> – Tracks Credit Card usage and blocks leakages.</li>
+<li><strong>Trojan Protection</strong> – Detecting access to Trojans horses.</li>
+<li><strong>Identification of Application Defects</strong> – alerts on application misconfigurations.</li>
+<li><strong>Error Detection and Hiding</strong> – Disguising error messages sent by the server.</li>
+</ul>
+<h3 id="toc_h3_34">6.1 Download &amp; Installation</h3>
+<p>Following prerequisites must be installed on the server where you wish to use Mod Security with Apache. If any one of these doesn’t exist then Mod Security compilation will fail. You may use yum install on Linux or CentOS to install these packages.</p>
+<ul>
+<li>apache 2.x or higher</li>
+<li>libpcre package</li>
+<li>libxml2 package</li>
+<li>liblua package</li>
+<li>libcurl package</li>
+<li>libapr and libapr-util package</li>
+<li>mod_unique_id module bundled with Apache Web server</li>
+</ul>
+<p>Now, let’s download the latest stable version of Mod Security 2.7.5 from <a href="https://www.modsecurity.org/download.html" target="_blank">here</a></p>
+<ul>
+<li>Transfer downloaded file to /opt/apache</li>
+<li>Extract modsecurity-apache_2.7.5.tar.gz</li>
+</ul>
+<h1 id="toc_h1_35">gunzip –c modsecurity-apache_2.7.5.tar.gz | tar xvf –</h1>
+<ul>
+<li>Go to extracted folder modsecurity-apache_2.7.5</li>
+</ul>
+<h1 id="toc_h1_36">cd modsecurity-apache_2.7.5</h1>
+<ul>
+<li>Run the configure script including apxs path to existing Apache</li>
+</ul>
+<h1 id="toc_h1_37">./configure –with-apxs=/opt/apache/bin/apxs</h1>
+<ul>
+<li>Compile &amp; install with make script</li>
+</ul>
+<h1 id="toc_h1_38">make</h1>
+<h1 id="toc_h1_39">make install</h1>
+<ul>
+<li>Once installation is done, you would see <strong>mod_security2.so</strong> in modules folder under /opt/apache</li>
+</ul>
+<p>Now this concludes, you have installed Mod Security module in existing Apache Web server.</p>
+<h3 id="toc_h3_40">6.2 Configuration</h3>
+<p>In order to use Mod security feature with Apache, we have to load mod security module in httpd.conf. <strong>The mod_unique_id</strong> module is pre-requisite for Mod Security.</p>
+<p>This module provides an environment variable with a unique identifier for each request, which is tracked and used by Mod Security.</p>
+<ul>
+<li>Add following a line to load module for Mod Security in httpd.conf and save the configuration file</li>
+</ul>
+<p>LoadModule unique_id_module modules/mod_unique_id.so<br>
+LoadModule security2_module modules/mod_security2.so</p>
+<ul>
+<li>Restart apache Web server</li>
+</ul>
+<p>Mod Security is now installed!</p>
+<p>Next thing you have to do is to install Mod Security core rule to take full advantage of its feature.</p>
+<p>Latest Core Rule can be downloaded from following a link, which is free.<a href="https://github.com/SpiderLabs/owasp-modsecurity-crs/zipball/master" target="_blank">https://github.com/SpiderLabs/owasp-modsecurity-crs/zipball/master</a></p>
+<ul>
+<li>Copy downloaded core rule zip to /opt/apache/conf folder</li>
+<li>Unzip core rule file</li>
+<li>You may wish to rename the folder to something short and easy to remember. In this example, I will rename to crs.</li>
+<li>Go to crs folder and rename <strong>modsecurity_crs10_setup.conf.example to modsecurity_crs10_setup.conf</strong></li>
+</ul>
+<p>Now, let’s enable these rules to get it working with Apache Web server.</p>
+<ul>
+<li>Add following in httpd.conf</li>
+</ul>
+<p>Include conf/crs/modsecurity_crs_10_setup.confInclude conf/crs/base_rules/*.conf</p>
+<p>In above configuration, we are loading Mod Security main configuration file <strong>modsecurity_crs_10_setup.conf</strong> and base rules **base_rules/*.conf **provided by Mod Security Core Rules to protect Web applications.</p>
+<ul>
+<li>Restart apache Web server</li>
+</ul>
+<p>You have successfully configured Mod Security with Apache!</p>
+<p><strong>Well done</strong>. Now, Apache Web server is protected by Mod Security Web application firewall.</p>
+<h3 id="toc_h3_41">6.3 Getting Started</h3>
+<p>Let’s get it started with some of the critical configurations in Mod Security to harden &amp; secure Web applications.</p>
+<p>In this section, we will do all configuration modification in <strong>/opt/apache/conf/crs/modsecurity_crs_10_setup.conf</strong>.</p>
+<p>We will refer **/opt/apache/conf/crs/modsecurity_crs_10_setup.conf **as <strong>setup.conf</strong> in this section for example purpose.</p>
+<p>It’s important to understand what are the OWASP rules are provided for free. There are two types of rules provided by OWASP.</p>
+<p><strong>Base Rules</strong> – these rules are heavily tested, and probably false alarm ratio is less.</p>
+<p><strong>Experimental Rules</strong> – these rules are for an experimental purpose, and you may have the high false alarm. It’s important to configure, test and implement in UAT before using these in a production environment.</p>
+<p><strong>Optional Rules</strong> – these optional rules may not be suitable for the entire environment. Based on your requirement you may use them.</p>
+<p>If you are looking for CSRF, User tracking, Session hijacking, etc. protection then you may consider using optional rules. We have the base, optional and experimental rules after extracting the downloaded crs zip file from OWASP download page.</p>
+<p>These rules configuration file is available in crs/base_rules, crs/optional_rules and crs/experimental_rules folder. Let’s get familiar with some of the base rules.</p>
+<ul>
+<li>**modsecurity_crs_20_protocol_violations.conf:**This rule is protecting from Protocol vulnerabilities like response splitting, request smuggling, using non-allowed protocol (HTTP 1.0).</li>
+<li>**modsecurity_crs_21_protocol_anomalies.conf:**This is to protect from a request, which is missing with Host, Accept, User-Agent in the header.</li>
+<li>**modsecurity_crs_23_request_limits.conf:**This rule has the dependency on application specific like request size, upload size, a length of a parameter, etc.</li>
+<li>**modsecurity_crs_30_http_policy.conf:**This is to configure and protect allowed or disallowed method like CONNECT, TRACE, PUT, DELETE, etc.</li>
+<li>**modsecurity_crs_35_bad_robots.conf:**Detect malicious robots</li>
+<li>**modsecurity_crs_40_generic_attacks.conf:**This is to protect from OS command injection, remote file inclusion, etc.</li>
+<li>**modsecurity_crs_41_sql_injection_attacks.conf:**This rule to protect SQL and blind SQL inject request.</li>
+<li>**modsecurity_crs_41_xss_attacks.conf:**Protection from Cross-Site Scripting request.</li>
+<li>**modsecurity_crs_42_tight_security.conf:**Directory traversal detection and protection.</li>
+<li>**modsecurity_crs_45_trojans.conf:**This rule to detect generic file management output, uploading of HTTP backdoor page, known signature.</li>
+<li>**modsecurity_crs_47_common_exceptions.conf:**This is used as an exception mechanism to remove common false positives that may be encountered suck as Apache internal dummy connection, SSL pinger, etc.</li>
+</ul>
+<h3 id="toc_h3_42">6.3.1 Logging</h3>
+<p>Logging is one of the first things to configure so you can have logs created for what Mod Security is doing. There are two types of logging available; Debug &amp; Audit log.</p>
+<p><strong>Debug Log:</strong> this is to duplicate the Apache error, warning and notice messages from the error log.</p>
+<p><strong>Audit Log:</strong> this is to write the transaction logs that are marked by Mod Security rule Mod Security gives you the flexibility to configure Audit, Debug or both logging. By default configuration will write both logs. However, you can change based on your requirement. The log is controlled in SecDefaultAction directive. Let’s look at default logging configuration in setup.conf</p>
+<p>SecDefaultAction “phase:1,deny,log”</p>
+<p>To log Debug, Audit log – use “log” To log only audit log – use “nolog,auditlog”To log only debug log – use “log,noauditlog” You can specify the Audit Log location to be stored which is controlled by SecAuditLog directive.</p>
+<p>Let’s write audit log into /opt/apache/logs/modsec_audit.log by adding as shown below.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Add SecAuditLog directive in setup.conf and restart Apache Web Server</li>
+</ul>
+<p><strong>SecAuditLog /opt/apache/logs/modsec_audit.log</strong></p>
+<ul>
+<li>After the restart, you should see modsec_audit.log getting generated</li>
+</ul>
+<h3 id="toc_h3_43">6.3.2 Enable Rule Engine</h3>
+<p>By default Engine Rule is Off that means if you don’t enable Rule Engine you are not utilizing all the advantages of Mod Security.</p>
+<p>Rule Engine enabling or disabling is controlled by SecRuleEngine directive.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Add SecRuleEngine directive in setup.conf and restart Apache Web Server</li>
+</ul>
+<p>SecRuleEngine On</p>
+<p>There are three values for SecRuleEngine:</p>
+<ul>
+<li><strong>On</strong> – to enable Rule Engine</li>
+<li><strong>Off</strong> – to disable Rule Engine</li>
+<li><strong>DetectionOnly</strong> – enable Rule Engine but never executes any actions like block, deny, drop, allow, proxy or redirect</li>
+</ul>
+<p>Once Rule Engine is on – Mod Security is ready to protect with some of the common attack types.</p>
+<h3 id="toc_h3_44">6.3.3 Common Attack Type Protection</h3>
+<p>Now Web server is ready to protect with common attack types like XSS, SQL Injection, Protocol Violation, etc. as we have installed Core Rule and turned on Rule Engine. Let’s test few of them.</p>
+<p><strong>XSS Attack:-</strong></p>
+<ul>
+<li>Open Firefox and access your application and put  tag at the end or URL</li>
+<li>Monitor the modsec_audit.log in apache/logs folder</li>
+</ul>
+<p>You will notice Mod Security blocks request as it contains <script> tag which is the root of XSS attack.</p>
+<p><strong>Directory Traversal Attack:-</strong><br />
+Directory traversal attacks can create a lot of damage by taking advantage of this vulnerabilities and access system related file. Ex – /etc/passwd, .htaccess, etc.</p>
+<ul>
+<li>Open Firefox and access your application with directory traversal</li>
+<li>Monitor the modsec_audit.log in apache/logs folder</li>
+</ul>
+<pre><code class="language-fallback highlight-chroma">http://localhost/?../.../boot
+</code></pre>
+<ul>
+<li>You will notice Mod Security blocks request as it contains directory traversal.</li>
+</ul>
+<h3>6.3.4 Change Server Banner</h3>
+<p>Earlier in this guide, you learned how to remove Apache and OS type, version help of ServerTokens directive.</p>
+<p>Let’s go one step ahead, how about keeping server name whatever you wish? It’s possible with SecServerSignature directive in Mod Security. You see it’s interesting.</p>
+<p><strong>Note:</strong> to use Mod Security to manipulate Server Banner from a header, you must set ServerTokesn to Full in httpd.conf of Apache Web server.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Add SecServerSignature directive with your desired server name in setup.conf and restart Apache Web Server.</li>
+</ul>
+<p><strong>Ex:</strong></p>
+<p>[/opt/apache/conf/crs] #grep SecServer modsecurity_crs_10_setup.conf<br />
+SecServerSignature geekflare.com<br />
+[/opt/apache/conf/crs] #</p>
+<h2>7. General Configuration</h2>
+<p>We will talk about some of the general configuration as best practice.</p>
+<h3>7.1 Configure Listen</h3>
+<p>When you have multiple interface and IP’s on a single server, it’s recommended to have Listen directive configured with absolute IP and Port number.</p>
+<p>When you leave apache configuration to Listen on all IP’s with some port number, it may create the problem in forwarding HTTP request to some other Web server. This is quite common in the shared environment.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>Configure Listen directive in httpd.conf with absolute IP and port as shown example below</li>
+</ul>
+<p>Listen 10.10.10.1:80</p>
+<h3>7.2 Access Logging</h3>
+<p>It’s essential to configure access log properly in your Web server. Some of the important parameter to capture in the log would be the time taken to serve the request, SESSION ID.</p>
+<p>By default, Apache is not configured to capture these data. You got to configure them manually as follows.</p>
+<p><strong>Implementation</strong></p>
+<ul>
+<li>To capture time taken to serve the request and SESSION ID in access log</li>
+<li>Add **% T **&amp; <strong>% sessionID</strong> in httpd.conf under LogFormat directive</li>
+</ul>
+<p>LogFormat &quot;% h % l % u % t &quot;<strong>% {sessionID}C</strong>&quot; &quot;% r&quot; % &gt;s % b <strong>% T</strong>&quot; common</p>
+<p>You can refer <a href="https://httpd.apache.org/docs/2.2/mod/mod_log_config.html">http://httpd.apache.org/docs/2.2/mod/mod_log_config.html</a> for a complete list of parameter supported in LogFormat directive in Apache Web Server.</p>
+<h3>7.3 Disable Loading unwanted modules</h3>
+<p>If you have compiled and installed with all modules, then there are high chances you will have many modules loaded in Apache, which may not be required.</p>
+<p>Best practice is to configure Apache with required modules in your Web applications. Following modules have security concerns, and you might be interested in disabling in httpd.conf of Apache Web Server.</p>
+<p><strong>WebDAV</strong> (Web-based Distributed Authoring and Versioning) This module allows remote clients to manipulate files on the server and subject to various denial-of-service attacks. To disable comment following in httpd.conf</p>
+<p>#LoadModule dav_module modules/mod_dav.so<br />
+#LoadModule dav_fs_module modules/mod_dav_fs.so<br />
+#Include conf/extra/httpd-dav.conf</p>
+<p><strong>Info Module</strong> The mod_info module can leak sensitive information using .htaccess once this module is loaded. To disable comment following in httpd.conf</p>
+<p>#LoadModule info_module modules/mod_info.so</p>
+<p><strong>Reference:</strong> This wouldn’t be possible without guidance from the following link:</p>
+<ul>
+<li><a href="https://httpd.apache.org/docs/2.4/">http://httpd.apache.org/docs/2.4/</a></li>
+<li><a href="https://www.modsecurity.org/documentation.html">http://www.modsecurity.org/documentation/</a></li>
+<li><a href="https://www.owasp.org/index.php/Category:OWASP_ModSecurity_Core_Rule_Set_Project">https://www.owasp.org/index.php/Category:OWASP_ModSecurity_Core_Rule_Set_Project</a></li>
+</ul>
+<p>So that was some of the best practices you can use to secure your Apache Web server.</p>
+<p>If you are new to Apache HTTP, then I would recommend taking <a href="https://click.linksynergy.com/deeplink?id=jf7w44yEft4&amp;mid=39197&amp;murl=https%3A%2F%2Fwww.udemy.com%2Fapache-web-server-administration%2F">Apache HTTP administration course</a>.</p>
+<p>转自：<a href="https://geekflare.com/apache-web-server-hardening-security/">https://geekflare.com/apache-web-server-hardening-security/</a>，感谢原作者。</p>
+</script></p>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Apache">
+                            Apache</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E5%8A%A0%E5%AF%86%E5%AE%89%E5%85%A8">
+                            加密安全</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2018/09/30/1538314978887.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="Shadowsocks自定义PAC规则">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="Apache Web Server Hardening and Security Guide"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2018/10/04/1538621106899.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2018/10/09/1539064578164.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="How to Run Java Program Automatically on Tomcat Startup">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1538621106899"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+<ul class="article__toc">
+        <li class="toc__h2">
+            <a href="#toc_h2_0">1. Introduction</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_1">1.1 Audience</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_2">1.2 Notes</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_3">2. Information Leakage</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_4">2.1 Remove Server Version Banner</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_5">2.2 Disable directory browser listing</a>
+        </li>
+        <li class="toc__h1">
+            <a href="#toc_h1_6">mkdir test</a>
+        </li>
+        <li class="toc__h1">
+            <a href="#toc_h1_7">touch hi</a>
+        </li>
+        <li class="toc__h1">
+            <a href="#toc_h1_8">touch hello</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_9">2.3 Etag</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_10">3. Authorization</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_11">3.1 Run Apache from non-privileged account</a>
+        </li>
+        <li class="toc__h1">
+            <a href="#toc_h1_12">groupadd apache</a>
+        </li>
+        <li class="toc__h1">
+            <a href="#toc_h1_13">useradd –G apache apache</a>
+        </li>
+        <li class="toc__h1">
+            <a href="#toc_h1_14">chown –R apache:apache /opt/apache</a>
+        </li>
+        <li class="toc__h1">
+            <a href="#toc_h1_15">ps –ef |grep http</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_16">3.2 Protect binary and configuration directory permission</a>
+        </li>
+        <li class="toc__h1">
+            <a href="#toc_h1_17">chmod –R 750 bin conf</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_18">3.3 System Settings Protection</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_19">3.4 HTTP Request Methods</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_20">4. Web Application Security</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_21">4.1 Cookies</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_22">4.1.1 Disable Trace HTTP Request</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_23">4.1.2 Set cookie with HttpOnly and Secure flag</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_24">4.2 Clickjacking Attack</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_25">4.3 Server Side Include</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_26">4.4 X-XSS Protection</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_27">4.5 Disable HTTP 1.0 Protocol</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_28">4.6 Timeout value configuration</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_29">5. SSL</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_30">5.1 SSL Key</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_31">5.2 SSL Cipher</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_32">5.3 Disable SSL v2 & v3</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_33">6. Mod Security</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_34">6.1 Download & Installation</a>
+        </li>
+        <li class="toc__h1">
+            <a href="#toc_h1_35">gunzip –c modsecurity-apache_2.7.5.tar.gz | tar xvf –</a>
+        </li>
+        <li class="toc__h1">
+            <a href="#toc_h1_36">cd modsecurity-apache_2.7.5</a>
+        </li>
+        <li class="toc__h1">
+            <a href="#toc_h1_37">./configure –with-apxs=/opt/apache/bin/apxs</a>
+        </li>
+        <li class="toc__h1">
+            <a href="#toc_h1_38">make</a>
+        </li>
+        <li class="toc__h1">
+            <a href="#toc_h1_39">make install</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_40">6.2 Configuration</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_41">6.3 Getting Started</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_42">6.3.1 Logging</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_43">6.3.2 Enable Rule Engine</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_44">6.3.3 Common Attack Type Protection</a>
+        </li>
+</ul></aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1538621106899",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1538621106899",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("Apache,加密安全", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1538621106899', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 32ms, 2020/11/29 22:19:06 -->

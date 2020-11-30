@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>NoteExpress 实现文献检索、下载、管理、Word参考文献自动引用 - 随心笔客</title><meta name="description" content="NoteExpress 是一款通用参考文献管理软件， 是管理和使用参考文献资料和信息的首要选择。 对于大多数使用 NoteExpress 的用户来说，使用 NoteExpress 管理文献的主要目的便是文章撰写。NoteExpress 内置了多种国内外学术期刊、学位论文和国标的格式规范，通过 NoteExpress 插入文献，然后选择需要的格式进行格式化，可以快速自动地生成参考文献。"/><meta property="og:description" content="NoteExpress 是一款通用参考文献管理软件， 是管理和使用参考文献资料和信息的首要选择。 对于大多数使用 NoteExpress 的用户来说，使用 NoteExpress 管理文献的主要目的便是文章撰写。NoteExpress 内置了多种国内外学术期刊、学位论文和国标的格式规范，通过 NoteExpress 插入文献，然后选择需要的格式进行格式化，可以快速自动地生成参考文献。"/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="NoteExpress 实现文献检索、下载、管理、Word参考文献自动引用 - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2019/10/09/1570595442064.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="NoteExpress 实现文献检索、下载、管理、Word参考文献自动引用 - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2019/10/09/1570595442064.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title="Chrome 67版本后无法拖拽离线安装crx扩展插件的解决办法" href="https://zxniuniu.github.io/articles/2019/08/12/1565575993052.html">
+            <link rel="next" title="无限空间相册管理软件 - 一刻相册" href="https://zxniuniu.github.io/articles/2019/10/10/1570675261608.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2019/10/09/1570595442064.html">
+                            NoteExpress 实现文献检索、下载、管理、Word参考文献自动引用
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2019-10-15
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2019/10/09/1570595442064.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1570595442064">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2019/10/09/1570595442064.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <p>NoteExpress 是一款通用参考文献管理软件， 具有更高的管理效率， 更好地兼容中文， 更容易上手， 而且具有一些独特的创新功能以及丰富的辅助资源， 是管理和使用参考文献资料和信息的首要选择。<br>
+最近我家那位在职论文撰写过程中需要用到文献管理，所以就把这个还是在本科及研究生时使用的好用的软件拿出来用了下，感觉是越来越好用啊，效率反正是提高了不少，你唯一需要关心的就是检索资料，以及记录需要引用的文献就可以了，参考文献生成那简直太方便了。</p>
+<h3 id="toc_h3_0">NoteExpress 核心功能</h3>
+<ul>
+<li>
+<p><strong>数据收集</strong>：通过插件保存题录和全文到 NoteExpress，可以快速下载大量题录（文摘）及全文</p>
+</li>
+<li>
+<p><strong>文献管理</strong>：分类管理电子文献题录以及全文——海量数据、井然有序</p>
+</li>
+<li>
+<p><strong>结果分析</strong>：对检索结果进行多种统计分析——有的放矢，事半功倍</p>
+</li>
+<li>
+<p><strong>主动发现</strong>：综述阅读方式，快速发现有价值文献，与文献相互关联的笔记功能可以让您随时记录思想火花</p>
+</li>
+<li>
+<p><strong>高效写作</strong>：支持 Word 和 WPS，自动生成符合要求的参考文献索引，繁琐工作，一键完成</p>
+</li>
+</ul>
+<h3 id="toc_h3_1">下载安装</h3>
+<p>目前最新的版本为 3.2 版本，你可以直接 Google 下载或前往以下链接下载。</p>
+<ul>
+<li><a href="http://www.inoteexpress.com/wiki/index.php" target="_blank">官网介绍</a></li>
+<li><a href="https://www.lanzous.com/i6nt80b" target="_blank">集团用户版下载</a></li>
+</ul>
+<p>下载安装可参见以详细教程: <a href="https://zhuanlan.zhihu.com/p/24909375" target="_blank">文献检索与管理 | NoteExpress 下载和安装教程</a></p>
+<p><img src="https://img.hacpai.com/file/2019/10/image-bd25b6c3.png?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="image.png"></p>
+<h3 id="toc_h3_2">知网检索导入</h3>
+<h4 id="toc_h4_3">1、在中国知网以关键词“GLP-1”并含“糖尿病”进行检索，结果如下。</h4>
+<p><img src="https://img.hacpai.com/file/2019/10/v2dc15f1694a8b521bfcf1c73813e3c78dhd-e84aa387.jpg?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="v2dc15f1694a8b521bfcf1c73813e3c78dhd.jpg"></p>
+<h4 id="toc_h4_4">2、点击“题名”字样前的小方框，选中检索到的文献。待需要选中的文献题目前的方框均出现对勾“√”，点击“导出/参考文献”。</h4>
+<p><img src="https://img.hacpai.com/file/2019/10/v21cb817dad075d73d475d162a2cb43c40hd-b8958180.jpg?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="v21cb817dad075d73d475d162a2cb43c40hd.jpg"></p>
+<h4 id="toc_h4_5">3、在新弹出的页面中，点击“NoteExpress”后，点击“导出”。</h4>
+<p><img src="https://img.hacpai.com/file/2019/10/v2c1b84b090eabc20c78d111cf2f3ba06dhd-7e7df10d.jpg?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="v2c1b84b090eabc20c78d111cf2f3ba06dhd.jpg"></p>
+<h4 id="toc_h4_6">4、在 NoteExpress 中【文件】→【导入题录】，选择刚才下载的文件后，选择好过滤器，确定即可。</h4>
+<p><img src="https://img.hacpai.com/file/2019/10/20191009113441-f19d19f8.jpg?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="20191009113441.jpg"></p>
+<p>更多格式可参见详细教程: <a href="https://zhuanlan.zhihu.com/p/25072525" target="_blank">NoteExpress 教程 | 文献检索和导出</a></p>
+<h3 id="toc_h3_7">使用 NoteExpress 网络捕手插件</h3>
+<p>NoteExpress 网络捕手是支持 Chrome 浏览器及 Chromium 内核浏览器的插件程序，可以将网页上的内容一键保存到 NoteExpress 当前数据库的任意指定目录，辅助用户高效收集资料。</p>
+<h4 id="toc_h4_8">1、在 Chrome 应用商店中搜索“NoteExpress 网络捕手”或 <a href="https://chrome.google.com/webstore/detail/noteexpress%E7%BD%91%E7%BB%9C%E6%8D%95%E6%89%8B/ljbhddngkkppbbkknjldoikonnolgafd?utm_source=chrome-ntp-icon" target="_blank">点击此处</a>跳转，并点击右侧的“添加至 Chrome”即可。</h4>
+<p><img src="https://img.hacpai.com/file/2019/10/800px%E6%8F%92%E4%BB%B6%E5%9B%BE%E7%89%871-1adbc556.png?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="800px 插件图片 1.png"></p>
+<h4 id="toc_h4_9">2、安装教程可参见 <a href="http://www.inoteexpress.com/wiki/index.php/NoteExpress%E7%BD%91%E7%BB%9C%E6%8D%95%E6%89%8B%E5%AE%89%E8%A3%85%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E" target="_blank">NoteExpress 网络捕手安装使用说明</a></h4>
+<h4 id="toc_h4_10">3、与本地 NoteExpress 程序配合使用</h4>
+<p>NoteExpress 网络捕手必须配合本地 NoteExpress 程序一起使用，如果本地的 NoteExpress 程序没有启动，点击插件时会启动本地 NoteExpress 程序。这类操作需要用户授权才能执行。如果您遇到如下的提示，请先勾选“记住我对此类链接的选择”，然后点击“启动应用”，本次 NoteExpress 程序启动后，再次点击浏览器插件，即可正常使用。</p>
+<p><img src="https://img.hacpai.com/file/2019/10/800px%E6%8F%92%E4%BB%B6%E5%9B%BE%E7%89%8711-cd5b4f51.png?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="800px 插件图片 11.png"></p>
+<h3 id="toc_h3_11">直接使用 NoteExpress 检索</h3>
+<p>NE 集成了绝大部分常用的数据库，不用登陆到数据库页面，利用 NE 集成的在线检索作为网关即可检索获取题录信息。</p>
+<h4 id="toc_h4_12">1、选择需要检索的数据库，在打开的界面中选择字段进行检索</h4>
+<p><img src="https://img.hacpai.com/file/2019/10/%E5%9C%A8%E7%BA%BF%E6%A3%80%E7%B4%A2%E9%80%89%E6%8B%A9%E6%95%B0%E6%8D%AE%E5%BA%93-b2f6dc4c.png?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="在线检索选择数据库.png"></p>
+<h4 id="toc_h4_13">2、输入检索词取回检索结果后，勾选所需要的题录。可以使用批量获取功能，一次性将检索题录全部导入软件</h4>
+<p><img src="https://img.hacpai.com/file/2019/10/%E5%9C%A8%E7%BA%BF%E6%A3%80%E7%B4%A2%E6%89%B9%E9%87%8F%E8%8E%B7%E5%8F%96-1a550dcb.png?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="在线检索批量获取.png"></p>
+<h4 id="toc_h4_14">3、将获取题录导入软件进行查看</h4>
+<p><img src="https://img.hacpai.com/file/2019/10/%E5%9C%A8%E7%BA%BF%E6%A3%80%E7%B4%A2%E5%AF%BC%E5%85%A5-34b03d9e.png?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="在线检索导入.png"></p>
+<h3 id="toc_h3_15">Word 插入参考文献</h3>
+<p>在 NoteExpress 中选中需要插入的参考文献题录，然后在 Word 中需要引用文献的位置选择“插入引文”按钮，该参考文献即可插入 Word 文档，且在文档最后自动生成参考文献列表。</p>
+<p>或者在 NoteExpress 中选中需要插入的文献题录，点击“引用”按钮即可跳转到 Word 光标处并插入文献。</p>
+<p><img src="https://img.hacpai.com/file/2019/10/word-f8297134.jpg?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="word.jpg"></p>
+<p>当然，NoteExpress 插件样式选项可更改不同的文献样式格式。</p>
+<p><img src="https://img.hacpai.com/file/2019/10/format-1b05aebb.jpg?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="format.jpg"></p>
+<h3 id="toc_h3_16">总结</h3>
+<p>对于大多数使用 NoteExpress 的用户来说，使用 NoteExpress 管理文献的主要目的便是文章撰写。NoteExpress 内置了多种国内外学术期刊、学位论文和国标的格式规范，通过 NoteExpress 插入文献，然后选择需要的格式进行格式化，可以<strong>快速自动地生成参考文献</strong>。</p>
+<p>这样在写文章/论文的过程中，用户便可以从手工编辑与管理文献的繁重工作中解脱出来。而且可以根据需要随时调整参考文献的格式。当然如果 NoteExpress 没有需要的文献格式，也可以非常方便地编辑自己需要的格式。</p>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E5%B7%A5%E5%85%B7">
+                            工具</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96">
+                            性能优化</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2019/08/12/1565575993052.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="Chrome 67版本后无法拖拽离线安装crx扩展插件的解决办法">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="NoteExpress 实现文献检索、下载、管理、Word参考文献自动引用"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2019/10/09/1570595442064.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2019/10/10/1570675261608.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="无限空间相册管理软件 - 一刻相册">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1570595442064"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+<ul class="article__toc">
+        <li class="toc__h3">
+            <a href="#toc_h3_0">NoteExpress 核心功能</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_1">下载安装</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_2">知网检索导入</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_3">1、在中国知网以关键词“GLP-1”并含“糖尿病”进行检索，结果如下。</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_4">2、点击“题名”字样前的小方框，选中检索到的文献。待需要选中的文献题目前的方框均出现对勾“√”，点击“导出/参考文献”。</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_5">3、在新弹出的页面中，点击“NoteExpress”后，点击“导出”。</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_6">4、在 NoteExpress 中【文件】→【导入题录】，选择刚才下载的文件后，选择好过滤器，确定即可。</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_7">使用 NoteExpress 网络捕手插件</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_8">1、在 Chrome 应用商店中搜索“NoteExpress 网络捕手”或 点击此处跳转，并点击右侧的“添加至 Chrome”即可。</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_9">2、安装教程可参见 NoteExpress 网络捕手安装使用说明</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_10">3、与本地 NoteExpress 程序配合使用</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_11">直接使用 NoteExpress 检索</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_12">1、选择需要检索的数据库，在打开的界面中选择字段进行检索</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_13">2、输入检索词取回检索结果后，勾选所需要的题录。可以使用批量获取功能，一次性将检索题录全部导入软件</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_14">3、将获取题录导入软件进行查看</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_15">Word 插入参考文献</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_16">总结</a>
+        </li>
+</ul></aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1570595442064",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1570595442064",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("工具,性能优化", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1570595442064', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 32ms, 2020/11/29 22:19:04 -->

@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>App爬虫神器Mitmproxy和Mitmdump的使用 - 随心笔客</title><meta name="description" content="mitmproxy 是一个支持 HTTP 和 HTTPS 的抓包程序，有类似 Fiddler、Charles 的功能，只不过它是一个控制台的形式操作。 mitmproxy 还有两个关联组件。一个是 mitmdump，它是 mitmproxy 的命令行接口，利用它我们可以对接 Python 脚本，用 Python 实现监听后的处理。另一个是 mitmweb，它是一个 Web 程序，通过它我们可以清楚观察 mitmproxy 捕获的请求。"/><meta property="og:description" content="mitmproxy 是一个支持 HTTP 和 HTTPS 的抓包程序，有类似 Fiddler、Charles 的功能，只不过它是一个控制台的形式操作。 mitmproxy 还有两个关联组件。一个是 mitmdump，它是 mitmproxy 的命令行接口，利用它我们可以对接 Python 脚本，用 Python 实现监听后的处理。另一个是 mitmweb，它是一个 Web 程序，通过它我们可以清楚观察 mitmproxy 捕获的请求。"/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="App爬虫神器Mitmproxy和Mitmdump的使用 - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2018/10/12/1539357030798.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="App爬虫神器Mitmproxy和Mitmdump的使用 - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2018/10/12/1539357030798.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title="如何突破网站对Selenium的屏蔽" href="https://zxniuniu.github.io/articles/2018/10/12/1539355419624.html">
+            <link rel="next" title="Javascript Injection With Selenium, Puppeteer, And Marionette In Chrome And Firefox" href="https://zxniuniu.github.io/articles/2018/10/12/1539357955729.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2018/10/12/1539357030798.html">
+                            App爬虫神器Mitmproxy和Mitmdump的使用
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2019-10-15
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2018/10/12/1539357030798.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1539357030798">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2018/10/12/1539357030798.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <p>mitmproxy 是一个支持 HTTP 和 HTTPS 的抓包程序，有类似 Fiddler、Charles 的功能，只不过它是一个控制台的形式操作。</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/a6db804fdf3d4ceeb4d097256b1a002b_timg1.jpg" alt="timg1jpg"></p>
+<p>mitmproxy 还有两个关联组件。一个是 mitmdump，它是 mitmproxy 的命令行接口，利用它我们可以对接 Python 脚本，用 Python 实现监听后的处理。另一个是 mitmweb，它是一个 Web 程序，通过它我们可以清楚观察 mitmproxy 捕获的请求。</p>
+<p>下面我们来了解它们的用法。</p>
+<p>一、准备工作</p>
+<p>请确保已经正确安装好了 mitmproxy，并且手机和 PC 处于同一个局域网下，同时配置好了 mitmproxy 的 CA 证书。</p>
+<p>二、mitmproxy 的功能</p>
+<p>mitmproxy 有如下几项功能。</p>
+<p><img src="https://yqfile.alicdn.com/d47e62d2b349aca45e42305ed6714efbe5ed61d9.png" alt="">拦截 HTTP 和 HTTPS 请求和响应。<br>
+<img src="https://yqfile.alicdn.com/d47e62d2b349aca45e42305ed6714efbe5ed61d9.png" alt="">保存 HTTP 会话并进行分析。<br>
+<img src="https://yqfile.alicdn.com/d47e62d2b349aca45e42305ed6714efbe5ed61d9.png" alt="">模拟客户端发起请求，模拟服务端返回响应。<br>
+<img src="https://yqfile.alicdn.com/d47e62d2b349aca45e42305ed6714efbe5ed61d9.png" alt="">利用反向代理将流量转发给指定的服务器。<br>
+<img src="https://yqfile.alicdn.com/d47e62d2b349aca45e42305ed6714efbe5ed61d9.png" alt="">支持 Mac 和 Linux 上的透明代理。</p>
+<p><img src="https://yqfile.alicdn.com/d47e62d2b349aca45e42305ed6714efbe5ed61d9.png" alt="">利用 Python 对 HTTP 请求和响应进行实时处理。</p>
+<p>三、抓包原理</p>
+<p>和 Charles 一样，mitmproxy 运行于自己的 PC 上，mitmproxy 会在 PC 的 8080 端口运行，然后开启一个代理服务，这个服务实际上是一个 HTTP/HTTPS 的代理。</p>
+<p>手机和 PC 在同一个局域网内，设置代理为 mitmproxy 的代理地址，这样手机在访问互联网的时候流量数据包就会流经 mitmproxy，mitmproxy 再去转发这些数据包到真实的服务器，服务器返回数据包时再由 mitmproxy 转发回手机，这样 mitmproxy 就相当于起了中间人的作用，抓取到所有 Request 和 Response，另外这个过程还可以对接 mitmdump，抓取到的 Request 和 Response 的具体内容都可以直接用 Python 来处理，比如得到 Response 之后我们可以直接进行解析，然后存入数据库，这样就完成了数据的解析和存储过程。</p>
+<p>四、设置代理</p>
+<p>首先，我们需要运行 mitmproxy，命令如下所示：</p>
+<p>启动 mitmproxy 的命令如下：</p>
+<pre><code class="language-fallback highlight-chroma">mitmproxy
+</code></pre>
+<p>之后会在 8080 端口上运行一个代理服务，如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/f3334f432fb19ac2df5683edf0235bbf903692ab.png" alt=""></p>
+<p>右下角会出现当前正在监听的端口。</p>
+<p>或者启动 mitmdump，它也会监听 8080 端口，命令如下所示：</p>
+<pre><code class="language-fallback highlight-chroma">mitmdump
+</code></pre>
+<p>运行结果如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/ce5fee92a981bdfd1bc47b8f95d2763402c12f8b.png" alt=""></p>
+<p>将手机和 PC 连接在同一局域网下，设置代理为当前代理。首先看看 PC 的当前局域网 IP。</p>
+<p>Windows 上的命令如下所示：</p>
+<pre><code class="language-fallback highlight-chroma">ipconfig
+</code></pre>
+<p>Linux 和 Mac 上的命令如下所示：</p>
+<pre><code class="language-fallback highlight-chroma">ifconfig
+</code></pre>
+<p>输出结果如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/b8f5f9dea81cb653a6b2c7bc9b088b391a296119.png" alt=""></p>
+<p>一般类似 10.<em>.</em>.<em>或 172.16.</em>.*或 192.168.1.*这样的 IP 就是当前 PC 的局域网 IP，例如此图中 PC 的 IP 为 192.168.1.28，手机代理设置类似如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/3086a28d20e1fb6797bf5966399b8f3f49e3c6c3.png" alt=""></p>
+<p>这样我们就配置好了 mitmproxy 的的代理。</p>
+<p>五、mitmproxy 的使用</p>
+<p>确保 mitmproxy 正常运行，并且手机和 PC 处于同一个局域网内，设置了 mitmproxy 的代理，具体的配置方法可以参考官方文档。</p>
+<p>运行 mitmproxy，命令如下所示：</p>
+<pre><code class="language-fallback highlight-chroma">mitmproxy
+</code></pre>
+<p>设置成功之后，我们只需要在手机浏览器上访问任意的网页或浏览任意的 App 即可。例如在手机上打开百度，mitmproxy 页面便会呈现出手机上的所有请求，如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/1ebc2419cde41bf5f92fd621f34efcd8998305ad.png" alt=""></p>
+<p>这就相当于之前我们在浏览器开发者工具监听到的浏览器请求，在这里我们借助于 mitmproxy 完成。Charles 完全也可以做到。</p>
+<p>这里是刚才手机打开百度页面时的所有请求列表，左下角显示的 2/38 代表一共发生了 38 个请求，当前箭头所指的是第二个请求。</p>
+<p>每个请求开头都有一个 GET 或 POST，这是各个请求的请求方式。紧接的是请求的 URL。第二行开头的数字就是请求对应的响应状态码，后面是响应内容的类型，如 text/html 代表网页文档、image/gif 代表图片。再往后是响应体的大小和响应的时间。</p>
+<p>当前呈现了所有请求和响应的概览，我们可以通过这个页面观察到所有的请求。</p>
+<p>如果想查看某个请求的详情，我们可以敲击回车，进入请求的详情页面，如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/d06e2a2c71b273cd4d3e38d42bd717a67095e9e6.png" alt=""></p>
+<p>可以看到 Headers 的详细信息，如 Host、Cookies、User-Agent 等。</p>
+<p>最上方是一个 Request、Response、Detail 的列表，当前处在 Request 这个选项上。这时我们再点击 TAB 键，即可查看这个请求对应的响应详情，如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/48363d4149d23f970b2f9e6493d99f5d3a3f02f5.png" alt=""></p>
+<p>最上面是响应头的信息，下拉之后我们可以看到响应体的信息。针对当前请求，响应体就是网页的源代码。</p>
+<p>这时再敲击 TAB 键，切换到最后一个选项卡 Detail，即可看到当前请求的详细信息，如服务器的 IP 和端口、HTTP 协议版本、客户端的 IP 和端口等，如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/af1a75f058f13fd3156b854c411b36c4098bb16f.png" alt=""></p>
+<p>mitmproxy 还提供了命令行式的编辑功能，我们可以在此页面中重新编辑请求。敲击 e 键即可进入编辑功能，这时它会询问你要编辑哪部分内容，如 Cookies、Query、URL 等，每个选项的第一个字母会高亮显示。敲击要编辑内容名称的首字母即可进入该内容的编辑页面，如敲击 m 即可编辑请求的方式，敲击 q 即可修改 GET 请求参数 Query。</p>
+<p>这时我们敲击 q，进入到编辑 Query 的页面。由于没有任何参数，我们可以敲击 a 来增加一行，然后就可以输入参数对应的 Key 和 Value，如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/cd4d8a1293ae51653621a6b651df3b07188bfd83.png" alt=""></p>
+<p>这里我们输入 Key 为 wd，Value 为 NBA。</p>
+<p>然后再敲击 esc 键和 q 键，返回之前的页面，再敲击 e 和 p 键修改 Path。和上面一样，敲击 a 增加 Path 的内容，这时我们将 Path 修改为 s，如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/9aa39400de225baf610cd31d437ce6ea7a93e091.png" alt=""></p>
+<p>再敲击 esc 和 q 键返回，这时我们可以看到最上面的请求链接变成了：<a href="https://www.baidu.com/s?wd=NBA" target="_blank">https://www.baidu.com/s?wd=NBA</a>。访问这个页面，可以看到百度搜索 NBA 关键词的搜索结果，如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/d11a5237cdefa4c5c4a9dacf7cf2b3683aa9b06c.png" alt=""></p>
+<p>敲击 a 保存修改，敲击 r 重新发起修改后的请求，即可看到上方请求方式前面多了一个回旋箭头，这说明重新执行了修改后的请求。这时我们再观察响应体内容，即可看到搜索 NBA 的页面结果的源代码，如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/2f4872a01834059d40a0d894e90ae8ebd61eb88f.png" alt=""></p>
+<p>以上内容便是 mitmproxy 的简单用法。利用 mitmproxy，我们可以观察到手机上的所有请求，还可以对请求进行修改并重新发起。</p>
+<p>Fiddler、Charles 也有这个功能，而且它们的图形界面操作更加方便。那么 mitmproxy 的优势何在？</p>
+<p>mitmproxy 的强大之处体现在它的另一个工具 mitmdump，有了它我们可以直接对接 Python 对请求进行处理。下面我们来看看 mitmdump 的用法。</p>
+<p>六、mitmdump 的使用</p>
+<p>mitmdump 是 mitmproxy 的命令行接口，同时还可以对接 Python 对请求进行处理，这是相比 Fiddler、Charles 等工具更加方便的地方。有了它我们可以不用手动截获和分析 HTTP 请求和响应，只需写好请求和响应的处理逻辑即可。它还可以实现数据的解析、存储等工作，这些过程都可以通过 Python 实现。</p>
+<p>1. 实例引入</p>
+<p>我们可以使用命令启动 mitmproxy，并把截获的数据保存到文件中，命令如下所示：</p>
+<pre><code class="language-fallback highlight-chroma">mitmdump -w outfile
+</code></pre>
+<p>其中<code>outfile</code>的名称任意，截获的数据都会被保存到此文件中。</p>
+<p>还可以指定一个脚本来处理截获的数据，使用<code>-s</code>参数即可：</p>
+<pre><code class="language-fallback highlight-chroma">mitmdump -s script.py
+</code></pre>
+<p>这里指定了当前处理脚本为 script.py，它需要放置在当前命令执行的目录下。</p>
+<p>我们可以在脚本里写入如下的代码：</p>
+<pre><code class="language-fallback highlight-chroma">def request(flow):
+
+ flow.request.headers['User-Agent'] = 'MitmProxy'
+
+ print(flow.request.headers)
+</code></pre>
+<p>我们定义了一个<code>request()</code>方法，参数为<code>flow</code>，它其实是一个<code>HTTPFlow</code>对象，通过<code>request</code>属性即可获取到当前请求对象。然后打印输出了请求的请求头，将请求头的 User-Agent 修改成了 MitmProxy。</p>
+<p>运行之后我们在手机端访问<a href="http://httpbin.org/get" target="_blank">http://httpbin.org/get</a>，可以看到如下情况发生。</p>
+<p>手机端的页面显示如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/4ff24751512c4f573dc51bb56a9d2abb2b7b70c3.png" alt=""></p>
+<p>PC 端控制台输出如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/d64467a8757e55004e1980ddda741c1539bbbe6e.png" alt=""></p>
+<p>手机端返回结果的 Headers 实际上就是请求的 Headers，User-Agent 被修改成了 mitmproxy。PC 端控制台输出了修改后的 Headers 内容，其 User-Agent 的内容正是 mitmproxy。</p>
+<p>所以，通过这三行代码我们就可以完成对请求的改写。<code>print()</code>方法输出结果可以呈现在 PC 端控制台上，可以方便地进行调试。</p>
+<p>2. 日志输出</p>
+<p>mitmdump 提供了专门的日志输出功能，可以设定不同级别以不同颜色输出结果。我们把脚本修改成如下内容：</p>
+<pre><code class="language-fallback highlight-chroma">from mitmproxy import ctx
+
+def request(flow):
+
+ flow.request.headers['User-Agent'] = 'MitmProxy'
+
+ ctx.log.info(str(flow.request.headers))
+
+ ctx.log.warn(str(flow.request.headers))
+
+ ctx.log.error(str(flow.request.headers))
+</code></pre>
+<p>这里调用了 ctx 模块，它有一个 log 功能，调用不同的输出方法就可以输出不同颜色的结果，以方便我们做调试。例如，<code>info()</code>方法输出的内容是白色的，<code>warn()</code>方法输出的内容是黄色的，<code>error()</code>方法输出的内容是红色的。运行结果如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/eb001115a5a8f264e1985acf86db83bf3ea6d0da.png" alt=""></p>
+<p>不同的颜色对应不同级别的输出，我们可以将不同的结果合理划分级别输出，以更直观方便地查看调试信息。</p>
+<p>3. Request</p>
+<p>最开始我们实现了<code>request()</code>方法并且对 Headers 进行了修改。下面我们来看看 Request 还有哪些常用的功能。我们先用一个实例来感受一下。</p>
+<p><img src="https://yqfile.alicdn.com/eb001115a5a8f264e1985acf86db83bf3ea6d0da.png" alt=""></p>
+<p>我们修改脚本，然后在手机上打开百度，即可看到 PC 端控制台输出了一系列的请求，在这里我们找到第一个请求。控制台打印输出了 Request 的一些常见属性，如 URL、Headers、Cookies、Host、Method、Scheme 等。输出结果如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/e87ea7cd9bfca5dff24b5a60028824174d8cfecb.png" alt=""></p>
+<p>结果中分别输出了请求链接、请求头、请求 Cookies、请求 Host、请求方法、请求端口、请求协议这些内容。</p>
+<p>同时我们还可以对任意属性进行修改，就像最初修改 Headers 一样，直接赋值即可。例如，这里将请求的 URL 修改一下，脚本修改如下所示：</p>
+<pre><code class="language-fallback highlight-chroma">def request(flow):
+
+ url = 'https://httpbin.org/get'
+
+ flow.request.url = url
+</code></pre>
+<p>手机端得到如下结果，如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/a4f5ad57720f64a53aa7a6ce50bb4555d66af176.png" alt=""></p>
+<p>比较有意思的是，浏览器最上方还是呈现百度的 URL，但是页面已经变成了 httpbin.org 的页面了。另外，Cookies 明显还是百度的 Cookies。我们只是用简单的脚本就成功把请求修改为其他的站点。通过这种方式修改和伪造请求就变得轻而易举。</p>
+<p>通过这个实例我们知道，有时候 URL 虽然是正确的，但是内容并非是正确的。我们需要进一步提高自己的安全防范意识。</p>
+<p>Request 还有很多属性，在此不再一一列举。更多属性可以参考：<a href="http://docs.mitmproxy.org/en/latest/scripting/api.html" target="_blank">http://docs.mitmproxy.org/en/latest/scripting/api.html</a>。</p>
+<p>只要我们了解了基本用法，会很容易地获取和修改 Reqeust 的任意内容，比如可以用修改 Cookies、添加代理等方式来规避反爬。</p>
+<p>4. Response</p>
+<p>对于爬虫来说，我们更加关心的其实是 Response 的内容，因为 Response Body 才是爬取的结果。对于 Response 来说，mitmdump 也提供了对应的处理接口，就是<code>response()</code>方法。下面我们用一个实例感受一下。</p>
+<pre><code class="language-fallback highlight-chroma">from mitmproxy import ctx
+
+def response(flow):
+
+ response = flow.response
+
+ info = ctx.log.info
+
+ info(str(response.status_code))
+
+ info(str(response.headers))
+
+ info(str(response.cookies))
+
+ info(str(response.text))
+</code></pre>
+<p>将脚本修改为如上内容，然后手机访问：<a href="http://httpbin.org/get" target="_blank">http://httpbin.org/get</a>。</p>
+<p>这里打印输出了 Response 的<code>status_code</code>、<code>headers</code>、<code>cookies</code>、<code>text</code>这几个属性，其中最主要的<code>text</code>属性就是网页的源代码。</p>
+<p>PC 端控制台输出如下图所示。</p>
+<p><img src="https://yqfile.alicdn.com/30dbdcc2ef7bf0fda2ccdf006c9e2ef61e4d0074.png" alt=""></p>
+<p>感谢原作者，博客转自：<a href="https://yq.aliyun.com/articles/603782?utm_content=m_1000003903" target="_blank">https://yq.aliyun.com/articles/603782?utm_content=m_1000003903</a></p>
+<p>控制台输出了 Response 的状态码、响应头、Cookies、响应体这几部分内容。</p>
+<p>我们可以通过<code>response()</code>方法获取每个请求的响应内容。接下来再进行响应的信息提取和存储，我们就可以成功完成爬取了。</p>
+<p>感谢原作者，博客转自：<a href="https://yq.aliyun.com/articles/603782?utm_content=m_1000003903" target="_blank">https://yq.aliyun.com/articles/603782?utm_content=m_1000003903</a></p>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Mitmproxy">
+                            Mitmproxy</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E4%BB%A3%E7%90%86">
+                            代理</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E7%88%AC%E8%99%AB">
+                            爬虫</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2018/10/12/1539355419624.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="如何突破网站对Selenium的屏蔽">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="App爬虫神器Mitmproxy和Mitmdump的使用"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2018/10/12/1539357030798.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2018/10/12/1539357955729.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="Javascript Injection With Selenium, Puppeteer, And Marionette In Chrome And Firefox">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1539357030798"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+    <section>
+        <div class="ad vditor-reset">
+            孤芳自赏｜Birds love to hear herself sing
+        </div>
+
+        <div class="module">
+            <header><h2>分类</h2></header>
+            <main>
+                    <a href="https://zxniuniu.github.io/category/%E5%B7%A5%E5%85%B7"
+                       aria-label="24 文章"
+                       class="tag vditor-tooltipped vditor-tooltipped__n">
+                        工具软件</a>
+                    <a href="https://zxniuniu.github.io/category/%25E4%25BB%25A3%25E7%2590%2586"
+                       aria-label="13 文章"
+                       class="tag vditor-tooltipped vditor-tooltipped__n">
+                        代理梯子</a>
+                    <a href="https://zxniuniu.github.io/category/%E6%95%B0%E6%8D%AE%E5%BA%93"
+                       aria-label="12 文章"
+                       class="tag vditor-tooltipped vditor-tooltipped__n">
+                        数据库</a>
+                    <a href="https://zxniuniu.github.io/category/%E5%8F%AF%E8%A7%86%E5%8C%96"
+                       aria-label="5 文章"
+                       class="tag vditor-tooltipped vditor-tooltipped__n">
+                        可视化</a>
+            </main>
+        </div>
+
+        <div class="module">
+            <header><h2>标签</h2></header>
+            <main>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/%E5%B7%A5%E5%85%B7"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="24 篇文章">
+                        工具</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="26 篇文章">
+                        性能优化</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/%E4%BB%A3%E7%90%86"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="11 篇文章">
+                        代理</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="10 篇文章">
+                        数据库</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/Java"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="13 篇文章">
+                        Java</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/%E5%8A%A0%E5%AF%86%E5%AE%89%E5%85%A8"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="10 篇文章">
+                        加密安全</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/%E7%88%AC%E8%99%AB"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="6 篇文章">
+                        爬虫</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/Mitmproxy"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="6 篇文章">
+                        Mitmproxy</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/MariaDB"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="6 篇文章">
+                        MariaDB</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/Tomcat"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="6 篇文章">
+                        Tomcat</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/%E5%BE%85%E5%88%86%E7%B1%BB"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="0 篇文章">
+                        待分类</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/Python"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="5 篇文章">
+                        Python</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/Redis"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="5 篇文章">
+                        Redis</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/Selenium"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="5 篇文章">
+                        Selenium</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/SS"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="4 篇文章">
+                        SS</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/%E5%8F%AF%E8%A7%86%E5%8C%96"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="2 篇文章">
+                        可视化</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/%E7%9B%B8%E5%86%8C"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="3 篇文章">
+                        相册</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/Apache"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="3 篇文章">
+                        Apache</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/%E7%9F%A5%E8%AF%86%E7%AE%A1%E7%90%86"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="1 篇文章">
+                        知识管理</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/MySQL"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="0 篇文章">
+                        MySQL</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/Solo"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="3 篇文章">
+                        Solo</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/SSR"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="3 篇文章">
+                        SSR</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/Q%26A"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="3 篇文章">
+                        Q&A</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/%E5%BC%80%E6%BA%90"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="1 篇文章">
+                        开源</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/V2ray"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="2 篇文章">
+                        V2ray</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/Appium"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="2 篇文章">
+                        Appium</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/%E6%B5%8F%E8%A7%88%E5%99%A8"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="2 篇文章">
+                        浏览器</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/Springboot"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="2 篇文章">
+                        Springboot</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/Nginx"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="2 篇文章">
+                        Nginx</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/%E6%8E%A5%E5%8F%A3"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="1 篇文章">
+                        接口</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/GitHub"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="0 篇文章">
+                        GitHub</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/%E7%BD%91%E7%9B%98"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="0 篇文章">
+                        网盘</a>
+                    <a rel="tag"
+                       href="https://zxniuniu.github.io/tags/Elasticsearch"
+                       class="tag vditor-tooltipped vditor-tooltipped__n"
+                       aria-label="1 篇文章">
+                        Elasticsearch</a>
+            </main>
+        </div>
+
+        <div class="module meta">
+            <header>
+                <h2 class="ft__center">
+    <a href="https://ld246.com/member/zxniuniu"
+       aria-label="https://ld246.com/member/zxniuniu"
+       class="vditor-tooltipped__nw vditor-tooltipped  user__site"
+       target="_blank" rel="noopener nofollow">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path fill="#d23f31" style="fill: var(--color1, #d23f31)" d="M5.787 17.226h17.033l5.954 9.528c0.47 0.752 0.003 1.361-1.042 1.361h-15.141z"></path>
+            <path d="M10.74 3.927h17.033c1.045 0 1.512 0.609 1.042 1.361l-5.954 9.528h-19.872l6.379-10.209c0.235-0.376 0.849-0.681 1.372-0.681z"></path>
+            <path d="M2.953 17.226h2.839l6.804 10.889h-1.892c-0.523 0-1.137-0.305-1.372-0.681z"></path>
+        </svg>
+    </a>
+
+        <a href="https://github.com/zxniuniu"
+           aria-label="https://github.com/zxniuniu"
+           class="vditor-tooltipped__nw vditor-tooltipped  user__site"
+           target="_blank" rel="noopener nofollow">
+            <svg viewBox="0 0 32 32" width="100%" height="100%">
+                <path d="M16 0.331c-8.836 0-16 7.163-16 16 0 7.069 4.585 13.067 10.942 15.182 0.8 0.148 1.094-0.347 1.094-0.77 0-0.381-0.015-1.642-0.022-2.979-4.452 0.968-5.391-1.888-5.391-1.888-0.728-1.849-1.776-2.341-1.776-2.341-1.452-0.993 0.11-0.973 0.11-0.973 1.606 0.113 2.452 1.649 2.452 1.649 1.427 2.446 3.743 1.739 4.656 1.33 0.143-1.034 0.558-1.74 1.016-2.14-3.554-0.404-7.29-1.777-7.29-7.907 0-1.747 0.625-3.174 1.649-4.295-0.166-0.403-0.714-2.030 0.155-4.234 0 0 1.344-0.43 4.401 1.64 1.276-0.355 2.645-0.532 4.005-0.539 1.359 0.006 2.729 0.184 4.008 0.539 3.054-2.070 4.395-1.64 4.395-1.64 0.871 2.204 0.323 3.831 0.157 4.234 1.026 1.12 1.647 2.548 1.647 4.295 0 6.145-3.743 7.498-7.306 7.895 0.574 0.497 1.085 1.47 1.085 2.963 0 2.141-0.019 3.864-0.019 4.391 0 0.426 0.288 0.925 1.099 0.768 6.354-2.118 10.933-8.113 10.933-15.18 0-8.837-7.164-16-16-16z"></path>
+            </svg>
+        </a>
+
+        <a href="https://stackoverflow.com/users/1436643"
+           aria-label="https://stackoverflow.com/users/1436643"
+           target="_blank"
+           class="vditor-tooltipped__nw vditor-tooltipped  user__site" rel="noopener nofollow">
+            <svg viewBox="0 0 32 32" width="100%" height="100%">
+                <path d="M22.141 25.5h-17.469v-7.5h-2.5v10h22.469v-10h-2.5v7.5zM7.422 17.313l0.516-2.453 12.234 2.578-0.516 2.438zM9.031 11.469l1.047-2.281 11.328 5.297-1.047 2.266zM12.172 5.906l1.594-1.922 9.594 8.016-1.594 1.922zM18.375 0l7.453 10.016-2 1.5-7.453-10.016zM7.156 22.984v-2.484h12.5v2.484h-12.5z"></path>
+            </svg>
+        </a>
+        <a href="https://www.linkedin.com/in/fuxianwu"
+           aria-label="https://www.linkedin.com/in/fuxianwu"
+           target="_blank"
+           class="vditor-tooltipped__nw vditor-tooltipped  user__site" rel="noopener nofollow">
+            <svg viewBox="0 0 32 32" width="100%" height="100%">
+                <path d="M4.32 23.443h4.211v-12.651h-4.211v12.651zM8.805 6.891c-0.018-1.24-0.911-2.188-2.352-2.188s-2.388 0.948-2.388 2.188c0 1.203 0.911 2.187 2.333 2.187h0.018c1.477 0 2.388-0.984 2.388-2.187zM19.469 23.443h4.211v-7.255c0-3.883-2.078-5.688-4.849-5.688-2.26 0-3.263 1.258-3.81 2.133h0.036v-1.841h-4.211s0.055 1.185 0 12.651v0h4.211v-7.073c0-0.365 0.018-0.747 0.128-1.021 0.31-0.747 1.003-1.531 2.169-1.531 1.513 0 2.115 1.148 2.115 2.862v6.763zM28 5.25v17.5c0 2.898-2.352 5.25-5.25 5.25h-17.5c-2.898 0-5.25-2.352-5.25-5.25v-17.5c0-2.898 2.352-5.25 5.25-5.25h17.5c2.898 0 5.25 2.352 5.25 5.25z"></path>
+            </svg>
+        </a>
+        <a href="https://weibo.com/fuxianwu"
+           aria-label="https://weibo.com/fuxianwu"
+           target="_blank"
+           class="vditor-tooltipped__nw vditor-tooltipped  user__site" rel="noopener nofollow">
+            <svg viewBox="0 0 32 32" width="100%" height="100%">
+                <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+                <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+                <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+                <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+            </svg>
+        </a>
+        <a href="tencent://message/?uin=363077702"
+           aria-label="363077702"
+           target="_blank"
+           class="vditor-tooltipped__nw vditor-tooltipped  user__site" rel="noopener nofollow">
+            <svg viewBox="0 0 32 32" width="100%" height="100%">
+                <path d="M4.821 14.393c-0.125-0.304-0.143-0.607-0.143-0.929 0-0.5 0.321-1.304 0.625-1.679-0.018-0.464 0.179-1.411 0.536-1.714 0-3.304 2.554-7.464 5.536-8.893 1.839-0.875 3.768-1.179 5.786-1.179 1.571 0 3.286 0.375 4.75 0.982 4.196 1.768 5.143 5.054 6.036 9.25l0.018 0.089c0.518 0.786 0.982 1.714 0.982 2.679 0 0.482-0.321 0.964-0.321 1.393 0 0.036 0.107 0.179 0.125 0.214 1.536 2.268 2.929 4.732 2.929 7.554 0 0.625-0.339 2.804-1.339 2.804-0.696 0-1.464-1.696-1.714-2.161-0.018-0.018-0.036-0.018-0.054-0.018l-0.089 0.071c-0.571 1.482-1.196 2.875-2.357 3.982 1.018 0.982 2.661 0.893 2.964 2.589-0.089 0.196-0.054 0.411-0.196 0.607-1.018 1.536-3.75 1.732-5.393 1.732-2.179 0-3.946-0.571-6-1.179-0.429-0.125-1.071-0.054-1.536-0.107-1.089 1.196-3.75 1.518-5.286 1.518-1.357 0-6.607-0.089-6.607-2.411 0-1 0.214-1.286 0.911-1.929 0.554-0.107 0.964-0.411 1.607-0.446 0.089 0 0.161-0.018 0.25-0.036 0.018-0.018 0.036-0.018 0.036-0.071l-0.036-0.054c-1.232-0.286-2.964-3.393-3.232-4.679l-0.089-0.054c-0.125 0-0.179 0.268-0.214 0.357-0.393 0.911-1.321 1.893-2.357 2h-0.018c-0.143 0-0.089-0.143-0.196-0.179-0.25-0.589-0.411-1.125-0.411-1.786 0-3.571 1.714-6.214 4.5-8.321z"></path>
+            </svg>
+        </a>
+        <a href="javascript:void(0)"
+           class="vditor-tooltipped__nw vditor-tooltipped  user__site" aria-label="bluefuxianwu">
+            <svg viewBox="0 0 32 32" width="100%" height="100%">
+                <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+            </svg>
+        </a>
+                </h2>
+            </header>
+            <main class="fn__clear">
+                <img src="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100" alt="zxniuniu" aria-label="zxniuniu"/>
+                <div class="fn-right">
+                    <a href="https://zxniuniu.github.io/archives.html">
+                        58
+                        <span class="ft-gray">文章</span></a><br/>
+                    <span data-uvstaturl="https://zxniuniu.github.io">52603</span> <span class="ft-gray">浏览</span>
+                    
+                </div>
+            </main>
+        </div>
+
+            <div class="module">
+                <header><h2>友链</h2></header>
+                <main>
+                        <a rel="friend"
+                           target="_blank"
+                           href="https://fuyiyi.imdo.co"
+                           class="tag vditor-tooltipped vditor-tooltipped__n"
+                           aria-label="友链互换，请联系363077702#qq.com (@替换#)">
+                            <font color="red">友链互换: 363077702#qq.com (@替换#)</font></a>
+                        <a rel="friend"
+                           target="_blank"
+                           href="https://www.xinke.org.cn"
+                           class="tag vditor-tooltipped vditor-tooltipped__n"
+                           aria-label="ECode1024官网-专业的IT技术交流社区">
+                            <img src="https://www.xinke.org.cn/images/avatar/default.ico" width="16" height="16" style="margin-right:10px;">ECode1024</a>
+                        <a rel="friend"
+                           target="_blank"
+                           href="https://blog.mufengs.com"
+                           class="tag vditor-tooltipped vditor-tooltipped__n"
+                           aria-label="沐风博客 [没有引发任何行动的思想都不是思想，而是梦想]">
+                            <img src="https://avatars0.githubusercontent.com/u/13534743?s=32&v=4" width="16" height="16" style="margin-right:10px;">沐风博客</a>
+                        <a rel="friend"
+                           target="_blank"
+                           href="https://echocow.cn"
+                           class="tag vditor-tooltipped vditor-tooltipped__n"
+                           aria-label="EchoCow的个人博客 [嘘，用心去听，他在回响]">
+                            <img src="https://resources.echocow.cn/file/solo/favicon.png" width="16" height="16" style="margin-right:10px;">EchoCow的个人博客</a>
+                        <a rel="friend"
+                           target="_blank"
+                           href="https://awall.club"
+                           class="tag vditor-tooltipped vditor-tooltipped__n"
+                           aria-label="渣渣码农的个人博客">
+                            <img src="https://img.hacpai.com/file/2019/03/image-2a17a40a.png" width="16" height="16" style="margin-right:10px;">渣渣码农的个人博客</a>
+                        <a rel="friend"
+                           target="_blank"
+                           href="https://ld246.com/"
+                           class="tag vditor-tooltipped vditor-tooltipped__n"
+                           aria-label="链滴社区（原黑客派） [记录生活，连接点滴]">
+                            <img src="https://static.ld246.com/images/favicon.png" width="16" height="16" style="margin-right:10px;">链滴社区（原黑客派）</a>
+                        <a rel="friend"
+                           target="_blank"
+                           href="http://niuniu.hicp.net/"
+                           class="tag vditor-tooltipped vditor-tooltipped__n"
+                           aria-label="小妞图库">
+                            小妞图库</a>
+                        <a rel="friend"
+                           target="_blank"
+                           href="https://pencilso.cn"
+                           class="tag vditor-tooltipped vditor-tooltipped__n"
+                           aria-label="铅笔的个人博客 [Java/Android技术博客]">
+                            <img src="https://pencilso.cn/themes/iissnan_next/source/images/favicon-16x16-next.png" width="16" height="16" style="margin-right:10px;">铅笔的个人博客</a>
+                        <a rel="friend"
+                           target="_blank"
+                           href="https://fuyiyi.imdo.co/layoutit/index.html"
+                           class="tag vditor-tooltipped vditor-tooltipped__n"
+                           aria-label="Layoutit 在线 Bootstrap 可视化布局系统">
+                            Layoutit 在线 Bootstrap 可视化布局系统</a>
+                        <a rel="friend"
+                           target="_blank"
+                           href="https://tool.xinke.org.cn"
+                           class="tag vditor-tooltipped vditor-tooltipped__n"
+                           aria-label="工具帝国-专注于提供各种在线工具!">
+                            <img src="https://tool.xinke.org.cn/favicon.png" width="16" height="16" style="margin-right:10px;">工具帝国</a>
+                </main>
+            </div>
+
+            <div class="module">
+                <header><h2>存档</h2></header>
+                <main class="list">
+                    <ul>
+                                <li>
+                                        <a href="https://zxniuniu.github.io/archives/2020/10"
+                                           title="2020 年 10 月(0)">
+                                            2020 年 10 月(0)</a>
+                                </li>
+                                <li>
+                                        <a href="https://zxniuniu.github.io/archives/2020/03"
+                                           title="2020 年 03 月(2)">
+                                            2020 年 03 月(2)</a>
+                                </li>
+                                <li>
+                                        <a href="https://zxniuniu.github.io/archives/2020/01"
+                                           title="2020 年 01 月(1)">
+                                            2020 年 01 月(1)</a>
+                                </li>
+                                <li>
+                                        <a href="https://zxniuniu.github.io/archives/2019/12"
+                                           title="2019 年 12 月(2)">
+                                            2019 年 12 月(2)</a>
+                                </li>
+                                <li>
+                                        <a href="https://zxniuniu.github.io/archives/2019/10"
+                                           title="2019 年 10 月(3)">
+                                            2019 年 10 月(3)</a>
+                                </li>
+                                <li>
+                                        <a href="https://zxniuniu.github.io/archives/2019/08"
+                                           title="2019 年 08 月(2)">
+                                            2019 年 08 月(2)</a>
+                                </li>
+                                <li>
+                                        <a href="https://zxniuniu.github.io/archives/2019/07"
+                                           title="2019 年 07 月(1)">
+                                            2019 年 07 月(1)</a>
+                                </li>
+                                <li>
+                                        <a href="https://zxniuniu.github.io/archives/2019/06"
+                                           title="2019 年 06 月(1)">
+                                            2019 年 06 月(1)</a>
+                                </li>
+                                <li>
+                                        <a href="https://zxniuniu.github.io/archives/2019/05"
+                                           title="2019 年 05 月(7)">
+                                            2019 年 05 月(7)</a>
+                                </li>
+                                <li>
+                                        <a href="https://zxniuniu.github.io/archives/2019/03"
+                                           title="2019 年 03 月(5)">
+                                            2019 年 03 月(5)</a>
+                                </li>
+                            <li>
+                                <a href="https://zxniuniu.github.io/archives.html">...</a>
+                            </li>
+                    </ul>
+                </main>
+            </div>
+
+    </section>
+</aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1539357030798",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1539357030798",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("Mitmproxy,代理,爬虫", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1539357030798', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 25ms, 2020/11/29 22:19:05 -->

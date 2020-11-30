@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>A Web Developer’s Guide to Browser Caching - 随心笔客</title><meta name="description" content="Caching is a useful yet surprisingly complex feature of Web browsers. In this article, we’ll explain the how the browser uses its cache to load pages faster, which factors determine cache duration, and how we can bypass the cache when necessary."/><meta property="og:description" content="Caching is a useful yet surprisingly complex feature of Web browsers. In this article, we’ll explain the how the browser uses its cache to load pages faster, which factors determine cache duration, and how we can bypass the cache when necessary."/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="A Web Developer’s Guide to Browser Caching - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2018/10/18/1539837869502.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="A Web Developer’s Guide to Browser Caching - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2018/10/18/1539837869502.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title="Javascript Injection With Selenium, Puppeteer, And Marionette In Chrome And Firefox" href="https://zxniuniu.github.io/articles/2018/10/12/1539357955729.html">
+            <link rel="next" title="16 Tips to Speed-up Your Website" href="https://zxniuniu.github.io/articles/2018/10/18/1539848872657.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2018/10/18/1539837869502.html">
+                            A Web Developer’s Guide to Browser Caching
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2019-10-15
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2018/10/18/1539837869502.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1539837869502">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2018/10/18/1539837869502.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <h3 id="toc_h3_0">Overview</h3>
+<p>Caching is a useful yet surprisingly complex feature of Web browsers.</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/a312c82efe1347c288c7f311ca1811e7_1_9ATNhiFm5p5y2pcqHdNnuA.png" alt="1_9ATNhiFm5p5y2pcqHdNnuApng"></p>
+<p>In this article, we’ll explain the how the browser uses its cache to load pages faster, which factors determine cache duration, and how we can bypass the cache when necessary.</p>
+<h3 id="toc_h3_1">Why is Caching Important?</h3>
+<p>All browsers attempt to keep local copies of static assets in an effort to reduce page load times and minimize network traffic.</p>
+<p>Fetching a resource over a network will always be slower than retrieving it from local cache. This is true whether the server is on the same network or it’s located on the far side of the world.</p>
+<h3 id="toc_h3_2">How Browser Caching Works</h3>
+<h4 id="toc_h4_3">Case 1: User has not visited the site before</h4>
+<p>The browser won’t have any files cached for the site so it will fetch everything from the server.</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/2101ccbc011a4abea456ab0100b69ad3_1_O8wBeQX0CaQkn4XIHYXkIA.png" alt="1_O8wBeQX0CaQkn4XIHYXkIApng"></p>
+<p>Below is a snapshot of the resources downloaded when visiting the Wikipedia home page for the first time. The status bar at the bottom shows that 265KB of data was transferred to the browser.</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/f6639ec3cc82428297b86a2ee682032d_1_8R1eSRX9bznC0DG4tdsRVw.png" alt="1_8R1eSRX9bznC0DG4tdsRVwpng"></p>
+<h4 id="toc_h4_4">Case 2: User has visited the site before</h4>
+<p>The browser will retrieve the HTML page from the Web server but consult its cache for the static assets (JavaScript, CSS, images).</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/12d76d69a9a345a08ffc719557174c51_1_mvRqpyeHl8MT90nOoQFJVg.png" alt="1_mvRqpyeHl8MT90nOoQFJVgpng"></p>
+<p>We can see the difference cache makes when we refresh the Wikipedia page:</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/7fe87b9caacd45e6bbc7505848cef15c_1_utGadcZALom4Fd7_EtiDqw.png" alt="1_utGadcZALom4Fd7_EtiDqwpng"></p>
+<p>The data transferred went down to 928 bytes — that’s 0.3% the size of the initial page load. The Size column shows us that most of the content is pulled from cache.</p>
+<blockquote>
+<p><em>Chrome will pull files from either memory cache or disk cache. Since we didn’t close our browser between Cases 1 &amp; 2, the data was still in memory cache.</em></p>
+</blockquote>
+<h4 id="toc_h4_5">Show the Browser Cache</h4>
+<p>In Chrome, we can go to <code>chrome://cache</code> to view the contents of the cache. This will display a page of links to a detailed view for each cached file.</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/af508be5af9e45c88bda5376da97871e_1_nYuzaJF_E2GNCKNX_tMPyA.png" alt="1_nYuzaJF_E2GNCKNX_tMPyApng"></p>
+<h3 id="toc_h3_6">How Does the Browser Know What to Cache?</h3>
+<p>The browser inspects the headers of the HTTP response generated by the Web server. There are four headers commonly used for caching:</p>
+<ul>
+<li>ETag</li>
+<li>Cache-Control</li>
+<li>Expires</li>
+<li>Last-Modified</li>
+</ul>
+<h4 id="toc_h4_7">ETag</h4>
+<p>The <em>ETag</em> (or Entity Tag) is a string that serves as a cache validation token. This is usually a hash of the file contents.</p>
+<p>The server can include an ETag in its response, which the browser can then use this in a future request (after the file has expired) to determine if the cache contains a stale copy.</p>
+<p>If the hash is the same, then the resource hasn’t changed and the server responds with a 304 response code (Not Modified) with an empty body. This lets the browser know it’s still safe to use the cached copy.</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/fa9505a3117844ff8512f0163c445bcc_1_hWsWByT7Vx3IOgSea_LcyA.png" alt="1_hWsWByT7Vx3IOgSea_LcyApng"></p>
+<p>Note that ETag is only used in requests whenever the file has expired from cache.</p>
+<h4 id="toc_h4_8">Cache-Control</h4>
+<p>The <em>Cache-Control</em> header has a number of directives we can set to control cache behavior, expiration, and validation. These can be combined together as well.</p>
+<p><strong>Cache Behavior</strong></p>
+<p>Cache-Control: public</p>
+<p>public means that the resource can be cached by any cache (browser, CDN, etc)</p>
+<p>Cache-Control: private</p>
+<p>private means that the resource can only be cached by the browser</p>
+<p>Cache-Control: no-store</p>
+<p>This tells the browser to always request the resource from the server</p>
+<p>Cache-Control: no-cache</p>
+<p>This one is actually a bit misleading. It doesn’t mean “do not cache”.</p>
+<p>This tells the browser to cache the file but not to use it until it checks with the server to validate we have the latest version. This validation is done with the ETag header.</p>
+<p>This is commonly used with HTML files since it makes sense for the browser to always check for the latest markup.</p>
+<p><strong>Expiration</strong></p>
+<p>Cache-Control: max-age=60</p>
+<p>This specifies the length of time in seconds the resource should be cached.So a <em>max-age=60</em> means that it should be cached for 1 minute. RFC 2616 recommends that the maximum value for should no longer than 1 year (<em>max-age=31536000</em>).</p>
+<p>Cache-Control: s-max-age=60</p>
+<p>This is only used by intermediate caches like a CDN.</p>
+<p><strong>Validation</strong></p>
+<p>Cache-Control: must-revalidate</p>
+<p>This tells the cache it must verify the status of the stale resource before using it and expired ones should not be used.</p>
+<h4 id="toc_h4_9">Expires</h4>
+<p>The <em>Expires</em> header is from the older HTTP 1.0 days but is still used on many sites.</p>
+<p>This header field provides an expiration date after which the asset is considered invalid.</p>
+<pre><code class="language-fallback highlight-chroma">Expires: Wed, 25 Jul 2018 21:00:00 GMT
+</code></pre>
+<blockquote>
+<p><em>The browser will ignore this field if there’s a max-age directive in Cache-Control</em></p>
+</blockquote>
+<h4 id="toc_h4_10">Last-Modified</h4>
+<p>The Last-Modified header is also from the HTTP 1.0 days.</p>
+<pre><code class="language-fallback highlight-chroma">Last-Modified: Mon, 12 Dec 2016 14:45:00 GMT
+</code></pre>
+<p>This field contains the date and time the resource was last modified.</p>
+<h4 id="toc_h4_11">HTML Meta Tag</h4>
+<p>Prior to HTML5, using meta tags inside HTML to specify cache-control was a valid approach:</p>
+<pre><code class="language-fallback highlight-chroma">&lt;meta http-equiv="Cache-control" content="no-cache"&gt;
+</code></pre>
+<p>Using a meta tag like this is now discouraged and is not valid HTML5. Why? It’s not a good idea because only browsers will be able to parse the meta tag and understand it. Intermediate caches won’t.</p>
+<p>So always send caching instructions via HTTP headers.</p>
+<h4 id="toc_h4_12">HTTP Response</h4>
+<p>Let’s take a look at an sample HTTP response:</p>
+<pre><code class="language-fallback highlight-chroma">Accept-Ranges: bytesCache-Control: max-age=3600Connection: Keep-AliveContent-Length: 4361Content-Type: image/pngDate: Tue, 25 Jul 2017 17:26:16 GMTETag: "1109-554221c5c8540"Expires: Tue, 25 Jul 2017 18:26:16 GMTKeep-Alive: timeout=5, max=93Last-Modified: Wed, 12 Jul 2017 17:26:05 GMTServer: Apache
+</code></pre>
+<ul>
+<li>Line 2 tells us that the max-age is 1 hour</li>
+<li>Line 5 tells us that this is a PNG image</li>
+<li>Line 7 shows us the ETag value which will be used for validation after the 1 hour mark to verify that the resource hasn’t changed</li>
+<li>Line 8 is the Expires header which will be ignored since max-age is set</li>
+<li>Line 10 is the Last-Modified header which shows when the image was last modified</li>
+</ul>
+<h3 id="toc_h3_13">Caching Pitfalls</h3>
+<p>So we’ve established that browser caching is awesome, and we should take advantage of it.</p>
+<p>But we also want users see the latest version of our page when we make updates. We can’t expect them to do a hard refresh (Ctrl-F5) every time they visit our site or clear their cache regularly.</p>
+<p>These types of caching issues are often a source of frustration for both the developer and end-user. A user may see a broken page or a button that behaves strangely because they have an outdated stylesheet or JavaScript code.</p>
+<h4 id="toc_h4_14">Stale Files</h4>
+<p>Below is a Twitter exchange between Chase Support and a user having issues with a login form on the banking site.</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/cd8a1bfc62234010bdb509b80220ef16_1_CapIYz0VA69ycGMtuBUpQA.png" alt="1_CapIYz0VA69ycGMtuBUpQApng"></p>
+<p>The user likely had some old JavaScript cached in their browser which caused the form to reset instead of submit when the Logon button was clicked.</p>
+<p>Let’s explore another situation where stale files could bite us.</p>
+<p>Suppose we fix a bug in a JavaScript file called <em>app.min.js</em> and push the update to our production site.</p>
+<p>This is what our HTML looks like:</p>
+<pre><code class="language-fallback highlight-chroma">&lt;script src="assets/js/app.min.js"&gt;
+</code></pre>
+<p>Our Web server sets the <em>max-age</em> of JavaScript files to 1 week (604,800 seconds).</p>
+<pre><code class="language-fallback highlight-chroma">Cache-Control: private, max-age=604800
+</code></pre>
+<p>After the update, some users report they are still having issues symptomatic of the bug.</p>
+<p>What’s going on here?</p>
+<ul>
+<li>Bob visited the site 2 weeks ago and has a cached copy of buggy _app.min.js. _Since his copy is older than max-age, the browser will retrieve the file from the server, and he gets the latest bug-free version.</li>
+<li>Mary visited the site 2 days ago and also has a cached copy of buggy _app.min.js. _Her copy is newer than max-age so her browser is still happily using the cached copy.</li>
+</ul>
+<p>In the next section, we’ll see how to prevent these issues with a technique called <em>cache busting</em>.</p>
+<h3 id="toc_h3_15">Cache Busting</h3>
+<p>Cache busting is where we invalidate a cached file and force the browser to retrieve the file from the server.</p>
+<p>We can instruct the browser to bypass the cache by simply changing the filename. To the browser, this is a completely new resource so it will fetch the resource from the server.</p>
+<p>Cache busting also allows us to keep long <em>max-age</em> values for resources that may change frequently. Google recommends that max-age be set to 1 year (<a href="https://developers.google.com/speed/docs/insights/LeverageBrowserCaching" target="_blank">source</a>).</p>
+<h3 id="toc_h3_16">Versioning</h3>
+<p>We could add a version number to the filename:</p>
+<pre><code class="language-fallback highlight-chroma">assets/js/app-v2.min.js
+</code></pre>
+<h3 id="toc_h3_17">Fingerprinting</h3>
+<p>We could add a fingerprint based on the file contents:</p>
+<pre><code class="language-fallback highlight-chroma">assets/js/app-d41d8cd98f00b204e9800998ecf8427e.min.js
+</code></pre>
+<h3 id="toc_h3_18">Append Query String</h3>
+<p>We could append a query string to the end of the filename:</p>
+<pre><code class="language-fallback highlight-chroma">assets/js/app.min.js?version=2
+</code></pre>
+<p>The query string approach has <a href="https://gtmetrix.com/remove-query-strings-from-static-resources.html" target="_blank">known issues</a> with proxy servers so this method is generally discouraged.</p>
+<h3 id="toc_h3_19">Best Practices</h3>
+<h4 id="toc_h4_20">Do</h4>
+<ul>
+<li>Use the Cache-Control and ETag headers to control cache behavior for static assets</li>
+<li>Set long max-age values to reap the benefits of browser cache</li>
+<li>Use fingerprinting or versioning for cache busting</li>
+</ul>
+<h4 id="toc_h4_21">Don’t</h4>
+<ul>
+<li>Use HTML meta tags to specify cache behavior</li>
+<li>Use query strings for cache busting</li>
+</ul>
+<h3 id="toc_h3_22">FAQ</h3>
+<h4 id="toc_h4_23">How can I tell if a file was loaded from cache?</h4>
+<p>Check out the Developer Tools in your browser. In Chrome, this information is shown in the Network tab under the Size column.</p>
+<h4 id="toc_h4_24">How do I prevent caching for a file?</h4>
+<p>Use the following response header:</p>
+<pre><code class="language-fallback highlight-chroma">Cache-Control: no-cache, no-store, must-revalidate
+</code></pre>
+<p>感谢原作者，博客转自（墙外）：<a href="https://medium.com/@codebyamir/a-web-developers-guide-to-browser-caching-cc41f3b73e7c" target="_blank">https://medium.com/@codebyamir/a-web-developers-guide-to-browser-caching-cc41f3b73e7c</a></p>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E5%8A%A0%E5%AF%86%E5%AE%89%E5%85%A8">
+                            加密安全</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E5%B7%A5%E5%85%B7">
+                            工具</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%B5%8F%E8%A7%88%E5%99%A8">
+                            浏览器</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96">
+                            性能优化</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2018/10/12/1539357955729.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="Javascript Injection With Selenium, Puppeteer, And Marionette In Chrome And Firefox">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="A Web Developer’s Guide to Browser Caching"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2018/10/18/1539837869502.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2018/10/18/1539848872657.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="16 Tips to Speed-up Your Website">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1539837869502"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+<ul class="article__toc">
+        <li class="toc__h3">
+            <a href="#toc_h3_0">Overview</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_1">Why is Caching Important?</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_2">How Browser Caching Works</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_3">Case 1: User has not visited the site before</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_4">Case 2: User has visited the site before</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_5">Show the Browser Cache</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_6">How Does the Browser Know What to Cache?</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_7">ETag</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_8">Cache-Control</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_9">Expires</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_10">Last-Modified</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_11">HTML Meta Tag</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_12">HTTP Response</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_13">Caching Pitfalls</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_14">Stale Files</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_15">Cache Busting</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_16">Versioning</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_17">Fingerprinting</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_18">Append Query String</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_19">Best Practices</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_20">Do</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_21">Don’t</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_22">FAQ</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_23">How can I tell if a file was loaded from cache?</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_24">How do I prevent caching for a file?</a>
+        </li>
+</ul></aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1539837869502",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1539837869502",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("加密安全,工具,浏览器,性能优化", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1539837869502', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 28ms, 2020/11/29 22:19:05 -->

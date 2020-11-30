@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>Spring MVC 控制器定义与@RequestMapping详解 - 随心笔客</title><meta name="description" content="控制器提供访问应用程序的行为，通常通过服务接口定义或注解定义两种方法实现。 控制器解析用户的请求并将其转换为一个模型。在 Spring MVC 中一个控制器可以包含多个 Action（动作、方法）。"/><meta property="og:description" content="控制器提供访问应用程序的行为，通常通过服务接口定义或注解定义两种方法实现。 控制器解析用户的请求并将其转换为一个模型。在 Spring MVC 中一个控制器可以包含多个 Action（动作、方法）。"/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="Spring MVC 控制器定义与@RequestMapping详解 - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2018/12/23/1545494483392.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="Spring MVC 控制器定义与@RequestMapping详解 - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2018/12/23/1545494483392.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title="Pros and cons of end to end testing tools" href="https://zxniuniu.github.io/articles/2018/11/24/1543063983807.html">
+            <link rel="next" title="Migrating MariaDB Data Into Elasticsearch Using Logstash" href="https://zxniuniu.github.io/articles/2019/01/04/1546576680169.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2018/12/23/1545494483392.html">
+                            Spring MVC 控制器定义与@RequestMapping详解
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2019-10-15
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2018/12/23/1545494483392.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1545494483392">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2018/12/23/1545494483392.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <h1 id="toc_h1_0">一、控制器定义</h1>
+<p>控制器提供访问应用程序的行为，通常通过服务接口定义或注解定义两种方法实现。 控制器解析用户的请求并将其转换为一个模型。在 Spring MVC 中一个控制器可以包含多个 Action（动作、方法）。</p>
+<p><img src="https://img.hacpai.com/bing/20180223.jpg?imageView2/1/w/960/h/520/interlace/1/q/100" alt=""></p>
+<h2 id="toc_h2_1">1.1、实现接口 Controller 定义控制器</h2>
+<p>Controller 是一个接口，处在包 org.springframework.web.servlet.mvc 下，接口中只有一个未实现的方法，具体的接口如下所示：</p>
+<pre><code class="language- highlight-chroma"><span class="highlight-kn">package</span> <span class="highlight-nx">org</span><span class="highlight-p">.</span><span class="highlight-nx">springframework</span><span class="highlight-p">.</span><span class="highlight-nx">web</span><span class="highlight-p">.</span><span class="highlight-nx">servlet</span><span class="highlight-p">.</span><span class="highlight-nx">mvc</span><span class="highlight-p">;</span> 
+
+<span class="highlight-kn">import</span> <span class="highlight-nx">javax</span><span class="highlight-p">.</span><span class="highlight-nx">servlet</span><span class="highlight-p">.</span><span class="highlight-nx">http</span><span class="highlight-p">.</span><span class="highlight-nx">HttpServletRequest</span><span class="highlight-p">;</span> 
+<span class="highlight-kn">import</span> <span class="highlight-nx">javax</span><span class="highlight-p">.</span><span class="highlight-nx">servlet</span><span class="highlight-p">.</span><span class="highlight-nx">http</span><span class="highlight-p">.</span><span class="highlight-nx">HttpServletResponse</span><span class="highlight-p">;</span> 
+<span class="highlight-kn">import</span> <span class="highlight-nx">org</span><span class="highlight-p">.</span><span class="highlight-nx">springframework</span><span class="highlight-p">.</span><span class="highlight-nx">web</span><span class="highlight-p">.</span><span class="highlight-nx">servlet</span><span class="highlight-p">.</span><span class="highlight-nx">ModelAndView</span><span class="highlight-p">;</span> 
+
+<span class="highlight-c1">//实现该接口的类获得控制器功能与类型, 解析用户的请求并将其转换为一个模型
+</span><span class="highlight-c1"></span><span class="highlight-nx">public</span> <span class="highlight-kd">interface</span> <span class="highlight-nx">Controller</span> <span class="highlight-p">{</span> <span class="highlight-c1">//处理请求且返回一个模型与视图对象
+</span><span class="highlight-c1"></span>    <span class="highlight-nx">ModelAndView</span> <span class="highlight-nf">handleRequest</span><span class="highlight-p">(</span><span class="highlight-nx">HttpServletRequest</span> <span class="highlight-nx">request</span><span class="highlight-p">,</span> <span class="highlight-nx">HttpServletResponse</span> <span class="highlight-nx">response</span><span class="highlight-p">)</span> <span class="highlight-nx">throws</span> <span class="highlight-nx">Exception</span><span class="highlight-p">;</span>
+<span class="highlight-p">}</span>
+</code></pre>
+<p>在自定义控制器前先创建一个基于 maven 的 Web 项目，添加包的依赖，pom.xml 文件如下：</p>
+<pre><code class="language-fallback highlight-chroma">http://maven.apache.org/POM/4.0.0" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;groupId&gt;com.zhangguo&lt;/groupId&gt;
+    &lt;artifactId&gt;SpringMVC02&lt;/artifactId&gt;
+    &lt;version&gt;0.0.1&lt;/version&gt;
+    &lt;packaging&gt;war&lt;/packaging&gt;
+    &lt;properties&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8project.build.source&lt;/Encoding&gt;
+        &lt;spring.version&gt;4.3.0.RELEASE&lt;/spring.version&gt;
+    &lt;/properties&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-context&lt;/artifactId&gt;
+            &lt;version&gt;${spring.version}&lt;/version&gt;
+        &lt;/dependency&gt;
+        
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-webmvc&lt;/artifactId&gt;
+            &lt;version&gt;${spring.version}&lt;/version&gt;
+        &lt;/dependency&gt;
+        
+        &lt;dependency&gt;
+            &lt;groupId&gt;javax.servlet&lt;/groupId&gt;
+            &lt;artifactId&gt;jstl&lt;/artifactId&gt;
+            &lt;version&gt;1.2&lt;/version&gt;
+        &lt;/dependency&gt;
+        
+        &lt;dependency&gt;
+            &lt;groupId&gt;javax.servlet&lt;/groupId&gt;
+            &lt;artifactId&gt;javax.servlet-api&lt;/artifactId&gt;
+            &lt;version&gt;3.0.1&lt;/version&gt;
+            &lt;scope&gt;provided&lt;/scope&gt;
+        &lt;/dependency&gt;
+        
+        &lt;dependency&gt;
+            &lt;groupId&gt;javax.servlet.jsp&lt;/groupId&gt;
+            &lt;artifactId&gt;jsp-api&lt;/artifactId&gt;
+            &lt;version&gt;2.1&lt;/version&gt;
+            &lt;scope&gt;provided&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+&lt;/project&gt;
+</code></pre>
+<p>如果不配置 scope，会把 jar 包发布，会跟容器里的 jar 包冲突、scope 要设置为 provided，由容器提供，不会发布（或者不配这两个依赖，在项目的 Java BuildPath 的 Libraries 里添加 Server Runtime）目前 scope 可以使用 5 个值：</p>
+<p>compile：缺省值，适用于所有阶段，会随着项目一起发布。</p>
+<p>provided：类似 compile，期望 JDK、容器或使用者会提供这个依赖。如 servlet.jar。</p>
+<p>runtime：只在运行时使用，如 JDBC 驱动，适用运行和测试阶段。test，只在测试时使用，用于编译和运行测试代码。不会随项目发布。</p>
+<p>system：类似 provided，需要显式提供包含依赖的 jar，Maven 不会在 Repository 中查找它。</p>
+<p>创建一个名为 Foo 的类，实现接口 Controller，重写 handleRequest 方法，代码如下：</p>
+<pre><code class="language- highlight-chroma"><span class="highlight-kn">package</span> <span class="highlight-nx">com</span><span class="highlight-p">.</span><span class="highlight-nx">zhangguo</span><span class="highlight-p">.</span><span class="highlight-nx">springmvc02</span><span class="highlight-p">.</span><span class="highlight-nx">controllers</span><span class="highlight-p">;</span> 
+
+<span class="highlight-kn">import</span> <span class="highlight-nx">javax</span><span class="highlight-p">.</span><span class="highlight-nx">servlet</span><span class="highlight-p">.</span><span class="highlight-nx">http</span><span class="highlight-p">.</span><span class="highlight-nx">HttpServletRequest</span><span class="highlight-p">;</span> 
+<span class="highlight-kn">import</span> <span class="highlight-nx">javax</span><span class="highlight-p">.</span><span class="highlight-nx">servlet</span><span class="highlight-p">.</span><span class="highlight-nx">http</span><span class="highlight-p">.</span><span class="highlight-nx">HttpServletResponse</span><span class="highlight-p">;</span> 
+<span class="highlight-kn">import</span> <span class="highlight-nx">org</span><span class="highlight-p">.</span><span class="highlight-nx">springframework</span><span class="highlight-p">.</span><span class="highlight-nx">web</span><span class="highlight-p">.</span><span class="highlight-nx">servlet</span><span class="highlight-p">.</span><span class="highlight-nx">ModelAndView</span><span class="highlight-p">;</span> 
+<span class="highlight-kn">import</span> <span class="highlight-nx">org</span><span class="highlight-p">.</span><span class="highlight-nx">springframework</span><span class="highlight-p">.</span><span class="highlight-nx">web</span><span class="highlight-p">.</span><span class="highlight-nx">servlet</span><span class="highlight-p">.</span><span class="highlight-nx">mvc</span><span class="highlight-p">.</span><span class="highlight-nx">Controller</span><span class="highlight-p">;</span> 
+
+<span class="highlight-cm">/* 定义控制器 */</span>
+<span class="highlight-nx">public</span> <span class="highlight-nx">class</span> <span class="highlight-nx">FooController</span> <span class="highlight-nx">implements</span> <span class="highlight-nx">Controller</span> <span class="highlight-p">{</span>
+
+   <span class="highlight-err">@</span><span class="highlight-nx">Override</span> 
+	<span class="highlight-nx">public</span> <span class="highlight-nx">ModelAndView</span> <span class="highlight-nf">handleRequest</span><span class="highlight-p">(</span><span class="highlight-nx">HttpServletRequest</span> <span class="highlight-nx">request</span><span class="highlight-p">,</span> <span class="highlight-nx">HttpServletResponse</span> <span class="highlight-nx">response</span><span class="highlight-p">)</span> <span class="highlight-nx">throws</span> <span class="highlight-nx">Exception</span> <span class="highlight-p">{</span> 
+	   <span class="highlight-c1">//返回一个模型视图对象，指定路径，指定模型的名称为message，值为一段字符串
+</span><span class="highlight-c1"></span>      <span class="highlight-k">return</span> <span class="highlight-nx">new</span> <span class="highlight-nf">ModelAndView</span><span class="highlight-p">(</span><span class="highlight-s">"foo/index"</span><span class="highlight-p">,</span> <span class="highlight-s">"message"</span><span class="highlight-p">,</span> <span class="highlight-s">"Hello，我是通过实现接口定义的一个控制器"</span><span class="highlight-p">);</span>
+   <span class="highlight-p">}</span>
+<span class="highlight-p">}</span>
+</code></pre>
+<p>在 WEB-INF/views/foo 目录下创建一个名为 index.jsp 的视图，内容如下：</p>
+<pre><code class="language-fallback highlight-chroma">&lt;%@ page language="java" contentType="text/html; 
+	charset=UTF-8" pageEncoding="UTF-8"%&gt;
+&lt;%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%&gt;
+&lt;DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta http-equiv="Content-Type" content="text/html; 
+charset=UTF-8"&gt;
+&lt;title&gt;Foo&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt; ${message} &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>修改 springmvc-servlet.xml 配置文件，增加一个控制器 bean 的声明，具体内容如下：</p>
+<pre><code class="language-fallback highlight-chroma">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+http://www.springframework.org/schema/beans" 
+	  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	  xmlns:context="http://www.springframework.org/schema/context" 
+	  xmlns:mvc="http://www.springframework.org/schema/mvc" 
+	  xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	  http://www.springframework.org/schema/beans/spring-beans.xsd
+	  http://www.springframework.org/schema/context 
+	  http://www.springframework.org/schema/context/spring-context-4.3.xsd
+	  http://www.springframework.org/schema/mvc 
+	  http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd"&gt;
+    
+    &lt;context:component-scan base-package="com.zhangguo.springmvc02" /&gt;
+
+    &lt;mvc:default-servlet-handler /&gt;
+    
+    &lt;mvc:annotation-driven /&gt;
+
+    &lt;bean class="org.springframework.web.servlet.view.InternalResourceViewResolver" id="internalResourceViewResolver"&gt;
+        &lt;property name="prefix" value="/WEB-INF/views/" /&gt;
+        &lt;property name="suffix" value=".jsp" /&gt;
+    &lt;/bean&gt;
+ &lt;bean name="/foo" class="com.zhangguo.springmvc02.controllers.FooController"&gt;&lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+<p>基中 name 是访问路径，class 是自定义的控制器的全名称。运行后的结果如下：</p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160711110304826-119508193.png" alt=""></p>
+<p>小结：实现接口 Controller 定义控制器是较老的办法，缺点是：一个控制器中只有一个 Action，如果要多个 Action 则需要定义多个 Controller；定义的方式比较麻烦；Spring 2.5 以后采用注解的方式定义解决这引起问题。</p>
+<h2 id="toc_h2_2">1.2、使用注解@Controller 定义控制器</h2>
+<p>org.springframework.stereotype.Controller 注解类型用于声明 Spring 类的实例是一个控制器（在讲 IoC 时还提到了另外 3 个注解）；Spring 可以使用扫描机制来找到应用程序中所有基于注解的控制器类，为了保证 Spring 能找到你的控制器，需要在配置文件中声明组件扫描。</p>
+<p>创建一个名了 Bar 的类，定义为一个控制器，类的具体实现如下：</p>
+<pre><code class="language- highlight-chroma"><span class="highlight-kn">package</span> <span class="highlight-nx">com</span><span class="highlight-p">.</span><span class="highlight-nx">zhangguo</span><span class="highlight-p">.</span><span class="highlight-nx">springmvc02</span><span class="highlight-p">.</span><span class="highlight-nx">controllers</span><span class="highlight-p">;</span> 
+
+<span class="highlight-kn">import</span> <span class="highlight-nx">org</span><span class="highlight-p">.</span><span class="highlight-nx">springframework</span><span class="highlight-p">.</span><span class="highlight-nx">stereotype</span><span class="highlight-p">.</span><span class="highlight-nx">Controller</span><span class="highlight-p">;</span> 
+<span class="highlight-kn">import</span> <span class="highlight-nx">org</span><span class="highlight-p">.</span><span class="highlight-nx">springframework</span><span class="highlight-p">.</span><span class="highlight-nx">ui</span><span class="highlight-p">.</span><span class="highlight-nx">Model</span><span class="highlight-p">;</span> 
+<span class="highlight-kn">import</span> <span class="highlight-nx">org</span><span class="highlight-p">.</span><span class="highlight-nx">springframework</span><span class="highlight-p">.</span><span class="highlight-nx">web</span><span class="highlight-p">.</span><span class="highlight-nx">bind</span><span class="highlight-p">.</span><span class="highlight-nx">annotation</span><span class="highlight-p">.</span><span class="highlight-nx">RequestMapping</span><span class="highlight-p">;</span> 
+
+<span class="highlight-cm">/** * 定义控制器 */</span>
+<span class="highlight-c1">//BarController类的实例是一个控制器，会自动添加到Spring上下文中
+</span><span class="highlight-c1"></span><span class="highlight-err">@</span><span class="highlight-nx">Controller</span> <span class="highlight-nx">public</span> <span class="highlight-nx">class</span> <span class="highlight-nx">BarController</span> <span class="highlight-p">{</span> <span class="highlight-c1">//映射访问路径
+</span><span class="highlight-c1"></span>    <span class="highlight-err">@</span><span class="highlight-nf">RequestMapping</span><span class="highlight-p">(</span><span class="highlight-s">"/bar"</span><span class="highlight-p">)</span> <span class="highlight-nx">public</span> <span class="highlight-nx">String</span> <span class="highlight-nf">index</span><span class="highlight-p">(</span><span class="highlight-nx">Model</span> <span class="highlight-nx">model</span><span class="highlight-p">){</span> <span class="highlight-c1">//Spring MVC会自动实例化一个Model对象用于向视图中传值
+</span><span class="highlight-c1"></span>        <span class="highlight-nx">model</span><span class="highlight-p">.</span><span class="highlight-nf">addAttribute</span><span class="highlight-p">(</span><span class="highlight-s">"message"</span><span class="highlight-p">,</span> <span class="highlight-s">"这是通过注解定义的一个控制器中的Action"</span><span class="highlight-p">);</span> 
+		  <span class="highlight-c1">//返回视图位置
+</span><span class="highlight-c1"></span>        <span class="highlight-k">return</span> <span class="highlight-s">"foo/index"</span><span class="highlight-p">;</span>
+    <span class="highlight-p">}</span>
+<span class="highlight-p">}</span>
+</code></pre>
+<p>还要需要修改 Spring mvc 配置文件，启用自动组件扫描功能，在 beans 中增加如下配置：</p>
+<pre><code class="language-fallback highlight-chroma">&lt;context:component-scan base-package="com.zhangguo.springmvc02" /&gt;
+</code></pre>
+<p>base-package 属性用于指定扫描的基础包，可以缩小扫描的范围。运行结果如下：</p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160711135843811-561677629.png" alt=""></p>
+<p>小结：从代码与运行结果可以看出 BarController 与 FooController 同时都指定了一个视图 foo/index.jsp，但是页面结果的结果是不一样的，从这里可以看出视图是被复用的，而控制器与视图之间是弱偶合关系。</p>
+<h1 id="toc_h1_3">二、@RequestMapping 详解</h1>
+<p>@RequestMapping 注释用于映射 url 到控制器类或一个特定的处理程序方法。可用于类或方法上。用于类上，表示类中的所有响应请求的方法都是以该地址作为父路径。该注解共有 8 个属性，注解源码如下：</p>
+<pre><code class="language- highlight-chroma"><span class="highlight-kn">package</span> <span class="highlight-nx">org</span><span class="highlight-p">.</span><span class="highlight-nx">springframework</span><span class="highlight-p">.</span><span class="highlight-nx">web</span><span class="highlight-p">.</span><span class="highlight-nx">bind</span><span class="highlight-p">.</span><span class="highlight-nx">annotation</span><span class="highlight-p">;</span> 
+
+<span class="highlight-kn">import</span> <span class="highlight-nx">java</span><span class="highlight-p">.</span><span class="highlight-nx">lang</span><span class="highlight-p">.</span><span class="highlight-nx">annotation</span><span class="highlight-p">.</span><span class="highlight-nx">Documented</span><span class="highlight-p">;</span> 
+<span class="highlight-kn">import</span> <span class="highlight-nx">java</span><span class="highlight-p">.</span><span class="highlight-nx">lang</span><span class="highlight-p">.</span><span class="highlight-nx">annotation</span><span class="highlight-p">.</span><span class="highlight-nx">ElementType</span><span class="highlight-p">;</span> 
+<span class="highlight-kn">import</span> <span class="highlight-nx">java</span><span class="highlight-p">.</span><span class="highlight-nx">lang</span><span class="highlight-p">.</span><span class="highlight-nx">annotation</span><span class="highlight-p">.</span><span class="highlight-nx">Retention</span><span class="highlight-p">;</span> 
+<span class="highlight-kn">import</span> <span class="highlight-nx">java</span><span class="highlight-p">.</span><span class="highlight-nx">lang</span><span class="highlight-p">.</span><span class="highlight-nx">annotation</span><span class="highlight-p">.</span><span class="highlight-nx">RetentionPolicy</span><span class="highlight-p">;</span> 
+<span class="highlight-kn">import</span> <span class="highlight-nx">java</span><span class="highlight-p">.</span><span class="highlight-nx">lang</span><span class="highlight-p">.</span><span class="highlight-nx">annotation</span><span class="highlight-p">.</span><span class="highlight-nx">Target</span><span class="highlight-p">;</span> 
+<span class="highlight-kn">import</span> <span class="highlight-nx">java</span><span class="highlight-p">.</span><span class="highlight-nx">util</span><span class="highlight-p">.</span><span class="highlight-nx">concurrent</span><span class="highlight-p">.</span><span class="highlight-nx">Callable</span><span class="highlight-p">;</span> 
+<span class="highlight-kn">import</span> <span class="highlight-nx">org</span><span class="highlight-p">.</span><span class="highlight-nx">springframework</span><span class="highlight-p">.</span><span class="highlight-nx">core</span><span class="highlight-p">.</span><span class="highlight-nx">annotation</span><span class="highlight-p">.</span><span class="highlight-nx">AliasFor</span><span class="highlight-p">;</span> 
+
+<span class="highlight-cm">/** * 用于映射url到控制器类或一个特定的处理程序方法. */</span>
+<span class="highlight-c1">//该注解只能用于方法或类型上
+</span><span class="highlight-c1"></span><span class="highlight-err">@</span><span class="highlight-nf">Target</span><span class="highlight-p">({</span> <span class="highlight-nx">ElementType</span><span class="highlight-p">.</span><span class="highlight-nx">METHOD</span><span class="highlight-p">,</span> <span class="highlight-nx">ElementType</span><span class="highlight-p">.</span><span class="highlight-nx">TYPE</span> <span class="highlight-p">})</span>
+<span class="highlight-err">@</span><span class="highlight-nf">Retention</span><span class="highlight-p">(</span><span class="highlight-nx">RetentionPolicy</span><span class="highlight-p">.</span><span class="highlight-nx">RUNTIME</span><span class="highlight-p">)</span>
+<span class="highlight-err">@</span><span class="highlight-nx">Documented</span>
+<span class="highlight-err">@</span><span class="highlight-nx">Mapping</span> <span class="highlight-nx">public</span> <span class="highlight-err">@</span><span class="highlight-kd">interface</span> <span class="highlight-nx">RequestMapping</span> <span class="highlight-p">{</span> <span class="highlight-cm">/** * 指定映射的名称 */</span> <span class="highlight-nx">String</span> <span class="highlight-nf">name</span><span class="highlight-p">()</span> <span class="highlight-k">default</span> <span class="highlight-s">""</span><span class="highlight-p">;</span> 
+<span class="highlight-cm">/** * 指定请求的路径映射，指定的地址可以是uri模板,别名为path */</span> <span class="highlight-err">@</span><span class="highlight-nf">AliasFor</span><span class="highlight-p">(</span><span class="highlight-s">"path"</span><span class="highlight-p">)</span>
+    <span class="highlight-nx">String</span><span class="highlight-p">[]</span> <span class="highlight-nf">value</span><span class="highlight-p">()</span> <span class="highlight-k">default</span> <span class="highlight-p">{};</span> 
+<span class="highlight-cm">/** 别名为value，使用path更加形象 * 只有用在一个Servlet环境：路径映射URI（例如“/myPath.do”）。
+</span><span class="highlight-cm">     * Ant风格的路径模式，同时也支持（例如，“/myPath/*.do”）。在方法层面，在主要的映射在类型级别表示相对路径（例如，“edit.do”）
+</span><span class="highlight-cm">     * 的支持。路径映射的URI可能包含占位符（例如“/$ {}连接”） */</span> <span class="highlight-err">@</span><span class="highlight-nf">AliasFor</span><span class="highlight-p">(</span><span class="highlight-s">"value"</span><span class="highlight-p">)</span>
+    <span class="highlight-nx">String</span><span class="highlight-p">[]</span> <span class="highlight-nf">path</span><span class="highlight-p">()</span> <span class="highlight-k">default</span> <span class="highlight-p">{};</span> 
+<span class="highlight-cm">/** * 指定请求谓词的类型如GET, POST, HEAD, OPTIONS, PUT, PATCH, DELETE, TRACE. 收窄请求范围 The
+</span><span class="highlight-cm">     * HTTP request methods to map to, narrowing the primary mapping: GET, POST,
+</span><span class="highlight-cm">     * HEAD, OPTIONS, PUT, PATCH, DELETE, TRACE. */</span> <span class="highlight-nx">RequestMethod</span><span class="highlight-p">[]</span> <span class="highlight-nf">method</span><span class="highlight-p">()</span> <span class="highlight-k">default</span> <span class="highlight-p">{};</span> 
+<span class="highlight-cm">/** * 映射请求的参数，收窄请求范围 The parameters of the mapped request, narrowing the
+</span><span class="highlight-cm">     * primary mapping. */</span> <span class="highlight-nx">String</span><span class="highlight-p">[]</span><span class="highlight-nf">params</span><span class="highlight-p">()</span> <span class="highlight-k">default</span> <span class="highlight-p">{};</span> 
+<span class="highlight-cm">/** * 映射请求头部，收窄请求范围 The headers of the mapped request, narrowing the primary
+</span><span class="highlight-cm">     * mapping. RequestMapping(value = "/something", headers =
+</span><span class="highlight-cm">     * "content-type=text/*") */</span> <span class="highlight-nx">String</span><span class="highlight-p">[]</span> <span class="highlight-nf">headers</span><span class="highlight-p">()</span> <span class="highlight-k">default</span> <span class="highlight-p">{};</span> 
+<span class="highlight-cm">/** * 指定处理请求的提交内容类型（Content-Type），例如application/json, text/html，收窄请求范围 The
+</span><span class="highlight-cm">     * consumable media types of the mapped request, narrowing the primary
+</span><span class="highlight-cm">     * mapping. */</span> <span class="highlight-nx">String</span><span class="highlight-p">[]</span> <span class="highlight-nf">consumes</span><span class="highlight-p">()</span> <span class="highlight-k">default</span> <span class="highlight-p">{};</span> 
+<span class="highlight-cm">/** * 指定返回的内容类型，仅当request请求头中的(Accept)类型中包含该指定类型才返回 The producible media types
+</span><span class="highlight-cm">     * of the mapped request, narrowing the primary mapping. produces =
+</span><span class="highlight-cm">     * "text/plain" produces = {"text/plain", "application/*"} produces =
+</span><span class="highlight-cm">     * "application/json; 
+</span><span class="highlight-cm">charset=UTF-8" */</span> <span class="highlight-nx">String</span><span class="highlight-p">[]</span> <span class="highlight-nf">produces</span><span class="highlight-p">()</span> <span class="highlight-k">default</span> <span class="highlight-p">{};</span>
+<span class="highlight-p">}</span>
+</code></pre>
+<p>从上面的源码可以发现除了 name 基本都是数组类型，在设置时我们可以指定单个值，如@RequestMapping(value="/foo")；也可以同时指定多个值如：@RequestMapping(value={"/foo","/bar"})。</p>
+<h2 id="toc_h2_4">2.1、value 属性指定映射路径或 URL 模板</h2>
+<p>指定请求的实际地址，指定的地址可以是 URL 模板，正则表达式或路径占位，该属性与 path 互为别名关系，@RequestMapping("/foo")} 与 @RequestMapping(path="/foo")相同。该属性是使用最频繁，最重要的一个属性，如果只指定该属性时可以把 value 略去。Spring Framework 4.2 引入了一流的支持声明和查找注释属性的别名。@AliasFor 注解可用于声明一双别名属性，来给注解的属性起别名, 让使用注解时, 更加的容易理解(比如给 value 属性起别名, 更容易让人理解)。先看一个官网的示例：</p>
+<pre><code class="language-fallback highlight-chroma">@Controller
+@RequestMapping("/appointments") public class AppointmentsController { private final AppointmentBook appointmentBook;
+
+    @Autowired public AppointmentsController(AppointmentBook appointmentBook) { this.appointmentBook = appointmentBook;
+    }
+
+    @RequestMapping(method = RequestMethod.GET) public Map get() { return appointmentBook.getAppointmentsForToday();
+    }
+
+    @RequestMapping(value = "/{day}", method = RequestMethod.GET) public Map getForDay(@PathVariable @DateTimeFormat(iso = ISO.DATE) Date day, Model model) { return appointmentBook.getAppointmentsForDay(day);
+    }
+
+    @RequestMapping(value = "/new", method = RequestMethod.GET) public AppointmentForm getNewForm() { return new AppointmentForm();
+    }
+
+    @RequestMapping(method = RequestMethod.POST) public String add(@Valid AppointmentForm appointment, BindingResult result) { if (result.hasErrors()) { return "appointments/new";
+        }
+        appointmentBook.addAppointment(appointment); 
+return "redirect:/appointments";
+    }
+}
+</code></pre>
+<h3 id="toc_h3_5">2.1.1、指定具体路径字符</h3>
+<p>2.1.1.1 只注解方法</p>
+<pre><code class="language-fallback highlight-chroma">@Controller public class FooBarController {
+    @RequestMapping("/action1") public String action1(){ return "foo/index";
+    }
+}
+</code></pre>
+<p>访问路径：http://localhost:8087/SpringMVC02/action1</p>
+<p>2.1.1.2 同时注解类与方法</p>
+<pre><code class="language-fallback highlight-chroma">@Controller
+**@RequestMapping(****"/foobar") **public class FooBarController {
+** @RequestMapping(****"/action1") **public String action1(){ return "foo/index";
+    }
+}
+</code></pre>
+<p>访问路径：http://localhost:8087/SpringMVC02/foobar/action1</p>
+<p>需要先指定类的路径再指定方法的路径</p>
+<p>2.1.1.3 当 value 为空值</p>
+<p>注解在方法上时，如果 value 为空则表示该方法为类下默认的 Action。</p>
+<pre><code class="language-fallback highlight-chroma">@Controller
+@RequestMapping("/foobar") public class FooBarController {
+    @RequestMapping("/action1") public String action1(Model model){ //在模型中添加属性message值为action1，渲染页面时使用
+        model.addAttribute("message", "action1"); 
+return "foo/index";
+    }
+
+    **@RequestMapping** public String action2(Model model){ //在模型中添加属性message值为action2，渲染页面时使用
+        model.addAttribute("message", "action2"); 
+return "foo/index";
+    }
+}
+</code></pre>
+<p>访问 action2 的路径是：http://localhost:8087/SpringMVC02/foobar，如果加上 action2 就错误了。</p>
+<p>注解在类上时，当 value 为空值则为默认的控制器，可以用于设置项目的起始页。</p>
+<pre><code class="language-fallback highlight-chroma">@Controller
+**@RequestMapping** public class FooBarController {
+    @RequestMapping("/action1") public String action1(Model model){ //在模型中添加属性message值为action1，渲染页面时使用
+        model.addAttribute("message", "action1"); 
+return "foo/index";
+    }
+
+** @RequestMapping **public String action2(Model model){ //在模型中添加属性message值为action2，渲染页面时使用
+        model.addAttribute("message", "action2"); 
+return "foo/index";
+    }
+}
+</code></pre>
+<p>访问路径：http://localhost:8087/SpringMVC02/，同时省去了控制器名与 Action 名称，可用于欢迎页。</p>
+<p>访问 action1 的路径是：http://localhost:8087/SpringMVC02/action1</p>
+<h3 id="toc_h3_6">2.1.2、路径变量占位，URI 模板模式</h3>
+<p>在 Spring MVC 可以使用@PathVariable 注释方法参数的值绑定到一个 URI 模板变量。</p>
+<pre><code class="language-fallback highlight-chroma">@RequestMapping("/action3/{p1}/{p2}") public String action3(@PathVariable int p1,@PathVariable int p2,Model model){
+        model.addAttribute("message", p1+p2); 
+return "foo/index";
+    }
+</code></pre>
+<p>运行结果：</p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160711152515701-1226845292.png" alt=""></p>
+<p>使用路径变量的好处：使路径变得更加简洁；获得参数更加方便，框架会自动进行类型转换。通过路径变量的类型可以约束访问参数，如果类型不一样，则访问不到 action，如这里访问是的路径是/action3/1/a，则路径与方法不匹配，而不会是参数转换失败。</p>
+<h3 id="toc_h3_7">2.1.3、正则表达式模式的 URI 模板</h3>
+<pre><code class="language-fallback highlight-chroma">    @RequestMapping(value="/action4/{id:\\d{6}}-{name:[a-z]{3}}") public String action4(@PathVariable int id,@PathVariable String name,Model model){
+        model.addAttribute("message", "id:"+id+" name:"+name); 
+return "foo/index";
+    }
+</code></pre>
+<p>正则要求 id 必须为 6 位的数字，而 name 必须为 3 位小写字母，访问结果如下：</p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160711155418982-1998650098.png" alt=""></p>
+<h3 id="toc_h3_8">2.1.4、矩阵变量@MatrixVariable</h3>
+<p>矩阵变量可以出现在任何路径段,每个矩阵变量用“;”分隔。例如:“/汽车;颜色 = 红;年 =2012”。多个值可以是“,”分隔“颜色 = 红、绿、蓝”或变量名称可以重复“颜色 = 红;颜色 = 绿色;颜色 = 蓝”，如下所示：</p>
+<pre><code class="language-fallback highlight-chroma">    // GET /pets/42;q=11;r=22
+    @RequestMapping(value = "/pets/{petId}") public void findPet(@PathVariable String petId, @MatrixVariable int q) { // petId == 42 // q == 11
+    }
+
+    // 矩阵变量
+    @RequestMapping(value = "/action5/{name}") public String action5(Model model, 
+            @PathVariable String name, //路径变量，用于获得路径中的变量name的值
+ @MatrixVariable String r,
+            @MatrixVariable(required = true) String g,  //参数g是必须的
+            @MatrixVariable(defaultValue = "99", required = false) String b) {  //参数b不是必须的，默认值是99
+        model.addAttribute("message", name + " is #" + r + g + b); 
+return "foo/index";
+    }
+ //Get http://localhost:8087/SpringMVC02/action5/the%20book%20color;r=33;g=66
+ //the book color is #336699
+</code></pre>
+<p>默认是不允许使用矩阵变量的，需要设置配置文中的 RequestMappingHandlerMapping 的属性 removeSemicolonContent 为 false；在 annotation-driven 中增加属性 enable-matrix-variables="true"，修改后的 springmvc-servlet.xml 文件如下：</p>
+<pre><code class="language-fallback highlight-chroma">    &lt;mvc:annotation-driven enable-matrix-variables="true" /&gt;
+    
+    &lt;bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"&gt;
+        &lt;property name="removeSemicolonContent" value="false" /&gt;
+    bean&gt;
+</code></pre>
+<p>访问结果如下：</p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160711205437842-659324236.png" alt=""></p>
+<h3 id="toc_h3_9">2.1.5、Ant 风格路径模式</h3>
+<p>@RequestMapping 注解也支持 ant 风格的路径模式，如/myPath/<em>.do，/owners/</em>/pets/{petId}，示例代码如下：</p>
+<pre><code class="language-fallback highlight-chroma">    //Ant风格路径模式
+    @RequestMapping(value = "/action6/*.do") public String action6(Model model){ 
+        model.addAttribute("message","Ant风格路径模式"); 
+return "foo/index";
+    }
+</code></pre>
+<p>运行结果：</p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160711212330373-1197283185.png" alt=""></p>
+<p>当然还有关于路径匹配的规则，特殊的优先级高过一般的，更多规则可以参考官方帮助。</p>
+<p>ANT 通配符有三种：</p>
+<p><img src="https://img2018.cnblogs.com/blog/63651/201810/63651-20181024102655074-1541398188.png" alt=""></p>
+<p><img src="https://img2018.cnblogs.com/blog/63651/201810/63651-20181024102720221-1685826488.png" alt=""></p>
+<h3 id="toc_h3_10">2.1.6、@RequestMapping 来处理多个 URI</h3>
+<p>你可以将多个请求映射到一个方法上去，只需要添加一个带有请求路径值列表的 @RequestMapping 注解就行了。</p>
+<pre><code class="language-fallback highlight-chroma">@RestController  
+@RequestMapping("/home") public class IndexController {  
+
+    @RequestMapping(value = { "", "/page", "page*", "view/*",
+　　　　　"**/msg" })  
+    String indexMultipleMapping() { return "Hello from index multiple mapping."; 
+ 
+    }  
+} 
+</code></pre>
+<p>如你在这段代码中所看到的，@RequestMapping 支持统配符以及 ANT 风格的路径。前面这段代码中，如下的这些 URL 都会由 indexMultipleMapping() 来处理：</p>
+<pre><code class="language-fallback highlight-chroma">localhost:8080/home
+
+localhost:8080/home/
+
+localhost:8080/home/page
+
+localhost:8080/home/pageabc
+
+localhost:8080/home/view/
+
+localhost:8080/home/view/view
+</code></pre>
+<h2 id="toc_h2_11">2.2、method 属性指定谓词类型</h2>
+<p>用于约束请求的谓词类型，可以收窄请求范围。指定请求谓词的类型如 GET, POST, HEAD, OPTIONS, PUT, PATCH, DELETE, TRACE，如下代码所示：</p>
+<pre><code class="language-fallback highlight-chroma">    //谓词类型
+    @RequestMapping(value = "/action6",method={RequestMethod.POST,RequestMethod.DELETE}) public String action6(Model model) {
+        model.addAttribute("message", "请求谓词只能是POST与DELETE"); 
+return "foo/index";
+    }
+</code></pre>
+<p>要访问 action7 请求谓词类型必须是 POST 或者为 DELETE，当我们从浏览器的 URL 栏中直接请求时为一个 GET 请求，则结果是 405，如下所示：</p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160711162340717-1487269881.png" alt=""></p>
+<p>如果将 POST 修改为 GET 则正常了,如下所示：</p>
+<pre><code class="language-fallback highlight-chroma">    //谓词类型
+    @RequestMapping(value = "/action6",method=RequestMethod.GET) public String action6(Model model) {
+        model.addAttribute("message", "请求谓词只能是GET"); 
+return "foo/index";
+    }
+</code></pre>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160711162518732-868938556.png" alt=""></p>
+<p>Spring MVC 的 @RequestMapping 注解能够处理 HTTP 请求的方法, 比如 GET, PUT, POST, DELETE 以及 PATCH。</p>
+<p>所有的请求默认都会是 HTTP GET 类型的。</p>
+<p>为了能降一个请求映射到一个特定的 HTTP 方法，你需要在 @RequestMapping 中使用 method 来声明 HTTP 请求所使用的方法类型，如下所示：</p>
+<pre><code class="language-fallback highlight-chroma">@RestController  
+@RequestMapping("/home") public class IndexController {  
+    @RequestMapping(method = RequestMethod.GET)  
+    String get() { return "Hello from get"; 
+ 
+    }  
+    @RequestMapping(method = RequestMethod.DELETE)  
+    String delete() { return "Hello from delete"; 
+ 
+    }  
+    @RequestMapping(method = RequestMethod.POST)  
+    String post() { return "Hello from post"; 
+ 
+    }  
+    @RequestMapping(method = RequestMethod.PUT)  
+    String put() { return "Hello from put"; 
+ 
+    }  
+    @RequestMapping(method = RequestMethod.PATCH)  
+    String patch() { return "Hello from patch"; 
+ 
+    }  
+} 
+</code></pre>
+<p>在上述这段代码中， @RequestMapping 注解中的 method 元素声明了 HTTP 请求的 HTTP 方法的类型。<br>
+所有的处理处理方法会处理从这同一个 URL( /home)进来的请求, 但要看指定的 HTTP 方法是什么来决定用哪个方法来处理。<br>
+例如，一个 POST 类型的请求 /home 会交给 post() 方法来处理，而一个 DELETE 类型的请求 /home 则会由 delete() 方法来处理。<br>
+你会看到 Spring MVC 将使用这样相同的逻辑来映射其它的方法。</p>
+<h2 id="toc_h2_12">2.3、consumes 属性指定请求的 Content-Type</h2>
+<p>@RequestMapping 注解的 produces 和 consumes 这两个元素来缩小请求映射类型的范围，达到处理生产和消费对象的目的。</p>
+<p>指定处理请求的提交内容类型（Content-Type），例如 application/json, text/html，收窄请求范围，如果用户发送的请求内容类型不匹配则方法不会响应请求，具体使用如下代码所示：</p>
+<pre><code class="language- highlight-chroma"><span class="highlight-kn">package</span> <span class="highlight-nx">com</span><span class="highlight-p">.</span><span class="highlight-nx">zhangguo</span><span class="highlight-p">.</span><span class="highlight-nx">springmvc02</span><span class="highlight-p">.</span><span class="highlight-nx">controllers</span><span class="highlight-p">;</span> 
+<span class="highlight-kn">import</span> <span class="highlight-nx">org</span><span class="highlight-p">.</span><span class="highlight-nx">springframework</span><span class="highlight-p">.</span><span class="highlight-nx">stereotype</span><span class="highlight-p">.</span><span class="highlight-nx">Controller</span><span class="highlight-p">;</span> 
+<span class="highlight-kn">import</span> <span class="highlight-nx">org</span><span class="highlight-p">.</span><span class="highlight-nx">springframework</span><span class="highlight-p">.</span><span class="highlight-nx">ui</span><span class="highlight-p">.</span><span class="highlight-nx">Model</span><span class="highlight-p">;</span> 
+<span class="highlight-kn">import</span> <span class="highlight-nx">org</span><span class="highlight-p">.</span><span class="highlight-nx">springframework</span><span class="highlight-p">.</span><span class="highlight-nx">web</span><span class="highlight-p">.</span><span class="highlight-nx">bind</span><span class="highlight-p">.</span><span class="highlight-nx">annotation</span><span class="highlight-p">.</span><span class="highlight-nx">RequestMapping</span><span class="highlight-p">;</span>
+
+<span class="highlight-err">@</span><span class="highlight-nx">Controller</span>
+<span class="highlight-err">@</span><span class="highlight-nf">RequestMapping</span><span class="highlight-p">(</span><span class="highlight-s">"/home"</span><span class="highlight-p">)</span> <span class="highlight-nx">public</span> <span class="highlight-nx">class</span> <span class="highlight-nx">HomeController</span> <span class="highlight-p">{</span> <span class="highlight-c1">// 请求内容类型必须为text/html，注意浏览器默认没有指定Content-type
+</span><span class="highlight-c1"></span>    <span class="highlight-err">@</span><span class="highlight-nf">RequestMapping</span><span class="highlight-p">(</span><span class="highlight-nx">value</span> <span class="highlight-p">=</span> <span class="highlight-s">"/action8"</span><span class="highlight-p">,</span><span class="highlight-nx">consumes</span><span class="highlight-p">=</span><span class="highlight-s">"text/html"</span><span class="highlight-p">)</span> <span class="highlight-nx">public</span> <span class="highlight-nx">String</span> <span class="highlight-nf">action8</span><span class="highlight-p">(</span><span class="highlight-nx">Model</span> <span class="highlight-nx">model</span><span class="highlight-p">)</span> <span class="highlight-p">{</span>
+        <span class="highlight-nx">model</span><span class="highlight-p">.</span><span class="highlight-nf">addAttribute</span><span class="highlight-p">(</span><span class="highlight-s">"message"</span><span class="highlight-p">,</span> <span class="highlight-s">"请求的提交内容类型（Content-Type）是text/html"</span><span class="highlight-p">);</span> 
+<span class="highlight-k">return</span> <span class="highlight-s">"foo/index"</span><span class="highlight-p">;</span>
+    <span class="highlight-p">}</span>
+<span class="highlight-p">}</span>
+</code></pre>
+<p>在 action8 的注解中约束发送到服务器的 Content-Type 必须是 text/html 类型，如果类型不一致则会报错（415），测试结果如下：</p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160712092711998-79974306.png" alt=""></p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160712092759561-1222347155.png" alt=""></p>
+<p>从两个图的对比可以看出当内容类型为 text/plain 时报客户端错误 415，当内容类型为 text/html 时则响应正常，响应的结果如下：</p>
+<p>_请求的提交内容类型（Content-Type）是 text/html _</p>
+<p>注意：可以使用！号，如 consumes="!text/html"</p>
+<h2 id="toc_h2_13">2.4、produces 属性指定响应的 Content-Type，约束 Accept 类型</h2>
+<p>指定返回的内容类型，仅当 request 请求头中的(Accept)类型中包含该指定类型才返回，方法才处理客户端的请求否则会报 406 错误，常用设置如下：</p>
+<p>produces = "text/plain"  //客户端只接收纯文本</p>
+<p>produces = {"text/plain", "application/*"}   //客户端接收纯文本与 application/*类型的内容</p>
+<p>produces = "application/json;<br>
+charset=UTF-8"  //客户端接收 JSON 且编码为 utf-8</p>
+<pre><code class="language-fallback highlight-chroma">    //客户端接收json且编码为utf-8，多数浏览器Accept设置的为*/*，接收任意类型
+    @RequestMapping(value = "/action9",produces="application/json; 
+charset=UTF-8") public String action9(Model model) {
+        model.addAttribute("message", "客户端可以接收的类型是application/json; 
+charset=UTF-8"); 
+return "foo/index";
+    }
+</code></pre>
+<p>运行结果：</p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160712094206029-1081665188.png" alt=""></p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160712094333139-567631345.png" alt=""></p>
+<p>注意：可以使用！号，如 produces="!text/html"</p>
+<h2 id="toc_h2_14">2.5、params 属性指定请求中必须有特定参数与值</h2>
+<p>映射请求的参数，收窄请求范围。可以限制客户端发送到服务器的请求参数为某些特定值或不为某些值，如下代码所示：</p>
+<pre><code class="language-fallback highlight-chroma">    //请求的参数必须包含id=215与name不等于abc
+    @RequestMapping(value = "/action10",params={"id=215","name!=abc"}) public String action10(Model model) {
+        model.addAttribute("message", "请求的参数必须包含id=215与name不等于abc"); 
+return "foo/index";
+    }
+</code></pre>
+<p>运行结果如下：</p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160712095453920-1950438158.png" alt=""></p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160712095523920-346216342.png" alt=""></p>
+<p>name 的值如没有指定也是通过的；可以使用不等于；</p>
+<h2 id="toc_h2_15">2.6、headers 属性指定请求中必须有特定 header 值</h2>
+<p>映射请求头部，收窄请求范围。约束客户端发送的请求头部信息中必须包含某个特定的值或不包含某个值，作用范围明显大于前面讲过的几种，示例代码如下：</p>
+<pre><code class="language-fallback highlight-chroma">    //请求头部信息中必须包含Host=localhost:8088
+    @RequestMapping(value = "/action11",headers="Host=localhost:8088") public String action11(Model model) {
+        model.addAttribute("message", "请求头部信息中必须包含Host=localhost:8088"); 
+return "foo/index";
+    }
+</code></pre>
+<p>运行结果：</p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160712100415232-497626911.png" alt=""></p>
+<p>修改 Host 为 8087 时运行就正常了：</p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160712100523404-2136816645.png" alt=""></p>
+<p>这里同样可以使用！号；可以使用通配符如：Content-Type="application/*"</p>
+<h2 id="toc_h2_16">2.7、name 属性指定名称</h2>
+<p>为当前映射指定一个名称，不常用，一般不会指定。</p>
+<h2 id="toc_h2_17">2.8、path 属性指定路径</h2>
+<p>先看源码中的 path 与 value，定义如下：</p>
+<pre><code class="language-fallback highlight-chroma">    @AliasFor("path")
+    String[] value() default {};
+    @AliasFor("value")
+    String[] path() default {};
+</code></pre>
+<p>从 Spring 4.2 开始引入了@AliasFor 注解，可以实现属性的别名，如 value 本身并没有特定的含义，而 path 会更加具体，能见名知义，通俗说可以认为两者在使用中是一样的如：@RequestMapping("/foo")} 与 @RequestMapping(path="/foo")相同。示例代码如下：</p>
+<pre><code class="language-fallback highlight-chroma">    //映射访问路径为/action12或/myaction，指定映射名称为actionTest
+    @RequestMapping(path ={"/action12","/myaction"},name="actionTest") public String action12(Model model) {
+        model.addAttribute("message", "映射访问路径为/action12或/myaction，指定映射名称为actionTest"); 
+return "foo/index";
+    }
+</code></pre>
+<p>运行结果：</p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160712101634107-332644375.png" alt=""></p>
+<p><img src="https://images2015.cnblogs.com/blog/63651/201607/63651-20160712101700873-1076508180.png" alt=""></p>
+<h2 id="toc_h2_18">2.9、@RequestMapping 快捷方式</h2>
+<p>Spring 4.3 引入了方法级注解的变体，也被叫做 @RequestMapping 的组合注解。组合注解可以更好的表达被注解方法的语义。它们所扮演的角色就是针对 @RequestMapping 的封装，而且成了定义端点的标准方法。</p>
+<p>例如，@GetMapping 是一个组合注解，它所扮演的是 @RequestMapping(method =RequestMethod.GET) 的一个快捷方式。<br>
+方法级别的注解变体有如下几个：</p>
+<pre><code class="language-fallback highlight-chroma">@GetMapping
+@PostMapping
+@PutMapping
+@DeleteMapping
+@PatchMappin
+</code></pre>
+<p>如下面两个 action 就是基本等价的：</p>
+<pre><code class="language-fallback highlight-chroma">    @RequestMapping(value = "/action3",method = RequestMethod.GET) public String action3(Model model){
+        model.addAttribute("msg","action3 get请求"); 
+return "hi";
+    }
+
+    @GetMapping("/action4") public String action4(Model model){
+        model.addAttribute("msg","action4 get请求"); 
+return "hi";
+    }
+</code></pre>
+<p>action4 的写法要简单一些，GetMapping 与 RequestMapping 的具体用法一样，源码如下：</p>
+<p><img src="https://images.cnblogs.com/OutliningIndicators/ContractedBlock.gif" alt=""> View Code</p>
+<h3 id="toc_h3_19">2.9.1、小黄鸭调试法</h3>
+<p>场景一：<em>我们都有过向别人（甚至可能向完全不会编程的人）提问及解释编程问题的经历，但是很多时候就在我们解释的过程中自己却想到了问题的解决方案，然后对方却一脸茫然。</em></p>
+<p>场景二：你的同行跑来问你一个问题，但是当他自己把问题说完，或说到一半的时候就想出答案走了，留下一脸茫然的你。</p>
+<p>其实上面两种场景现象就是所谓的小黄鸭调试法（Rubber Duck Debuging），又称橡皮鸭调试法，它是我们软件工程中最常使用调试方法之一。</p>
+<p><img src="https://img2018.cnblogs.com/blog/63651/201810/63651-20181024151359564-1845106143.png" alt=""></p>
+<p>此概念据说来自《程序员修炼之道》书中的一个故事，传说程序大师随身携带一只小黄鸭，在调试代码的时候会在桌上放上这只小黄鸭，然后详细地向鸭子解释每行代码，然后很快就将问题定位修复了。</p>
+<p>谢谢原作者，博客转自：<a href="https://www.cnblogs.com/best/p/5659596.html" target="_blank">https://www.cnblogs.com/best/p/5659596.html</a></p>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Java">
+                            Java</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E5%8A%A0%E5%AF%86%E5%AE%89%E5%85%A8">
+                            加密安全</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96">
+                            性能优化</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2018/11/24/1543063983807.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="Pros and cons of end to end testing tools">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="Spring MVC 控制器定义与@RequestMapping详解"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2018/12/23/1545494483392.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2019/01/04/1546576680169.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="Migrating MariaDB Data Into Elasticsearch Using Logstash">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1545494483392"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+<ul class="article__toc">
+        <li class="toc__h1">
+            <a href="#toc_h1_0">一、控制器定义</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_1">1.1、实现接口 Controller 定义控制器</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_2">1.2、使用注解@Controller 定义控制器</a>
+        </li>
+        <li class="toc__h1">
+            <a href="#toc_h1_3">二、@RequestMapping 详解</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_4">2.1、value 属性指定映射路径或 URL 模板</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_5">2.1.1、指定具体路径字符</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_6">2.1.2、路径变量占位，URI 模板模式</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_7">2.1.3、正则表达式模式的 URI 模板</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_8">2.1.4、矩阵变量@MatrixVariable</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_9">2.1.5、Ant 风格路径模式</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_10">2.1.6、@RequestMapping 来处理多个 URI</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_11">2.2、method 属性指定谓词类型</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_12">2.3、consumes 属性指定请求的 Content-Type</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_13">2.4、produces 属性指定响应的 Content-Type，约束 Accept 类型</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_14">2.5、params 属性指定请求中必须有特定参数与值</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_15">2.6、headers 属性指定请求中必须有特定 header 值</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_16">2.7、name 属性指定名称</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_17">2.8、path 属性指定路径</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_18">2.9、@RequestMapping 快捷方式</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_19">2.9.1、小黄鸭调试法</a>
+        </li>
+</ul></aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1545494483392",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1545494483392",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("Java,加密安全,性能优化", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1545494483392', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 30ms, 2020/11/29 22:19:05 -->

@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+  <channel>
+    <title>随心笔客</title>
+    <link>https://zxniuniu.github.io</link>
+    <atom:link href="https://zxniuniu.github.io/rss.xml" rel="self" type="application/rss+xml"/>
+    <description>张小妞的个人博客</description>
+    <generator>Solo, v4.3.1, https://b3log.org/solo</generator>
+    <lastBuildDate>Sun, 29 Nov 2020 22:19:04 +0800</lastBuildDate>
+    <language>zh-cn</language>
+    <item>
+      <title>感受Lambda之美，推荐收藏，需要时查阅</title>
+      <link>https://zxniuniu.github.io/articles/2019/06/09/1560086633135.html</link>
+      <description><![CDATA[<p>Java8 最大的特性就是引入 Lambda 表达式，即函数式编程，可以将行为进行传递。<strong>总结就是：使用不可变值与函数，函数对不可变值进行处理，映射成另一个值。</strong></p>
+<p><img src="https://img.hacpai.com/bing/20190322.jpg?imageView2/1/w/960/h/300/interlace/1/q/100" alt=""></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/06/09/1560086633135.html</guid>
+      <category>工具</category>
+      <category>Java</category>
+      <pubDate>Fri, 19 Jun 2020 21:58:05 +0800</pubDate>
+    </item>
+    <item>
+      <title>Idea 中使用 JRebel 实现 SpringBoot 热部署</title>
+      <link>https://zxniuniu.github.io/articles/2020/03/26/1585192214841.html</link>
+      <description><![CDATA[<p>在 SpringBoot 开发过程中，当 Debug 项目时，修改代码逻辑、修改接口路由、新增工具类等等情况下，一般都需要重新启动工程。通过配置 JRebel 可实现热部署，保存代码后自动编译新文件，并通过 JRebel 自动 Reload，从而实现快捷开发。<br>
+<img src="https://img.hacpai.com/bing/20180408.jpg?imageView2/1/w/960/h/240/interlace/1/q/100" alt=""></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2020/03/26/1585192214841.html</guid>
+      <category>Java</category>
+      <category>工具</category>
+      <category>Springboot</category>
+      <category>性能优化</category>
+      <pubDate>Fri, 27 Mar 2020 14:01:01 +0800</pubDate>
+    </item>
+    <item>
+      <title>Springboot 使用 Logback 自动同步指定级别日志到 MariaDB 数据库</title>
+      <link>https://zxniuniu.github.io/articles/2020/03/25/1585146340397.html</link>
+      <description><![CDATA[<p>为方便问题排查与分析，有时候需要把符合条件的指定级别日志自动持久化到数据库中。本文使用 logback 的 DBAppender，以及 AsyncAppender 实现 WARN 以上级别的日志自动异步到指定的数据库中。<br>
+<img src="https://img.hacpai.com/bing/20181226.jpg?imageView2/1/w/960/h/240/interlace/1/q/100" alt=""></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2020/03/25/1585146340397.html</guid>
+      <category>MariaDB</category>
+      <category>数据库</category>
+      <category>Springboot</category>
+      <pubDate>Wed, 25 Mar 2020 22:30:26 +0800</pubDate>
+    </item>
+    <item>
+      <title>用好这些隐藏「小开关」，让 Chrome 浏览器更好用（个人备用）</title>
+      <link>https://zxniuniu.github.io/articles/2020/01/07/1578385869281.html</link>
+      <description><![CDATA[<p>桌面端 Chrome 可能是你我每天使用频次最多的桌面软件，多端数据同步，实用的扩展插件都让其成为电脑上的「超级应用」，近乎无限制的桌面平台也让其可以在第一时间运用起新的功能和技术。如 <code>开启并行下载功能</code> ，<code>给标签页进行分组</code>，<code>开启阅读模式</code>，<code>开启全局媒体播放控制</code>，<code>鼠标悬停标签页展示网页预览图</code>，<code>「冻结」非活动标签页，省电省资源</code>，<code>「加速」前进、后退操作</code>等。<br>
+<img src="https://img.hacpai.com/file/2020/01/16-8857af21.png?imageView2/1/w/960/h/270/interlace/1/q/100" alt="16.png"></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2020/01/07/1578385869281.html</guid>
+      <category>知识管理</category>
+      <category>工具</category>
+      <category>性能优化</category>
+      <pubDate>Thu, 16 Jan 2020 16:32:01 +0800</pubDate>
+    </item>
+    <item>
+      <title>Frp 内网穿透，实现个人相册、视频随时随地查看</title>
+      <link>https://zxniuniu.github.io/articles/2019/12/29/1577603429222.html</link>
+      <description><![CDATA[<p>前一段时间写了一篇关于家庭相册的文章（<a href="https://fuyiyi.imdo.co/articles/2019/10/10/1570698539034.html">可高级自定义的开源 Piwigo 相册，您的照片管理、浏览专家</a>），后来有人问，如果没有服务器，又不想花（太多的）钱怎么办？可以使用花生壳进行内网穿透，开通需 8 元后的账户貌似就可以够用，经过测试貌似限速 100M，且单月免费流量为 1G（可通过分享赚取花生米兑换流量），查看相册图片没什么问题，但看视频就不行了。那么另外一种方式就是今天要写的，即使用 SAKURA FRP 来免费实现。<br>
+<img src="https://img.hacpai.com/file/2019/12/image-428cb755.png?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="image.png"></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/12/29/1577603429222.html</guid>
+      <category>相册</category>
+      <category>工具</category>
+      <pubDate>Sun, 29 Dec 2019 15:17:12 +0800</pubDate>
+    </item>
+    <item>
+      <title>可高级自定义的开源 Piwigo 相册，您的照片管理、浏览专家【强烈推荐】</title>
+      <link>https://zxniuniu.github.io/articles/2019/10/10/1570698539034.html</link>
+      <description><![CDATA[<p><strong>Piwigo</strong> 是一款基于 Web 网页的开源图片管理系统，其带有非常简单的安装界面和管理面板，具有强大的功能来发布、管理、浏览您的照片，并且众多的扩展插件使 Piwigo 定制更加轻松，锦上添花。更令人振奋的是 Piwigo 是完全免费及源码开放的。Piwigo 提供了一系列丰富的功能，可设置图片自由/限制访问，以及角色/用户管理，多服务器支持，用户评论支持，采用模板控制界面外观，多语言支持，多目录支持（每一张图片可以同时属于多个目录）。Piwigo 每年都在更新，新功能取决于程序小组的新想法和与社区会员的讨论。</p>
+<p><img src="https://img.hacpai.com/file/2019/10/piwigo-bcafc0dc.jpg?imageView2/1/w/960/h/270/interlace/1/q/100" alt="piwigo.jpg"></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/10/10/1570698539034.html</guid>
+      <category>工具</category>
+      <category>相册</category>
+      <pubDate>Sun, 29 Dec 2019 15:17:02 +0800</pubDate>
+    </item>
+    <item>
+      <title>ECharts保存背景透明PNG图片</title>
+      <link>https://zxniuniu.github.io/articles/2019/12/23/1577069567682.html</link>
+      <description><![CDATA[<p>ECharts 前端生成图片后，截图或采用 toolbox 的 saveAsImage 保存的图片存在背景，或为白色背景，下面即为如何保存为背景透明图片的方法。<br>
+<img src="https://img.hacpai.com/bing/20190605.jpg?imageView2/1/w/960/h/270/interlace/1/q/100" alt=""></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/12/23/1577069567682.html</guid>
+      <category>工具</category>
+      <category>可视化</category>
+      <pubDate>Mon, 23 Dec 2019 12:32:40 +0800</pubDate>
+    </item>
+    <item>
+      <title>无限空间相册管理软件 - 一刻相册</title>
+      <link>https://zxniuniu.github.io/articles/2019/10/10/1570675261608.html</link>
+      <description><![CDATA[<p>虽然百度的产品经常被骂成狗，不过偶尔百度还是能推出好产品的，比如 Echarts。如今百度又推出了“一刻相册”打着无限备份容量的旗号，着实吸引眼球。不过还是提醒下，天下没有免费的午餐，小心被薅，毕竟百度网盘曾经是不限速的哦！<br>
+<img src="https://img.hacpai.com/file/2019/10/20191010103610-58b87595.jpg?imageView2/1/w/960/h/270/interlace/1/q/100" alt="20191010103610.jpg"></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/10/10/1570675261608.html</guid>
+      <category>工具</category>
+      <category>相册</category>
+      <pubDate>Tue, 15 Oct 2019 10:25:42 +0800</pubDate>
+    </item>
+    <item>
+      <title>NoteExpress 实现文献检索、下载、管理、Word参考文献自动引用</title>
+      <link>https://zxniuniu.github.io/articles/2019/10/09/1570595442064.html</link>
+      <description><![CDATA[<p>NoteExpress 是一款通用参考文献管理软件， 是管理和使用参考文献资料和信息的首要选择。 对于大多数使用 NoteExpress 的用户来说，使用 NoteExpress 管理文献的主要目的便是文章撰写。NoteExpress 内置了多种国内外学术期刊、学位论文和国标的格式规范，通过 NoteExpress 插入文献，然后选择需要的格式进行格式化，可以<strong>快速自动地生成参考文献</strong>。<br>
+<img src="https://img.hacpai.com/file/2019/10/image-bd25b6c3.png?imageView2/1/w/960/h/270/interlace/1/q/100" alt="image.png"></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/10/09/1570595442064.html</guid>
+      <category>工具</category>
+      <category>性能优化</category>
+      <pubDate>Tue, 15 Oct 2019 10:25:22 +0800</pubDate>
+    </item>
+    <item>
+      <title>Chrome 67版本后无法拖拽离线安装crx扩展插件的解决办法</title>
+      <link>https://zxniuniu.github.io/articles/2019/08/12/1565575993052.html</link>
+      <description><![CDATA[<p>Chrome 67 版本以后通过拖拽.crx 文件到【扩展程序】页面安装插件的方法已无法使用，以下为收集整理的三种解决 Chrome 67 版本后无法拖拽离线安装.crx 格式插件的解决方法。如果需要更加详细的安装教程，请参见 <a href="http://chromecj.com/utilities/2019-01/1791.html" target="_blank">图文详解 Chrome 离线扩展安装方法-2019 最新终极指南</a> 中的介绍。<br>
+<img src="https://img.hacpai.com/file/2019/08/%E4%BF%AE%E6%94%B9flags%E5%8F%82%E6%95%B0-77c28264.bmp?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="修改 flags 参数.bmp"></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/08/12/1565575993052.html</guid>
+      <category>工具</category>
+      <category>性能优化</category>
+      <pubDate>Tue, 15 Oct 2019 10:25:08 +0800</pubDate>
+    </item>
+    <item>
+      <title>MacType 美化 Windows10 字体，体验类 Mac 顺滑字体</title>
+      <link>https://zxniuniu.github.io/articles/2019/08/09/1565314018351.html</link>
+      <description><![CDATA[<p>一直以来，Windows 常常因为糟糕的字体渲染表现广为诟病，加之默认的字体时不时以点阵形式出现戳瞎双眼，而 Mac 顺滑的字体显示则让笔者在内的诸多 Windows 用户羡慕不已，不过有了 MacType 您就什么都能搞定了。<br>
+<img src="https://img.hacpai.com/file/2019/08/MacType2-3d2e8afb.png?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="MacType2.png"></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/08/09/1565314018351.html</guid>
+      <category>性能优化</category>
+      <category>工具</category>
+      <pubDate>Tue, 15 Oct 2019 10:24:54 +0800</pubDate>
+    </item>
+    <item>
+      <title>基于 KMS 服务的 Windows、Office 激活</title>
+      <link>https://zxniuniu.github.io/articles/2019/07/18/1563456163229.html</link>
+      <description><![CDATA[<p>KMS 在 Windows Vista 之后被引入 Windows 中，全称 Key Management Service，优点是仅需一个 KMS Key，即可激活，缺点是需要保持联网，如一段时间无法链接到 KMS 服务器，就会丧失激活。<br>
+<img src="https://img.hacpai.com/bing/20181028.jpg?imageView2/1/w/960/h/270/interlace/1/q/100" alt=""></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/07/18/1563456163229.html</guid>
+      <category>加密安全</category>
+      <category>工具</category>
+      <pubDate>Tue, 15 Oct 2019 10:24:31 +0800</pubDate>
+    </item>
+    <item>
+      <title>记一次WebDriver无法正常加载www.xxx.com域名Cookie文件的解决办法</title>
+      <link>https://zxniuniu.github.io/articles/2019/05/29/1559101766149.html</link>
+      <description><![CDATA[<p>具体问题为，在使用 WebDriver 正常登录网址后，进行了 Cookie 保存，但在下次自动反序列化加载 Cookie 时发现无法正常加载，导致每次需要重新登录验证，目前采用了一种曲线救国的方式，在序列化 Cookie 时调整域名为 xxx.com，具体方案如下。<br>
+<img src="https://img.hacpai.com/bing/20190522.jpg?imageView2/1/w/960/h/270/interlace/1/q/100" alt=""></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/05/29/1559101766149.html</guid>
+      <category>爬虫</category>
+      <category>性能优化</category>
+      <category>Selenium</category>
+      <pubDate>Tue, 15 Oct 2019 10:24:00 +0800</pubDate>
+    </item>
+    <item>
+      <title>Spring 定时任务 No qualifying bean of type TaskScheduler available 及 Could not find default TaskScheduler bean异常处理</title>
+      <link>https://zxniuniu.github.io/articles/2019/05/29/1559099232927.html</link>
+      <description><![CDATA[<p>最近使用 Spring + SpringMvc + Quartz 的系统中，使用@annotation 注解方式, 直接在类的方法上使用@Scheduled(cron=”0 /5 * * ?”)来实现定时任务，在使用 debug 日志级别时，启动提示 No qualifying bean of type TaskScheduler available 及 Could not find default TaskScheduler bean 异常。可以通过配置日志级别进行解决。<br>
+<img src="https://img.hacpai.com/bing/20180418.jpg?imageView2/1/w/960/h/270/interlace/1/q/100" alt=""></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/05/29/1559099232927.html</guid>
+      <category>Tomcat</category>
+      <category>Java</category>
+      <category>性能优化</category>
+      <pubDate>Tue, 15 Oct 2019 10:23:36 +0800</pubDate>
+    </item>
+    <item>
+      <title>SS/SSR中转V2ray起飞教程</title>
+      <link>https://zxniuniu.github.io/articles/2019/05/23/1558608311047.html</link>
+      <description><![CDATA[<p>目前市面上已经有很多机场（提供 SS/SSR 服务的网站），且不乏众多公益机场，这些机场因为拥有一些好线路的服务器，所以在使用的时候可以获得较好的突破网络封锁的体验。本文的初衷是规避使用机场时流量隐私泄露的问题——如何使用机场服务的同时不暴露自己的流量隐私。</p>
+<p><img src="https://img.hacpai.com/file/2019/05/ssssrtov2ray-76f51eaf.png?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="ssssrtov2ray.png"></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/05/23/1558608311047.html</guid>
+      <category>代理</category>
+      <category>SSR</category>
+      <category>SS</category>
+      <category>V2ray</category>
+      <pubDate>Tue, 15 Oct 2019 10:23:20 +0800</pubDate>
+    </item>
+    <item>
+      <title>迅雷再见！你好，Motrix，往后余生，全部是你</title>
+      <link>https://zxniuniu.github.io/articles/2019/05/22/1558521398548.html</link>
+      <description><![CDATA[<p><strong>Motrix</strong> 是一款开源免费且界面非常清爽简约的全能型下载软件，它跨平台支持 Windows、Mac、Linux 三大系统，可以支持下载 HTTP、FTP、BT、磁力链接以及下载百度网盘等资源。如果你用腻了其他工具，不妨试试 Motrix 吧…</p>
+<p><img src="https://img.hacpai.com/file/2019/05/Motrix-6300558a.png?imageView2/0/w/240/h/240/interlace/1/q/100" alt="Motrix.png"></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/05/22/1558521398548.html</guid>
+      <category>爬虫</category>
+      <category>工具</category>
+      <pubDate>Tue, 15 Oct 2019 10:22:50 +0800</pubDate>
+    </item>
+    <item>
+      <title>黑科技式 DNS 技术在V2ray代理环境中的应用</title>
+      <link>https://zxniuniu.github.io/articles/2019/05/21/1558442529612.html</link>
+      <description><![CDATA[<p>这篇文章目的是以技术性例举方式，谈一谈 DNS 技术在 V2ray 代理环境中的使用上，V2Ray 的 DNS 相关功能：<a href="https://steemit.com/cn/@v2ray/dns" target="_blank">https://steemit.com/cn/@v2ray/dns</a>，其用法很多，可以解决很多问题，但如果不理解其工作方式，就很难做出合理的配置。</p>
+<p><img src="https://img.hacpai.com/bing/20180718.jpg?imageView2/1/w/960/h/270/interlace/1/q/100" alt=""></p>
+<p>本文所讨论的也不单纯是 DNS，还涉及 V2Ray 的部分工作原理，因为我们的讨论是依赖于使用 V2Ray 来对 DNS 流量做各种处理的。</p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/05/21/1558442529612.html</guid>
+      <category>代理</category>
+      <category>V2ray</category>
+      <category>工具</category>
+      <pubDate>Tue, 15 Oct 2019 10:22:27 +0800</pubDate>
+    </item>
+    <item>
+      <title>Tomcat 配置导致启动时，项目加载两次的解决办法</title>
+      <link>https://zxniuniu.github.io/articles/2019/05/11/1557556661045.html</link>
+      <description><![CDATA[<p>Tomcat 在启动的时候，由于配置原因，导致工程会被加载两次，很容易出现内存溢出。如果有定时任务，也可能导致定时任务执行两次，从而出现问题。<br>
+<img src="https://img.hacpai.com/bing/20180522.jpg?imageView2/1/w/960/h/340/interlace/1/q/100" alt=""></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/05/11/1557556661045.html</guid>
+      <category>Q&amp;A</category>
+      <category>性能优化</category>
+      <category>Tomcat</category>
+      <pubDate>Tue, 15 Oct 2019 10:21:22 +0800</pubDate>
+    </item>
+    <item>
+      <title>Java Log4j 日志中的类路径显示首字母缩写</title>
+      <link>https://zxniuniu.github.io/articles/2019/03/21/1553147675859.html</link>
+      <description><![CDATA[<p>Java 在 Log4j 日志中显示首字母，如 com.abc.def.ClassName 日志中显示为 c.a.d.ClassName，方便调试，以及减少记录大小。<br>
+<img src="https://img.hacpai.com/bing/20190103.jpg?imageView2/1/w/960/h/340/interlace/1/q/100" alt=""></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/03/21/1553147675859.html</guid>
+      <category>Java</category>
+      <category>性能优化</category>
+      <category>工具</category>
+      <pubDate>Tue, 15 Oct 2019 10:20:49 +0800</pubDate>
+    </item>
+    <item>
+      <title>Understanding – Group Replication and InnoDB Cluster</title>
+      <link>https://zxniuniu.github.io/articles/2019/03/16/1552743939239.html</link>
+      <description><![CDATA[<p>In this blog post, I’d like to show some relationships of “<a href="https://dev.mysql.com/doc/refman/8.0/en/group-replication-options.html" target="_blank">Group Replication</a>” and “<a href="https://dev.mysql.com/doc/refman/8.0/en/mysql-innodb-cluster-working-with-cluster.html" target="_blank">InnoDB Cluster</a>“.  My hope is that I will be able to draw meaningful correlations and attempt to simplify our way of thinking about these setups.<br>
+<img src="https://img.hacpai.com/bing/20180825.jpg?imageView2/1/w/960/h/340/interlace/1/q/100" alt=""></p>]]></description>
+      <author>zxniuniu</author>
+      <guid>https://zxniuniu.github.io/articles/2019/03/16/1552743939239.html</guid>
+      <category>性能优化</category>
+      <category>数据库</category>
+      <category>MariaDB</category>
+      <pubDate>Tue, 15 Oct 2019 10:20:17 +0800</pubDate>
+    </item>
+  </channel>
+</rss>

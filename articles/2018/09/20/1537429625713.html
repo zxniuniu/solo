@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>Redis Windows安装配置与Jedis访问数据库 - 随心笔客</title><meta name="description" content="Redis 是一个开源的使用 ANSI C 语言编写、遵守 BSD 协议、支持网络、可基于内存亦可持久化的日志型、Key-Value 数据库，并提供多种语言的 API。它通常被称为数据结构服务器，因为值（value）可以是 字符串(String), 哈希(Map), 列表(list), 集合(sets)和有序集合(sorted sets)等类型。这使得 Redis 可执行单层树复制。存盘可以有意无意的对数据进行写操作。由于完全实现了发布/订阅机制，使得从数据库在任何地方同步树时，可订阅一个频道并接收主服务器完整的消息发布记录。同步对读取操作的可扩展性和数据冗余很有帮助。"/><meta property="og:description" content="Redis 是一个开源的使用 ANSI C 语言编写、遵守 BSD 协议、支持网络、可基于内存亦可持久化的日志型、Key-Value 数据库，并提供多种语言的 API。它通常被称为数据结构服务器，因为值（value）可以是 字符串(String), 哈希(Map), 列表(list), 集合(sets)和有序集合(sorted sets)等类型。这使得 Redis 可执行单层树复制。存盘可以有意无意的对数据进行写操作。由于完全实现了发布/订阅机制，使得从数据库在任何地方同步树时，可订阅一个频道并接收主服务器完整的消息发布记录。同步对读取操作的可扩展性和数据冗余很有帮助。"/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="Redis Windows安装配置与Jedis访问数据库 - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2018/09/20/1537429625713.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="Redis Windows安装配置与Jedis访问数据库 - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2018/09/20/1537429625713.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title="阿里Druid数据源配置数据库密码加密" href="https://zxniuniu.github.io/articles/2018/09/18/1537258285996.html">
+            <link rel="next" title="Shadowsocks自定义PAC规则" href="https://zxniuniu.github.io/articles/2018/09/30/1538314978887.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2018/09/20/1537429625713.html">
+                            Redis Windows安装配置与Jedis访问数据库
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2019-10-15
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2018/09/20/1537429625713.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1537429625713">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2018/09/20/1537429625713.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <h1 id="toc_h1_0">一 Redis 概要</h1>
+<p>Redis 是一个开源的使用 ANSI C 语言编写、遵守 BSD 协议、支持网络、可基于内存亦可持久化的日志型、Key-Value 数据库，并提供多种语言的 API。它通常被称为数据结构服务器，因为值（value）可以是 字符串(String), 哈希(Map), 列表(list), 集合(sets)和有序集合(sorted sets)等类型。</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/9fbe435a4d714ed98c53e89cfecc7592_1.png" alt="1png"></p>
+<pre><code class="language-fallback highlight-chroma"> Redis支持主从同步。数据可以从主服务器向任意数量的从服务器上同步，从服务器可以是关联其他从服务器的主服务器。
+</code></pre>
+<p>这使得 Redis 可执行单层树复制。存盘可以有意无意的对数据进行写操作。由于完全实现了发布/订阅机制，使得从数据库在任何地方同步树时，可订阅一个频道并接收主服务器完整的消息发布记录。同步对读取操作的可扩展性和数据冗余很有帮助。</p>
+<h2 id="toc_h2_1">1、相关网站</h2>
+<p>官网：<a href="http://redis.io/" target="_blank">redis.io</a></p>
+<p>中文网：<a href="http://www.redis.net.cn/" target="_blank">http://www.redis.net.cn/</a></p>
+<p>GitHub：<a href="http://www.redis.net.cn/" target="_blank">https://github.com/MSOpenTech/redis</a></p>
+<p>下载地址：<a href="http://www.redis.net.cn/" target="_blank">https://github.com/MSOpenTech/redis/releases</a></p>
+<h1 id="toc_h1_2">二、安装与配置 Redis</h1>
+<h2 id="toc_h2_3">2.1、下载最新版的 Redis</h2>
+<p>打开 Redis 在 GitHub 上的网站：<a href="https://github.com/MSOpenTech/redis/releases" target="_blank">https://github.com/MSOpenTech/redis/releases</a>，选择下载最新版的 Redis，写该文字时最新版本是 3.2.1 版。</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/3461f03a28204b31bf0a11b84e87d988_2.png" alt="2png"></p>
+<p>这里我们选择下载手动安装包 Redis-x64-3.2.100.zip。如果是 32 位的可以下载源代码后自己编译出 32 位的版本，在<a href="https://github.com/dmajkic/redis/downloads" target="_blank">https://github.com/dmajkic/redis/downloads</a>可以下载到 32 的安装文件，不过版本有点旧了。</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/765c00b3d3fc455fba45bc1453db8f55_3.png" alt="3png"></p>
+<h2 id="toc_h2_4">2.2、添加环境变量</h2>
+<p>将下载后的安装包解压到磁盘中，最好是没有中文路径，没有特殊字符的目录下，比如：d:\redis 目录下。为了更加方便的使用 Redis，可以添加环境变量，在“系统环境变量”中的“Path”变量下添加 Redis 路径，如下所示：</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/c57020fd5adb49fdaf60c262ced62858_4.png" alt="4png"></p>
+<p>确定后启动 cmd，运行 redis-server 测试。</p>
+<h2 id="toc_h2_5">2.3、启动服务器</h2>
+<p>在命令模式下运行：redis-server.exe redis.windows.conf，如果运行提示未找到 conf 文件，则把参数中的配置文件路径加上，如：</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/28dcd3512543415f948c3e435cda33d5_5.png" alt="5png"></p>
+<p>启动成功后会有一个字符界面，提示连接的端口号是：6379，请不要关闭该服务器，等待客户端连接；这里也可以把 Redis 作成 windows 服务，不过 Redis 多数情况会在 Linux 平台使用。</p>
+<h2 id="toc_h2_6">2.4、启动客户端</h2>
+<p>再用 cmd 开启一个命令容器，输入命令：redis-cli -h 127.0.0.1 -p 6379，执行成功后如下所示：</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/377b64add35d4d5cbe1373054efc67af_6.png" alt="6png"></p>
+<p>-h 用于指定服务器位置，-p 用于指定端口号；如果想改变该内容可以修改.conf 文件。</p>
+<h2 id="toc_h2_7">2.5、测试并运行</h2>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/dfc513acca084af6b0943c542ff5cd4d_7.png" alt="7png"></p>
+<p>添加数据：set</p>
+<p>获得数据：get</p>
+<p>是否存在：exists</p>
+<p>删除数据：del</p>
+<p>修改数据：set</p>
+<p>帮助命令：help &lt; 命令名称 &gt;</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/3037b57ec0134364beca639038d9f1a4_8.png" alt="8png"></p>
+<p>查找键：keys &lt; 名称能配符 &gt;</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/e5921335cff743c2990ed7f9010e566b_9.png" alt="9png"></p>
+<p>设置过期时间：expire  &lt; 秒数 &gt;</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/55b34b03dab7436fb58ca201e1c41954_10.png" alt="10png"></p>
+<p>删除过期时间：persist</p>
+<p><strong>info</strong><br>
+服务器基本信息</p>
+<p><strong>monitor</strong></p>
+<p>实时转储收到的请求</p>
+<p><strong>config get   ????</strong><br>
+获取服务器的参数配置</p>
+<p><strong>flushdb</strong><br>
+清空当前数据库</p>
+<p><strong>flushall</strong><br>
+清除所有数据库</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/de9c20308ce44e0082f0a9cb3a116a20_11.png" alt="11png"></p>
+<p>更多命令：<a href="http://doc.redisfans.com/" target="_blank">http://doc.redisfans.com/</a></p>
+<h2 id="toc_h2_8">三、常用命令</h2>
+<pre><code class="language-fallback highlight-chroma">    1）连接操作命令
+    quit：关闭连接（connection）
+    auth：简单密码认证
+    help cmd： 查看cmd帮助，例如：help quit
+</code></pre>
+<pre><code class="language-fallback highlight-chroma">    2）持久化
+    save：将数据同步保存到磁盘
+    bgsave：将数据异步保存到磁盘
+    lastsave：返回上次成功将数据保存到磁盘的Unix时戳
+    shundown：将数据同步保存到磁盘，然后关闭服务
+</code></pre>
+<pre><code class="language-fallback highlight-chroma">    3）远程服务控制
+    info：提供服务器的信息和统计
+    monitor：实时转储收到的请求
+    slaveof：改变复制策略设置
+    config：在运行时配置Redis服务器
+</code></pre>
+<pre><code class="language-fallback highlight-chroma">    4）对value操作的命令
+    exists(key)：确认一个key是否存在
+    del(key)：删除一个key
+    type(key)：返回值的类型
+    keys(pattern)：返回满足给定pattern的所有key
+    randomkey：随机返回key空间的一个
+    keyrename(oldname, newname)：重命名key
+    dbsize：返回当前数据库中key的数目
+    expire：设定一个key的活动时间（s）
+    ttl：获得一个key的活动时间
+    select(index)：按索引查询
+    move(key, dbindex)：移动当前数据库中的key到dbindex数据库
+    flushdb：删除当前选择数据库中的所有key
+    flushall：删除所有数据库中的所有key
+</code></pre>
+<pre><code class="language-fallback highlight-chroma">    5）String
+    set(key, value)：给数据库中名称为key的string赋予值value
+    get(key)：返回数据库中名称为key的string的value
+    getset(key, value)：给名称为key的string赋予上一次的value
+    mget(key1, key2,…, key N)：返回库中多个string的value
+    setnx(key, value)：添加string，名称为key，值为value
+    setex(key, time, value)：向库中添加string，设定过期时间time
+    mset(key N, value N)：批量设置多个string的值
+    msetnx(key N, value N)：如果所有名称为key i的string都不存在
+    incr(key)：名称为key的string增1操作
+    incrby(key, integer)：名称为key的string增加integer
+    decr(key)：名称为key的string减1操作
+    decrby(key, integer)：名称为key的string减少integer
+    append(key, value)：名称为key的string的值附加value
+    substr(key, start, end)：返回名称为key的string的value的子串
+</code></pre>
+<pre><code class="language-fallback highlight-chroma">    6）List 
+    rpush(key, value)：在名称为key的list尾添加一个值为value的元素
+    lpush(key, value)：在名称为key的list头添加一个值为value的 元素
+    llen(key)：返回名称为key的list的长度
+    lrange(key, start, end)：返回名称为key的list中start至end之间的元素
+    ltrim(key, start, end)：截取名称为key的list
+    lindex(key, index)：返回名称为key的list中index位置的元素
+    lset(key, index, value)：给名称为key的list中index位置的元素赋值
+    lrem(key, count, value)：删除count个key的list中值为value的元素
+    lpop(key)：返回并删除名称为key的list中的首元素
+    rpop(key)：返回并删除名称为key的list中的尾元素
+    blpop(key1, key2,… key N, timeout)：lpop命令的block版本。
+    brpop(key1, key2,… key N, timeout)：rpop的block版本。
+    rpoplpush(srckey, dstkey)：返回并删除名称为srckey的list的尾元素，并将该元素添加到名称为dstkey的list的头部
+</code></pre>
+<pre><code class="language-fallback highlight-chroma">    7）Setsadd(key, member)：向名称为key的set中添加元素member
+    srem(key, member) ：删除名称为key的set中的元素member
+    spop(key) ：随机返回并删除名称为key的set中一个元素
+    smove(srckey, dstkey, member) ：移到集合元素
+    scard(key) ：返回名称为key的set的基数
+    sismember(key, member) ：member是否是名称为key的set的元素
+    sinter(key1, key2,…key N) ：求交集
+    sinterstore(dstkey, (keys)) ：求交集并将交集保存到dstkey的集合
+    sunion(key1, (keys)) ：求并集
+    sunionstore(dstkey, (keys)) ：求并集并将并集保存到dstkey的集合
+    sdiff(key1, (keys)) ：求差集
+    sdiffstore(dstkey, (keys)) ：求差集并将差集保存到dstkey的集合
+    smembers(key) ：返回名称为key的set的所有元素
+    srandmember(key) ：随机返回名称为key的set的一个元素8）Hash
+    hset(key, field, value)：向名称为key的hash中添加元素field
+    hget(key, field)：返回名称为key的hash中field对应的value
+    hmget(key, (fields))：返回名称为key的hash中field i对应的value
+    hmset(key, (fields))：向名称为key的hash中添加元素field 
+    hincrby(key, field, integer)：将名称为key的hash中field的value增加integer
+    hexists(key, field)：名称为key的hash中是否存在键为field的域
+    hdel(key, field)：删除名称为key的hash中键为field的域
+    hlen(key)：返回名称为key的hash中元素个数
+    hkeys(key)：返回名称为key的hash中所有键
+    hvals(key)：返回名称为key的hash中所有键对应的value
+    hgetall(key)：返回名称为key的hash中所有的键（field）及其对应的value
+</code></pre>
+<h2 id="toc_h2_9">2.6、添加 windows 服务</h2>
+<p>如果不添加 windows 服务，redis-server.exe 程序一直要以 GUI 的形式开启在任务栏，有时候不小心会被关闭，其实也可以像其它数据库如 Oracle 一样将 Redis 做成一个服务，以服务的形式运行，注册服务的方法如下：</p>
+<p>2.6.1、在命令模式下切换到 Redis 安装目录</p>
+<p>2.6.2、执行指令如下命令：</p>
+<pre><code class="language-fallback highlight-chroma">redis-server --service-install redis.windows.conf --loglevel verbose  --service-name Redis
+</code></pre>
+<p>解释：</p>
+<pre><code class="language-fallback highlight-chroma">--service-install redis.windows.conf 指定redis配置文件
+
+--loglevel verbose  指定日志级别
+
+--service-name Redis 指定服务名称
+</code></pre>
+<p>运行命令后的结果：</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/9754d57fca9f4aafb3489a700977e340_12.png" alt="12png"></p>
+<h1 id="toc_h1_10">三、使用 Jedis 访问 Redis 数据库</h1>
+<p>Jedis 是 Redis 的 Java 版的客户端实现，在 Java 程序中我们可以通过 Jedis 访问 Redis 数据库，源代码地址（<a href="https://github.com/xetorthio/jedis" target="_blank">https://github.com/xetorthio/jedis</a>），实现访问的方法如下：</p>
+<h2 id="toc_h2_11">3.1、引用或依赖 Jedis 包</h2>
+<p>3.1.1、如果使用 Maven，修改 pom.xml 文件，添加 Jedis 的依赖，修改后的 pom.xml 文件如下，引用成功后的结果：</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/409d7801499043c7b859f4dac1e4580b_13.png" alt="13png"></p>
+<p>从引用的结果可以发现 jedis 使用了 commons 的连接池技术。</p>
+<p>3.1.2、如果直接添加引用，可以去 GitHub 下载 jedis 源码包自行编译，下载地址是：<a href="https://github.com/xetorthio/jedis/releases" target="_blank">https://github.com/xetorthio/jedis/releases</a>，当前最新版本 2.8.1。</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/feb1cb5f3f4d4b92a19152b721535f77_14.png" alt="14png"></p>
+<p>如果想直接下载 jar 包，可以到 Maven 共享资源库（<a href="http://search.maven.org/" target="_blank">http://search.maven.org/</a>）下载，如下所示：</p>
+<p><img src="https://raw.githubusercontent.com/zxniuniu/solo/master/4a01fcbc89bd480ea0c58d7fe5bed392_15.png" alt="15png"></p>
+<h2 id="toc_h2_12">3.2、调用 Jedis</h2>
+<p>先开启 Redis 数据库服务，处理监听状态，在 Java 项目中编写如下测试代码：</p>
+<pre><code class="language- highlight-chroma"><span class="highlight-kn">package</span> <span class="highlight-nx">com</span><span class="highlight-p">.</span><span class="highlight-nx">zhangguo</span><span class="highlight-p">.</span><span class="highlight-nx">jedisdemo</span><span class="highlight-p">;</span>
+<span class="highlight-kn">import</span> <span class="highlight-nx">redis</span><span class="highlight-p">.</span><span class="highlight-nx">clients</span><span class="highlight-p">.</span><span class="highlight-nx">jedis</span><span class="highlight-p">.</span><span class="highlight-nx">Jedis</span><span class="highlight-p">;</span>
+
+<span class="highlight-nx">public</span> <span class="highlight-nx">class</span> <span class="highlight-nx">HelloJedis</span> <span class="highlight-p">{</span>
+    <span class="highlight-nx">public</span> <span class="highlight-nx">static</span> <span class="highlight-nx">void</span> <span class="highlight-nf">main</span><span class="highlight-p">(</span><span class="highlight-nx">String</span><span class="highlight-p">[]</span> <span class="highlight-nx">args</span><span class="highlight-p">)</span> <span class="highlight-p">{</span>
+        <span class="highlight-c1">//实例化一个jedis对象，连接到指定的服务器，指定连接端口号
+</span><span class="highlight-c1"></span>        <span class="highlight-nx">Jedis</span> <span class="highlight-nx">jedis</span> <span class="highlight-p">=</span> <span class="highlight-nx">new</span> <span class="highlight-nf">Jedis</span><span class="highlight-p">(</span><span class="highlight-s">"127.0.0.1"</span><span class="highlight-p">,</span><span class="highlight-mi">6379</span><span class="highlight-p">);</span>
+        <span class="highlight-c1">//将key为message的信息写入redis数据库中
+</span><span class="highlight-c1"></span>        <span class="highlight-nx">jedis</span><span class="highlight-p">.</span><span class="highlight-nf">set</span><span class="highlight-p">(</span><span class="highlight-s">"message"</span><span class="highlight-p">,</span> <span class="highlight-s">"Hello Redis!"</span><span class="highlight-p">);</span>
+        <span class="highlight-c1">//从数据库中取出key为message的数据
+</span><span class="highlight-c1"></span>        <span class="highlight-nx">String</span> <span class="highlight-nx">value</span> <span class="highlight-p">=</span> <span class="highlight-nx">jedis</span><span class="highlight-p">.</span><span class="highlight-nf">get</span><span class="highlight-p">(</span><span class="highlight-s">"message"</span><span class="highlight-p">);</span>
+        <span class="highlight-nx">System</span><span class="highlight-p">.</span><span class="highlight-nx">out</span><span class="highlight-p">.</span><span class="highlight-nb">println</span><span class="highlight-p">(</span><span class="highlight-nx">value</span><span class="highlight-p">);</span>
+        <span class="highlight-c1">//关闭连接
+</span><span class="highlight-c1"></span>        <span class="highlight-nx">jedis</span><span class="highlight-p">.</span><span class="highlight-nb">close</span><span class="highlight-p">();</span>
+    <span class="highlight-p">}</span>
+<span class="highlight-p">}</span>
+</code></pre>
+<p>运行结果：<br>
+<img src="https://raw.githubusercontent.com/zxniuniu/solo/master/f8c633c36ec5464a9f1e9e3c53b0cdd0_16.png" alt="16png"></p>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Redis">
+                            Redis</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93">
+                            数据库</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2018/09/18/1537258285996.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="阿里Druid数据源配置数据库密码加密">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="Redis Windows安装配置与Jedis访问数据库"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2018/09/20/1537429625713.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2018/09/30/1538314978887.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="Shadowsocks自定义PAC规则">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1537429625713"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+<ul class="article__toc">
+        <li class="toc__h1">
+            <a href="#toc_h1_0">一 Redis 概要</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_1">1、相关网站</a>
+        </li>
+        <li class="toc__h1">
+            <a href="#toc_h1_2">二、安装与配置 Redis</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_3">2.1、下载最新版的 Redis</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_4">2.2、添加环境变量</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_5">2.3、启动服务器</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_6">2.4、启动客户端</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_7">2.5、测试并运行</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_8">三、常用命令</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_9">2.6、添加 windows 服务</a>
+        </li>
+        <li class="toc__h1">
+            <a href="#toc_h1_10">三、使用 Jedis 访问 Redis 数据库</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_11">3.1、引用或依赖 Jedis 包</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_12">3.2、调用 Jedis</a>
+        </li>
+</ul></aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1537429625713",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1537429625713",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("Redis,数据库", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1537429625713', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 24ms, 2020/11/29 22:19:06 -->

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>Migrating MariaDB Data Into Elasticsearch Using Logstash - 随心笔客</title><meta name="description" content="In many cases we want to use inputs from different databases which are not natively supported by Elasticsearch. In this post we show how to migrate data from a MySQL database to Elasticsearch via Logstash."/><meta property="og:description" content="In many cases we want to use inputs from different databases which are not natively supported by Elasticsearch. In this post we show how to migrate data from a MySQL database to Elasticsearch via Logstash."/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="Migrating MariaDB Data Into Elasticsearch Using Logstash - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2019/01/04/1546576680169.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="Migrating MariaDB Data Into Elasticsearch Using Logstash - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2019/01/04/1546576680169.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title="Spring MVC 控制器定义与@RequestMapping详解" href="https://zxniuniu.github.io/articles/2018/12/23/1545494483392.html">
+            <link rel="next" title="Why Redis beats Memcached for caching" href="https://zxniuniu.github.io/articles/2019/02/02/1549069716678.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2019/01/04/1546576680169.html">
+                            Migrating MariaDB Data Into Elasticsearch Using Logstash
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2019-10-15
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2019/01/04/1546576680169.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1546576680169">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2019/01/04/1546576680169.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <p>In many cases we want to use inputs from different databases which are not natively supported by Elasticsearch. In this post we show how to migrate data from a MySQL database to Elasticsearch via Logstash.</p>
+<p><img src="https://qbox.io/img/blog/_blogWidth/jetty-593401_1920.jpg" alt=""></p>
+<h3 id="toc_h3_0">JDBC Plugin</h3>
+<p>The JDBC plugin available for Logstash makes sure that the data from any database with a JDBC interface can be taken into Logstash as input. This plugin also supports a need for scheduling running logstash. It also makes selective data as input by using queries. In these kind of databases we have the concept of rows and columns. Each row is considered a single event and the columns in each row (event) are considered fields in the event.</p>
+<p>The following block diagram explains the role of the JDBC connector plugin in migrating data from a JDBC supported database:<br>
+<img src="https://qbox.io/img/blog/mysql-logstash1.png" alt=""></p>
+<p>In the diagram we have logstash running the configuration file which fires the predefined query we have set to collect the data of our interests to the sequential database. Once the query is fired to the JDBC plugin, it passes it to the database and collects the data, which it will hand over to Logstash.</p>
+<p>According to our requirements, we can process the data and make it in the desired form, after the processing the processed data is indexed to Elasticsearch. We show the detailed application in the example in the coming sections.</p>
+<h3 id="toc_h3_1">Inserting MySQL Data to Elasticsearch</h3>
+<p>Let us move on to migrating data from a sequential database, such as MySQL to Elasticsearch with the help of Logstash. We require the corresponding JDBC driver for MySql. You can download it<a href="https://dev.mysql.com/downloads/connector/j/" target="_blank"> here.</a> Now let us create a database named <code>"testdb"</code> in MySQL using the following command:</p>
+<pre><code class="language-fallback highlight-chroma">create testdb
+</code></pre>
+<p>The database is now created and we just make sure we are using the same database for our purposes:</p>
+<pre><code class="language-fallback highlight-chroma">show databases;
+use testdb;
+</code></pre>
+<p>Create a table named <code>"testtable"</code> under the database <code>"testdb"</code>with the following schema:</p>
+<pre><code class="language-fallback highlight-chroma">create table testtable (PersonID int, LastName varchar(255), FirstName varchar(255), City varchar(255), Date datetime(6)); 
+</code></pre>
+<p>Now insert some test data into the above table:</p>
+<pre><code class="language-fallback highlight-chroma">INSERT INTO testtable (PersonID, LastName, FirstName, City, Date)
+VALUES ('4005','Kallis','Jaques','Cape Town','2016-05-23 16:12:03.568810');
+INSERT INTO testtable (PersonID, LastName, FirstName, City, Date)
+VALUES ('4004','Baron','Richard','Cape Town','2016-05-23 16:12:04.370460');
+INSERT INTO testtable (PersonID, LastName, FirstName, City, Date)
+VALUES ('4003','McWell','Sharon','Cape Town','2016-05-23 16:12:06.874801'); 
+</code></pre>
+<p>We have created a table with the details of 3 employees. You can display the details of the table to show all of it contents by passing the query:</p>
+<pre><code class="language-fallback highlight-chroma">select * from testtable
+</code></pre>
+<p>The resulting table will look like:</p>
+<p><img src="https://qbox.io/img/blog/mysqllogstash2.png" alt=""></p>
+<h3 id="toc_h3_2">Logstash Configuration</h3>
+<p>Now that we have created a MySQL table with contents as shown in the above section, look how Logstash must be configured. In the logstash folder, we have a <code>logstash.conf</code> file which is the one to be configured and run to obtain the necessary results. The initial configuration is shown in the following screenshot:</p>
+<p><img src="https://qbox.io/img/blog/mysqllogstash3.png" alt=""></p>
+<p><em><strong>Editors Note: I've included the code block above per request:</strong></em></p>
+<pre><code class="language-fallback highlight-chroma">input {
+  jdbc { 
+    jdbc_connection_string =&gt; "jdbc:mysql://localhost:3306/testdb"
+    # The user we wish to execute our statement as
+    jdbc_user =&gt; "root"
+    jdbc_password =&gt; "123456"
+    # The path to our downloaded jdbc driver
+    jdbc_driver_library =&gt; "/home/comp/Downloads/mysql-connector-java-5.1.38.jar"
+    jdbc_driver_class =&gt; "com.mysql.jdbc.Driver"
+    # our query
+    statement =&gt; "SELECT * FROM testtable"
+    }
+  }
+output {
+  stdout { codec =&gt; json_lines }
+  elasticsearch {
+  "hosts" =&gt; "localhost:9200"
+  "index" =&gt; "test-migrate"
+  "document_type" =&gt; "data"
+  }
+}
+</code></pre>
+<p>In the above configuration file we have mentioned numerous parameters such as: Which database should the JDBC connector check for data, the location for the JDBC plugin, the user name and password for MySQL access, and the query statement. After the above settings are applied to the <code>"logstash.conf"</code> file, run Logstash by typing in the command below:</p>
+<pre><code class="language-fallback highlight-chroma">bin/logstash -f logstash.conf
+</code></pre>
+<p>As mentioned in the block diagram in the JDBC section, the logstash configuration file passes the query to the JDBC driver along with the user credentials. It also fetchs the data and gives the data to Logstash. Logstash will make it JSON formatted and index to the Elasticsearch database. Query the index <code>"test-migrate"</code> like below:</p>
+<pre><code class="language-fallback highlight-chroma">curl -XPOST 'http://localhost:9200/test-migrate/_search?pretty=true' -d '{}' 
+</code></pre>
+<p>The above query lists each row as a separate document with the columns as field. An example:</p>
+<pre><code class="language-fallback highlight-chroma">{
+  "_index": "test-migrate",
+  "_type": "data",
+  "_id": "4004",
+  "_score": 1,
+  "_source": {
+    "personid": 4004,
+    "lastname": "Baron",
+    "firstname": "Richard",
+    "city": "Cape Town",
+    "date": "2016-05-23T10:42:04.370Z",
+    "@version": "1",
+    "@timestamp": "2016-07-10T10:36:43.685Z"
+  }
+}
+</code></pre>
+<h3 id="toc_h3_3">More Configurations</h3>
+<p>In this section we show various use case scenarios. Add another row of data to the above MySQL like below:</p>
+<pre><code class="language-fallback highlight-chroma">INSERT INTO testtable (PersonID, LastName, FirstName, City, Date)
+VALUES ('4002','Cheers','Joan','Cape Town','2016-05-23 16:12:07.163681');
+</code></pre>
+<p>Also, update existing values of a row in the same table like below:</p>
+<pre><code class="language-fallback highlight-chroma">UPDATE testtable
+-&gt; SET FirstName='James'
+ -&gt; WHERE PersonID=4005; 
+</code></pre>
+<h4 id="toc_h4_4">1. Duplication Issue</h4>
+<p>After the above procedure, run the logstash configuration file again. We expect a total of 4 documents inclusive to the new row and the updated row. However, when checking the index again, that it is not the case. Instead we have a total of 7 documents. This happens because the initial documents are left untouched in the Elasticsearch database, which is due to not giving a specific id from the table itself. When we run the logstash configuration, the entire content in the <code>"testtable"</code> is indexed once more.</p>
+<p>How can we solve this duplication? We have to give a unique ID for each document. For every run, the ID should be the same for each document which prevents the duplication issue. This can be made possible by editing the output section of the conf file as given below:</p>
+<p><img src="https://qbox.io/img/blog/mysqllogstash4.png" alt=""></p>
+<h4 id="toc_h4_5">2. Mutate Operation</h4>
+<p>One of the other important needs we encounter will be changing the field names and values as we index to elasticsearch. We add a requirement to our current example to demonstrate this. For all the documents which match "Cape Town" as the value, the field <code>"City"</code>should be replaced with value <code>"South Africa"</code> and the field value should be replaced with <code>"Country"</code>.</p>
+<p>In order to achieve this requirement, use the <code>"filter"</code> property to manipulate the ingested data in elasticsearch. Use the <code>"mutate"</code>property inside <code>"filter"</code> to execute the required change. With the above settings for the <code>"input"</code> and <code>"output"</code> sections, we need to add the following <code>"filter"</code> section in the <code>logstash.conf</code> file:</p>
+<pre><code class="language-fallback highlight-chroma">filter {
+  if [city] == "Cape Town" {
+    mutate {
+       rename =&gt; {"city" =&gt; "country"}
+       replace =&gt; [ "country", "South Africa" ]
+      }
+   }
+}
+</code></pre>
+<p>The ingested data is checked for the value <code>"Cape Town"</code> for each event's <code>"City"</code> column. If it finds a match, the <code>"City"</code> field is renamed <code>"country"</code> and the value for each match is replaced with <code>"South Africa"</code>.</p>
+<h4 id="toc_h4_6">3. Scheduled &amp; Incremental Updating</h4>
+<p>What if the data is continuously being updated in the MySQL database and we need to index it incrementally and periodically? For periodically fetching the data, add the <code>"scheduler"</code> property in the input section. The <code>"scheduler,"</code> when given a value, makes the conf file run at periodic intervals. It is highly customizable and uses the Rufus-scheduler<a href="https://github.com/jmettraux/rufus-scheduler" target="_blank"> syntax</a>.</p>
+<p>For incremental updating, modify the query to use the <code>"sql_last_value"</code> against a field. Here we give that field <code>"Date"</code>. We also set the <code>"use_column_value"</code> to be true and link the corresponding column to <code>"Date"</code> using <code>"tracking_column"</code>.</p>
+<p>The complete configuration file for the cases 1, 2, and 3, is given below:</p>
+<p><img src="https://qbox.io/img/blog/mysqllogstash5.png" alt=""></p>
+<p><em><strong>Editors Note: I've included the code block above per request:</strong></em></p>
+<pre><code class="language-fallback highlight-chroma">input {
+  jdbc { 
+    jdbc_connection_string =&gt; "jdbc:mysql://localhost:3306/testdb"
+    jdbc_user =&gt; "root"
+    jdbc_password =&gt; "factweavers"
+    # The path to our downloaded jdbc driver
+    jdbc_driver_library =&gt; "/home/comp/Downloads/mysql-connector-java-5.1.38.jar"
+    jdbc_driver_class =&gt; "com.mysql.jdbc.Driver"
+    # our query
+    schedule =&gt; "* * * *"
+    statement =&gt; "SELECT" * FROM testtable where Date &gt; :sql_last_value order by Date"
+    use_column_value =&gt; true
+    tracking_column =&gt; Date
+}
+filter {
+if [city] == "Cape Town" {
+mutate {
+  rename =&gt; {"city" =&gt; "country"}
+    replace =&gt; [ "country", "South Africa"]
+  }
+}
+}
+output {
+  stdout { codec =&gt; json_lines }
+  elasticsearch {
+  "hosts" =&gt; "localhost:9200"
+  "index" =&gt; "test-migrate"
+  "document_type" =&gt; "data"
+  "document_id" =&gt; "%{personid}"
+  }
+}
+</code></pre>
+<p>In order to see the above configuration working, add a few fields to the existing MySQL table with <code>"Date"</code> values more recent than the ones existing before. Now run logstash and you can see only the new data has been indexed in the Elasticsearch index.</p>
+<h3 id="toc_h3_7">Conclusion</h3>
+<p>In this post we discussed the JDBC plugin used to migrate data from sequential databases to Elasticsearch using logstash. We also familiarized how to deal with the common issues like duplication, mutation of fields and values, and also the scheduling and incremental updating. _Questions/Comments? Drop us a line below.</p>
+<p>感谢原作者，博客转自：<a href="https://qbox.io/blog/migrating-mysql-data-into-elasticsearch-using-logstash" target="_blank">https://qbox.io/blog/migrating-mysql-data-into-elasticsearch-using-logstash</a></p>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/MariaDB">
+                            MariaDB</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Elasticsearch">
+                            Elasticsearch</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93">
+                            数据库</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2018/12/23/1545494483392.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="Spring MVC 控制器定义与@RequestMapping详解">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="Migrating MariaDB Data Into Elasticsearch Using Logstash"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2019/01/04/1546576680169.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2019/02/02/1549069716678.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="Why Redis beats Memcached for caching">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1546576680169"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+<ul class="article__toc">
+        <li class="toc__h3">
+            <a href="#toc_h3_0">JDBC Plugin</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_1">Inserting MySQL Data to Elasticsearch</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_2">Logstash Configuration</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_3">More Configurations</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_4">1. Duplication Issue</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_5">2. Mutate Operation</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_6">3. Scheduled & Incremental Updating</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_7">Conclusion</a>
+        </li>
+</ul></aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1546576680169",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1546576680169",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("MariaDB,Elasticsearch,数据库", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1546576680169', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 27ms, 2020/11/29 22:19:05 -->

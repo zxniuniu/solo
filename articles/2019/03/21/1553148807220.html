@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>MySQL Group Replication, Single-Primary or Multi-Primary, how to make the right decision? - 随心笔客</title><meta name="description" content="By default MySQL Group Replication runs in Single-Primary mode. And it’s the best option and the option you should use. But sometimes it might happen that in very specific cases you would like to run you MGR Cluster in Multi-Primary mode: writing simultaneously on all the nodes member of the Group."/><meta property="og:description" content="By default MySQL Group Replication runs in Single-Primary mode. And it’s the best option and the option you should use. But sometimes it might happen that in very specific cases you would like to run you MGR Cluster in Multi-Primary mode: writing simultaneously on all the nodes member of the Group."/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="MySQL Group Replication, Single-Primary or Multi-Primary, how to make the right decision? - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2019/03/21/1553148807220.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="MySQL Group Replication, Single-Primary or Multi-Primary, how to make the right decision? - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2019/03/21/1553148807220.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title="Java Log4j 日志中的类路径显示首字母缩写" href="https://zxniuniu.github.io/articles/2019/03/21/1553147675859.html">
+            <link rel="next" title="Tomcat 配置导致启动时，项目加载两次的解决办法" href="https://zxniuniu.github.io/articles/2019/05/11/1557556661045.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2019/03/21/1553148807220.html">
+                            MySQL Group Replication, Single-Primary or Multi-Primary, how to make the right decision?
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2019-04-15
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2019/03/21/1553148807220.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1553148807220">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2019/03/21/1553148807220.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <p>By default MySQL Group Replication runs in <a href="https://dev.mysql.com/doc/refman/8.0/en/group-replication-options.html#sysvar_group_replication_single_primary_mode" target="_blank">Single-Primary mode</a>. And it’s the best option and the option you should use.</p>
+<p>But sometimes it might happen that in very specific cases you would like to run you MGR Cluster in Multi-Primary mode: writing simultaneously on all the nodes member of the Group.</p>
+<p><img src="https://img.hacpai.com/file/2019/03/IMG7071b-437dba13.jpg?imageView2/2/w/1280/format/jpg/interlace/1/q/100" alt="IMG7071b.jpg"></p>
+<p>It’s of course feasible but you need to make some extra verification as not all workload are compatible with this behavior of the cluster.</p>
+<h2 id="toc_h2_0">Requirements</h2>
+<p>The requirements are the same as those for using MGR in Single-Primary mode:</p>
+<ul>
+<li>InnoDB Storage Engine</li>
+<li>Primary Keys</li>
+<li>IPv4 Network</li>
+<li>Binary Log Active</li>
+<li>Slave Updates Logged</li>
+<li>Binary Log Row Format</li>
+<li>Global Transaction Identifiers On</li>
+<li>Replication Information Repositories stored to tables</li>
+<li>Transaction Write Set Extraction set to<code>XXHASH64</code></li>
+</ul>
+<p>You can find more details in the <a href="https://dev.mysql.com/doc/refman/8.0/en/group-replication-requirements.html" target="_blank">online manual</a>.</p>
+<h2 id="toc_h2_1">Limitations</h2>
+<p>These are the MySQL Group Replication Limitations as in <a href="https://dev.mysql.com/doc/refman/8.0/en/group-replication-limitations.html" target="_blank">the manual</a>:</p>
+<ul>
+<li>Replication Event Checksums must be set to NONE</li>
+<li>Gap Locks, so better to use READ-COMMITTED as tx_isolation</li>
+<li>Table Locks and Named Locks are not supported</li>
+<li>Savepoints are also not supported.</li>
+<li>SERIALIZABLE Isolation Level is not supported.</li>
+<li>Concurrent DDL vs DML/DDL Operations</li>
+<li>Foreign Keys with Cascading Constraints</li>
+</ul>
+<p>So from the list above, the limitations that we will affect Multi-Primary mode are the Concurrent DDLs/DML and the foreign keys.</p>
+<p>Let’s have a more detail look at them.</p>
+<h3 id="toc_h3_2">Concurrent DDL vs DML/DDL Operations</h3>
+<p>The manual says_Concurrent DDL vs DML/DDL operations on the same object, executing at different servers, is not supported in multi-primary deployments. Conflicting data definition statements (DDL) executing on different servers are not detected. Concurrent data definition statements and data manipulation statements executing against the same object but on different servers is not supported._</p>
+<p>So this is clear. The only thing we can do, is then be sure we don’t allow writes on the other nodes when we need to run a DDL. This can be done in your router/proxy solution and/or set the nodes in READ_ONLY.</p>
+<p>This means that if your application performs DDL on it’s own (and not handled by a DBA), I would recommend you to not use Multi-Primary at all !</p>
+<p>To verify if your application is running such statements, you can run the following query several times during the day and see how the values increase or not:</p>
+<pre><code class="language-fallback highlight-chroma">SELECT event_name, count_star, sum_errors 
+FROM events_statements_summary_global_by_event_name 
+WHERE event_name  REGEXP '.*sql/(create|drop|alter).*' 
+AND event_name NOT REGEXP '.*user';
+</code></pre>
+<h3 id="toc_h3_3">Foreign Keys with Cascading Constraints</h3>
+<p>Again, let’s see what the manual says about this limitation:<em>Multi-primary mode groups do not fully support using foreign key constraints. Foreign key constraints that result in cascading operations executed by a multi-primary mode group have a risk of undetected conflicts. Therefore we recommend setting group_replication_enforce_update_everywhere_checks=ON on server instances used in multi-primary mode groups. Disabling group_replication_enforce_update_everywhere_checks and using foreign keys with cascading constraints requires extra care. In single-primary mode this is not a problem.</em></p>
+<p>So let’s find if we have such design:</p>
+<pre><code class="language-fallback highlight-chroma">SELECT CONCAT(t1.table_name, '.', column_name) AS 'foreign key',     
+CONCAT(t1.referenced_table_name, '.', referenced_column_name) AS 'references',     
+t1.constraint_name AS 'constraint name', UPDATE_RULE, DELETE_RULE 
+FROM information_schema.key_column_usage as t1 
+JOIN information_schema.REFERENTIAL_CONSTRAINTS as t2 
+WHERE t2.CONSTRAINT_NAME = t1.constraint_name 
+AND t1.referenced_table_name IS NOT NULL 
+AND (DELETE_RULE = "CASCADE" OR UPDATE_RULE = "CASCADE");
+</code></pre>
+<pre><code class="language-fallback highlight-chroma">+----------------------+---------------------+---------------------+-------------+-------------+
+| foreign key          | references          | constraint name     | UPDATE_RULE | DELETE_RULE |
++----------------------+---------------------+---------------------+-------------+-------------+
+| dept_emp.emp_no      | employees.emp_no    | dept_emp_ibfk_1     | RESTRICT    | CASCADE     |
+| dept_emp.dept_no     | departments.dept_no | dept_emp_ibfk_2     | RESTRICT    | CASCADE     |
+| dept_manager.emp_no  | employees.emp_no    | dept_manager_ibfk_1 | RESTRICT    | CASCADE     |
+| dept_manager.dept_no | departments.dept_no | dept_manager_ibfk_2 | RESTRICT    | CASCADE     |
+| salaries.emp_no      | employees.emp_no    | salaries_ibfk_1     | RESTRICT    | CASCADE     |
+| titles.emp_no        | employees.emp_no    | titles_ibfk_1       | RESTRICT    | CASCADE     |
++----------------------+---------------------+---------------------+-------------+-------------+
+</code></pre>
+<p>So in our case above, we have a problem and it’s not recommended to use multi-primary.</p>
+<p>Let me show you what kind or error you may have.</p>
+<h4 id="toc_h4_4">Case 1: default settings + group_replication_single_primary_mode = off</h4>
+<p>In that case, if we perform a DML on such table,… nothing happens ! No error as there is no conflict on my test machine without concurrent workload.<br>
+But this is not safe as it might happen, remember, this is not fully supported !</p>
+<h4 id="toc_h4_5">Case 2: group_replication_single_primary_mode = off + group_replication_enforce_update_everywhere_checks = 1</h4>
+<p>Now if we run a DML on such table, we have an error:</p>
+<pre><code class="language-fallback highlight-chroma">mysql&gt; update employees.salaries set salary = 60118 where emp_no=10002 and salary&lt;60117;
+ERROR 3098 (HY000): The table does not comply with the requirements by an external plugin.
+
+</code></pre>
+<p>and in the error log we can read:</p>
+<pre><code class="language-fallback highlight-chroma">[ERROR] Plugin group_replication reported: 'Table salaries has a foreign key with 'CASCADE' clause. This is not compatible with Group Replication'
+</code></pre>
+<p>So be careful that by default you could get some issues as the check is disabled.</p>
+<p>I also want to add that all the nodes in the Group must have that setting. I you try to start group replication on a node where you have a different value for<br>
+group_replication_enforce_update_everywhere_checks, then the node won’t be able to join and in the error log you will see:</p>
+<pre><code class="language-fallback highlight-chroma">[ERROR] Plugin group_replication reported: 'The member configuration is not compatible with the group configuration. Variables such as single_primary_mode or enforce_update_everywhere_checks must have the same value on every server in the group. 
+
+ (member configuration option: [group_replication_enforce_update_everywhere_checks], group configuration option: []).
+</code></pre>
+<p>Is this enough to be sure that our cluster will run smoothly in Multi-Primary mode ? In fact no it isn’t !</p>
+<p>Now we also try to reduce the risk of certification failure that might happen when writing on multiple nodes simultaneously.</p>
+<h2 id="toc_h2_6">Workload Check</h2>
+<p>Group Replication might be sensible when writing on multiple nodes (Multi-Primary mode) do the following workload:</p>
+<ul>
+<li>Large transactions (they have the risk to be in conflict with a short one that they have to rollback too frequently)</li>
+<li>Hotspots: rows that might be changed on all the nodes simultaneously</li>
+</ul>
+<h3 id="toc_h3_7">Large Transactions</h3>
+<p>With Performance_Schema, we have in MySQL everything we need to be able to identify large transactions. We will focus then on identifying :</p>
+<ul>
+<li>the transactions with most statements (and most writes in particular)</li>
+<li>the transactions with most rows affected</li>
+<li>the largest statements by row affected</li>
+</ul>
+<p>Before being able to verify all this on your current system that you want to migrate to Group Replication, we need to activate some consumers and instruments in Performance_Schema:</p>
+<pre><code class="language-fallback highlight-chroma">mysql&gt; update performance_schema.setup_consumers 
+set enabled = 'yes' 
+where name like 'events_statement%' or name like 'events_transaction%';
+
+mysql&gt; update performance_schema.setup_instruments 
+set enabled = 'yes', timed = 'yes' 
+where name = 'transaction';
+</code></pre>
+<p>Now we should let the system run for some time and verify when we have enough data collected.</p>
+<p>In the future some of the data we are collecting in this article will be available via<code>sys</code>.</p>
+<h4 id="toc_h4_8">Transactions with most statements</h4>
+<pre><code class="language-fallback highlight-chroma">select t.thread_id, t.event_id, count(*) statement_count, 
+sum(s.rows_affected) rows_affected, 
+length(replace(group_concat(
+case when s.event_name = "statement/sql/update" then 1 
+when s.event_name = "statement/sql/insert" then 1 
+when s.event_name = "statement/sql/delete" then 1 
+else null end),',','')) as "# write statements" 
+from performance_schema.events_transactions_history_long t 
+join performance_schema.events_statements_history_long s 
+on t.thread_id = s.thread_id and t.event_id = s.nesting_event_id 
+group by t.thread_id, t.event_id order by rows_affected desc limit 10;
+</code></pre>
+<p>We can also see those statements has I illustrate it below:</p>
+<pre><code class="language-fallback highlight-chroma">mysql&gt; set group_concat_max_len = 1000000;
+mysql&gt; select t.thread_id, t.event_id, count(*) statement_count, 
+    -&gt;        sum(s.rows_affected) rows_affected, 
+    -&gt;        group_concat(sql_text order by s.event_id separator '\n') statements 
+    -&gt; from performance_schema.events_transactions_history_long t 
+    -&gt; join performance_schema.events_statements_history_long s 
+    -&gt;   on t.thread_id = s.thread_id and t.event_id = s.nesting_event_id 
+    -&gt; group by t.thread_id, t.event_id order by statement_count desc limit 1\G
+*************************** 1. row ***************************
+      thread_id: 332
+       event_id: 20079
+statement_count: 19
+  rows_affected: 4
+     statements: SELECT c FROM sbtest1 WHERE id=5011
+SELECT c FROM sbtest1 WHERE id=4994
+SELECT c FROM sbtest1 WHERE id=5049
+SELECT c FROM sbtest1 WHERE id=5048
+SELECT c FROM sbtest1 WHERE id=4969
+SELECT c FROM sbtest1 WHERE id=4207
+SELECT c FROM sbtest1 WHERE id=4813
+SELECT c FROM sbtest1 WHERE id=4980
+SELECT c FROM sbtest1 WHERE id=4965
+SELECT c FROM sbtest1 WHERE id=5160
+SELECT c FROM sbtest1 WHERE id BETWEEN 4965 AND 4965+99
+SELECT SUM(K) FROM sbtest1 WHERE id BETWEEN 3903 AND 3903+99
+SELECT c FROM sbtest1 WHERE id BETWEEN 5026 AND 5026+99 ORDER BY c
+SELECT DISTINCT c FROM sbtest1 WHERE id BETWEEN 5015 AND 5015+99 ORDER BY c
+UPDATE sbtest1 SET k=k+1 WHERE id=5038
+UPDATE sbtest1 SET c='09521266577-73910905313-02504464680-26379112033-24268550394-82474773859-79238765464-79164299430-72120102543-79625697876' WHERE id=4979
+DELETE FROM sbtest1 WHERE id=4964
+INSERT INTO sbtest1 (id, k, c, pad) VALUES (4964, 5013, '92941108506-80809269412-93466971769-85515755897-68489598719-07756610896-31666993640-93238959707-66480092830-97721213568', '74640142294-85723339839-62552309335-30960818723-80741740383')
+COMMIT
+</code></pre>
+<p>Of course there is not rules of thumb saying what is a transaction with too much statements, this is your role as DBA to analyze this and see how often such transaction could enter in conflict on multiple nodes at the same time.</p>
+<p>You can also see the amount of conflicts per host using the following statement:</p>
+<pre><code class="language-fallback highlight-chroma">mysql&gt; select COUNT_CONFLICTS_DETECTED from performance_schema.replication_group_member_stats;
++--------------------------+
+| COUNT_CONFLICTS_DETECTED |
++--------------------------+
+|                        4 |
++--------------------------+
+</code></pre>
+<h4 id="toc_h4_9">Transactions with most rows affected</h4>
+<p>This is of course a more important value to get than the previous one and here we will directly now how many rows could enter in conflict:</p>
+<pre><code class="language-fallback highlight-chroma">select t.thread_id, t.event_id, count(*) statement_count, 
+       sum(s.rows_affected) rows_affected, 
+       length(replace(group_concat(
+       case 
+         when s.event_name = "statement/sql/update" then 1 
+         when s.event_name = "statement/sql/insert" then 1 
+         when s.event_name = "statement/sql/delete" then 1 
+         else null end),',','')) as "# write statements" 
+from performance_schema.events_transactions_history_long t 
+join performance_schema.events_statements_history_long s 
+  on t.thread_id = s.thread_id and t.event_id = s.nesting_event_id 
+group by t.thread_id, t.event_id order by rows_affected desc limit 10;
+</code></pre>
+<p>If you find some with a large amount of rows, you can again see what were the statements in that particular transaction. This is an example:</p>
+<pre><code class="language-fallback highlight-chroma">select t.thread_id, t.event_id, count(*) statement_count, 
+       sum(s.rows_affected) rows_affected, 
+       group_concat(sql_text order by s.event_id separator '\n') statements 
+from performance_schema.events_transactions_history_long t 
+join performance_schema.events_statements_history_long s 
+  on t.thread_id = s.thread_id and t.event_id = s.nesting_event_id 
+group by t.thread_id, t.event_id order by rows_affected desc limit 1\G
+</code></pre>
+<p>Just<strong>don’t forget to verify the auto_commit ones as they are not returned</strong>with the query above.</p>
+<h4 id="toc_h4_10">Largest statements by row affected</h4>
+<p>This query can be used to find the specific statement that modifies the most rows:</p>
+<pre><code class="language-fallback highlight-chroma">SELECT query, db, rows_affected, rows_affected_avg 
+FROM sys.statement_analysis 
+ORDER BY rows_affected_avg DESC, rows_affected DESC LIMIT 10;
+</code></pre>
+<h3 id="toc_h3_11">Hotspots</h3>
+<p>For hotspots, we will look for the queries updating most the same PK and therefore having to wait more.</p>
+<pre><code class="language-fallback highlight-chroma">SELECT * 
+FROM performance_schema.events_statements_history_long 
+WHERE rows_affected &gt; 1 ORDER BY timer_wait DESC LIMIT 20
+</code></pre>
+<h2 id="toc_h2_12">Conclusion</h2>
+<p>As you can see, the workload is also important when you decide to spread your writes to all nodes or use only a dedicated one. The default is safer and requires less analysis.</p>
+<p>Therefore, I recommend to use MySQL Group Replication in Multi-Primary Mode only to advanced users</p>
+<p>感谢原作者，博客转自：https://lefred.be/content/mysql-group-replication-single-primary-or-multi-primary</p>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96">
+                            性能优化</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/MariaDB">
+                            MariaDB</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93">
+                            数据库</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2019/03/21/1553147675859.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="Java Log4j 日志中的类路径显示首字母缩写">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="MySQL Group Replication, Single-Primary or Multi-Primary, how to make the right decision?"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2019/03/21/1553148807220.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2019/05/11/1557556661045.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="Tomcat 配置导致启动时，项目加载两次的解决办法">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1553148807220"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+<ul class="article__toc">
+        <li class="toc__h2">
+            <a href="#toc_h2_0">Requirements</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_1">Limitations</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_2">Concurrent DDL vs DML/DDL Operations</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_3">Foreign Keys with Cascading Constraints</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_4">Case 1: default settings + group_replication_single_primary_mode = off</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_5">Case 2: group_replication_single_primary_mode = off + group_replication_enforce_update_everywhere_checks = 1</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_6">Workload Check</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_7">Large Transactions</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_8">Transactions with most statements</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_9">Transactions with most rows affected</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_10">Largest statements by row affected</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_11">Hotspots</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_12">Conclusion</a>
+        </li>
+</ul></aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1553148807220",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1553148807220",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("性能优化,MariaDB,数据库", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1553148807220', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 123ms, 2020/11/29 22:19:04 -->

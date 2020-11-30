@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>黑客派（HacPai）图片处理 imageView2 接口使用，可用于摘要图片 - 随心笔客</title><meta name="description" content="黑客派博客 Solo 配图可使用 imageView2 接口显示不同大小的摘要图，通过给定参数 imageView2 可调整图片的大小，使之显示出来比较美观，但是参数具体代表什么含义，看完这篇博文你就知道，也自己留个底，方便后面查看。 描述 imageView2 是原 imageView 接口的更新版本，实现略有差异，功能更为丰富。同样，只需要填写几个参数即可对图片进行缩略操作，生成各种缩略图。imageView2 接口可支持处理的原图片格式有 psd、jpeg、jpg、png、gif、webp、tiff、bmp。"/><meta property="og:description" content="黑客派博客 Solo 配图可使用 imageView2 接口显示不同大小的摘要图，通过给定参数 imageView2 可调整图片的大小，使之显示出来比较美观，但是参数具体代表什么含义，看完这篇博文你就知道，也自己留个底，方便后面查看。 描述 imageView2 是原 imageView 接口的更新版本，实现略有差异，功能更为丰富。同样，只需要填写几个参数即可对图片进行缩略操作，生成各种缩略图。imageView2 接口可支持处理的原图片格式有 psd、jpeg、jpg、png、gif、webp、tiff、bmp。"/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="黑客派（HacPai）图片处理 imageView2 接口使用，可用于摘要图片 - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2019/02/25/1551085983283.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="黑客派（HacPai）图片处理 imageView2 接口使用，可用于摘要图片 - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2019/02/25/1551085983283.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title="自建基于 Layoutit 的在线 Bootstrap 可视化布局系统" href="https://zxniuniu.github.io/articles/2019/02/25/1551064941317.html">
+            <link rel="next" title="JedisPool资源池优化及常见问题汇总" href="https://zxniuniu.github.io/articles/2019/03/12/1552377395451.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2019/02/25/1551085983283.html">
+                            黑客派（HacPai）图片处理 imageView2 接口使用，可用于摘要图片
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2019-10-15
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2019/02/25/1551085983283.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1551085983283">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2019/02/25/1551085983283.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <p>黑客派博客<code>Solo</code>配图可使用<code>imageView2</code>接口显示不同大小的摘要图，通过给定参数 <code>imageView2</code> 可调整图片的大小，使之显示出来比较美观，但是参数具体代表什么含义，看完这篇博文你就知道，也自己留个底，方便后面查看。<br>
+<img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/1/w/960/h/400/interlace/1/q/100" alt=""></p>
+<h3 id="toc_h3_0"><strong>描述</strong></h3>
+<p>imageView2 是原 imageView 接口的更新版本，实现略有差异，功能更为丰富。同样，只需要填写几个参数即可对图片进行缩略操作，生成各种缩略图。imageView2 接口可支持处理的原图片格式有<code>psd、jpeg、jpg、png、gif、webp、tiff、bmp</code>。</p>
+<h3 id="toc_h3_1"><strong>接口规格</strong></h3>
+<p>注意：接口规格**<code>不含任何空格及换行符</code>**：</p>
+<pre><code class="language-fallback highlight-chroma">imageView2/&lt;mode&gt;                     // 模式，可选值：0, 1, 2, 3, 4, 5
+          /w/&lt;LongEdge&gt;               // 宽度，长边
+          /h/&lt;ShortEdge&gt;              // 高度，短边
+          /format/&lt;Format&gt;            // 图片模式，可选值：
+          /interlace/&lt;Interlace&gt;      // 渐进显示，可选值：0, 1；仅对jpg有效；默认0，不渐进显示
+          /q/&lt;Quality&gt;                // 显示质量，默认值
+</code></pre>
+<p>其中<code>&lt;mode&gt;</code>分为如下几种情况：</p>
+<style> table th:nth-of-type(1) { width: 210px; } </style>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/0/w/&lt;LongEdge&gt;/h/&lt;ShortEdge&gt;</code></td>
+<td>限定缩略图的长边最多为<code>&lt;LongEdge&gt;</code>，短边最多为<code>&lt;ShortEdge&gt;</code>，进行等比缩放，不裁剪<br> * 若只指定<code>w</code>参数则表示限定长边，短边自适应<br> * 若只指定<code>h</code>参数则表示限定短边，长边自适应</td>
+</tr>
+<tr>
+<td><code>/1/w/&lt;Width&gt;/h/&lt;Height&gt;</code></td>
+<td>限定缩略图的宽最少为<code>&lt;Width&gt;</code>，高最少为<code>&lt;Height&gt;</code>，进行等比缩放，居中裁剪<br>* 裁剪后的缩略图通常恰好是<code>&lt;Width&gt;x&lt;Height&gt;</code>的大小，缩放时超出矩形框的边会被裁剪掉<br>* 若只指定 w 参数或只指定 h 参数，代表限定为长宽相等的正方形图</td>
+</tr>
+<tr>
+<td><code>/2/w/&lt;Width&gt;/h/&lt;Height&gt;</code></td>
+<td>限定缩略图的宽最多为<code>&lt;Width&gt;</code>，高最多为<code>&lt;Height&gt;</code>，进行等比缩放，不裁剪<br>如果只指定 w 参数则表示限定宽（长自适应），只指定 h 参数则表示限定长（宽自适应）。它和模式 0 类似，区别只是限定宽和高，不是限定长边和短边。从应用场景来说，模式 0 适合移动设备上做缩略图，模式 2 适合 PC 上做缩略图。</td>
+</tr>
+<tr>
+<td><code>/3/w/&lt;Width&gt;/h/&lt;Height&gt;</code></td>
+<td>限定缩略图的宽最少为<code>&lt;Width&gt;</code>，高最少为<code>&lt;Height&gt;</code>，进行等比缩放，不裁剪。如果只指定 w 参数或只指定 h 参数，代表长宽限定为同样的值。你可以理解为模式 1 是模式 3 的结果再做居中裁剪得到的。</td>
+</tr>
+<tr>
+<td><code>/4/w/&lt;LongEdge&gt;/h/&lt;ShortEdge&gt;</code></td>
+<td>限定缩略图的长边最少为<code>&lt;LongEdge&gt;</code>，短边最少为<code>&lt;ShortEdge&gt;</code>，进行等比缩放，不裁剪。如果只指定 w 参数或只指定 h 参数，表示长边短边限定为同样的值。这个模式很适合在手持设备做图片的全屏查看（把这里的长边短边分别设为手机屏幕的分辨率即可），生成的图片尺寸刚好充满整个屏幕（某一个边可能会超出屏幕）。</td>
+</tr>
+<tr>
+<td><code>/5/w/&lt;LongEdge&gt;/h/&lt;ShortEdge&gt;</code></td>
+<td>限定缩略图的长边最少为<code>&lt;LongEdge&gt;</code>，短边最少为<code>&lt;ShortEdge&gt;</code>，进行等比缩放，居中裁剪。如果只指定 w 参数或只指定 h 参数，表示长边短边限定为同样的值。同上模式 4，但超出限定的矩形部分会被裁剪。</td>
+</tr>
+</tbody>
+</table>
+<p><strong>注意：</strong></p>
+<ul>
+<li>可以仅指定<code>w</code>参数或<code>h</code>参数</li>
+<li>新图的宽/高/，长边/短边，不会比原图大，即接口总是缩小图片</li>
+<li>所有模式都可以只指定<code>w</code>参数或只指定<code>h</code>参数
+<ul>
+<li>在<code>w、h</code>为限定最大值时，未指定某参数等价于将该参数设置为自适应</li>
+<li>在<code>w、h</code>为限定最小值时，未指定参数等于给定的参数，也就限定的矩形是正方形</li>
+</ul>
+</li>
+<li>处理后的图片<code>w</code>和<code>h</code>参数不能超过 9999 像素，总像素不得超过 24999999（2500 万-1）像素</li>
+<li>处理前的图片<code>w</code>和<code>h</code>参数不能超过 3 万像素，总像素不能超过 1.5 亿像素</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>参数名称</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/format/</code></td>
+<td>新图的输出格式取值范围：<code>jpg</code>，<code>gif</code>，<code>png</code>，<code>webp</code>等，默认为原图格式。参考<a href="http://www.imagemagick.org/script/formats.php" target="_blank">支持转换的图片格式</a>。</td>
+</tr>
+<tr>
+<td><code>/interlace/&lt;Interlace&gt;</code></td>
+<td>是否支持渐进显示<br>取值范围：<code>1</code>支持渐进显示，<code>0</code>不支持渐进显示(默认为 0)。<br>适用目标格式：<code>jpg</code>  <br>效果：网速慢时，图片显示由模糊到清晰。</td>
+</tr>
+<tr>
+<td><code>/q/&lt;Quality&gt;</code></td>
+<td>新图的图片质量<br>取值范围是[1, 100]，默认 75。<br>● 指定值后面可以增加<code>!</code>，表示强制使用指定值，如<code>100!</code>。  <br>● 支持图片类型：jpg。</td>
+</tr>
+<tr>
+<td><code>/ignore-error/&lt;ignoreError&gt;</code></td>
+<td>可选取值：<code>1</code> <br>● 未设置此参数时，正常返回处理结果。<br>● 设置了此参数时，若图像处理的结果失败，则返回原图。<br>● 设置了此参数时，若图像处理的结果成功，则正常返回处理结果。</td>
+</tr>
+</tbody>
+</table>
+<p><code>&lt;Quality&gt;</code>修正值算法：<br>
+● 原图 quality &lt;= 90: <strong>min[90, 原图 quality*sqrt(原图长宽乘积/结果图片长宽乘积)]</strong><br>
+● 原图 quality &gt; 90: <strong>原图 quality*sqrt(原图长宽乘积/结果图片长宽乘积)</strong></p>
+<h3 id="toc_h3_2"><strong>示例</strong></h3>
+<pre><code class="language-fallback highlight-chroma">模块0，仅指定高度： image_path?imageView2/0/h/200 
+</code></pre>
+<h2 id="toc_h2_3"><img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/0/h/200" alt="缩略图"></h2>
+<pre><code class="language-fallback highlight-chroma">模块1，仅指定高度： image_path?imageView2/1/h/200 
+</code></pre>
+<h2 id="toc_h2_4"><img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/1/h/200" alt="缩略图"></h2>
+<pre><code class="language-fallback highlight-chroma">模块2，仅指定高度： image_path?imageView2/2/h/200 
+</code></pre>
+<h2 id="toc_h2_5"><img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/2/h/200" alt="缩略图"></h2>
+<pre><code class="language-fallback highlight-chroma">模块3，仅指定高度： image_path?imageView2/3/h/200 
+</code></pre>
+<h2 id="toc_h2_6"><img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/3/h/200" alt="缩略图"></h2>
+<pre><code class="language-fallback highlight-chroma">模块4，仅指定高度： image_path?imageView2/4/h/200 
+</code></pre>
+<h2 id="toc_h2_7"><img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/4/h/200" alt="缩略图"></h2>
+<pre><code class="language-fallback highlight-chroma">模块5，仅指定高度： image_path?imageView2/5/h/200 
+</code></pre>
+<h2 id="toc_h2_8"><img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/5/h/200" alt="缩略图"></h2>
+<pre><code class="language-fallback highlight-chroma">模块0，指定宽高： image_path?imageView2/0/h/200/w/200 
+</code></pre>
+<h2 id="toc_h2_9"><img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/0/h/200/w/200" alt="缩略图"></h2>
+<pre><code class="language-fallback highlight-chroma">模块1，指定宽高： image_path?imageView2/1/h/200 /w/200
+</code></pre>
+<h2 id="toc_h2_10"><img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/1/h/200/w/200" alt="缩略图"></h2>
+<pre><code class="language-fallback highlight-chroma">模块2，指定宽高： image_path?imageView2/2/h/200/w/200
+</code></pre>
+<h2 id="toc_h2_11"><img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/2/h/200/w/200" alt="缩略图"></h2>
+<pre><code class="language-fallback highlight-chroma">模块3，指定宽高： image_path?imageView2/3/h/200/w/200 
+</code></pre>
+<h2 id="toc_h2_12"><img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/3/h/200/w/200" alt="缩略图"></h2>
+<pre><code class="language-fallback highlight-chroma">模块4，指定宽高： image_path?imageView2/4/h/200/w/200 
+</code></pre>
+<h2 id="toc_h2_13"><img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/4/h/200/w/200" alt="缩略图"></h2>
+<pre><code class="language-fallback highlight-chroma">模块5，指定宽高： image_path?imageView2/5/h/200/w/200 
+</code></pre>
+<h2 id="toc_h2_14"><img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/5/h/200/w/200" alt="缩略图"></h2>
+<pre><code class="language-fallback highlight-chroma">image_path?imageView2/1/w/200/h/200
+</code></pre>
+<h2 id="toc_h2_15"><img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/1/w/200/h/200" alt="缩略图"></h2>
+<ul>
+<li>指定图片高度和宽度，裁剪图片：</li>
+</ul>
+<pre><code class="language-fallback highlight-chroma">image_path?imageView2/1/w/960/h/270/interlace/1/q/100
+</code></pre>
+<h2 id="toc_h2_16"><img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/1/w/960/h/270/interlace/1/q/100" alt="缩略图"></h2>
+<ul>
+<li>指定图片质量，取值范围是[1, 100]，默认 75，此处为 1：</li>
+</ul>
+<pre><code class="language-fallback highlight-chroma">image_path?imageView2/1/interlace/1/q/1
+</code></pre>
+<h2 id="toc_h2_17"><img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/1/interlace/1/q/1" alt="缩略图"></h2>
+<ul>
+<li>渐进显示图片：</li>
+</ul>
+<pre><code class="language-fallback highlight-chroma">image_path?imageView2/1/interlace/1 
+</code></pre>
+<p><img src="https://img.hacpai.com/bing/20180406.jpg?imageView2/1/interlace/1" alt="缩略图"></p>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Solo">
+                            Solo</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%8E%A5%E5%8F%A3">
+                            接口</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Q%26A">
+                            Q&A</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96">
+                            性能优化</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2019/02/25/1551064941317.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="自建基于 Layoutit 的在线 Bootstrap 可视化布局系统">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="黑客派（HacPai）图片处理 imageView2 接口使用，可用于摘要图片"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2019/02/25/1551085983283.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2019/03/12/1552377395451.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="JedisPool资源池优化及常见问题汇总">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1551085983283"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+<ul class="article__toc">
+        <li class="toc__h3">
+            <a href="#toc_h3_0">描述</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_1">接口规格</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_2">示例</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_3"></a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_4"></a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_5"></a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_6"></a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_7"></a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_8"></a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_9"></a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_10"></a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_11"></a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_12"></a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_13"></a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_14"></a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_15"></a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_16"></a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_17"></a>
+        </li>
+</ul></aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1551085983283",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1551085983283",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("Solo,接口,Q&A,性能优化", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1551085983283', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 28ms, 2020/11/29 22:19:05 -->

@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>3 ways to start Appium Server from Java - 随心笔客</title><meta name="description" content="When you start learning Appium or start writing your first test script with it, your initial approach (especially from a beginner’s point of view) would be to start and stop the Appium server manually. Initially, a lot of people start working with the GUI based Appium versions. GUI versions of Appium are easy to use, and users can easily start and stop the Appium server manually using the controls provided in the tool. After some time, many people would download and install the latest versions of Appium, which most of the times would be a non-GUI version. And its still relatively easy to start and stop the non-GUI version of Appium manually."/><meta property="og:description" content="When you start learning Appium or start writing your first test script with it, your initial approach (especially from a beginner’s point of view) would be to start and stop the Appium server manually. Initially, a lot of people start working with the GUI based Appium versions. GUI versions of Appium are easy to use, and users can easily start and stop the Appium server manually using the controls provided in the tool. After some time, many people would download and install the latest versions of Appium, which most of the times would be a non-GUI version. And its still relatively easy to start and stop the non-GUI version of Appium manually."/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="3 ways to start Appium Server from Java - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2018/11/04/1541295639948.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="3 ways to start Appium Server from Java - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2018/11/04/1541295639948.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title="SS、SSR链接解析，查看对应密码、端口、协议" href="https://zxniuniu.github.io/articles/2018/10/24/1540351937866.html">
+            <link rel="next" title="2018最新EDU邮箱申请-无限谷歌网盘，Office365教育版" href="https://zxniuniu.github.io/articles/2018/11/04/1541296167680.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2018/11/04/1541295639948.html">
+                            3 ways to start Appium Server from Java
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2019-10-15
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2018/11/04/1541295639948.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1541295639948">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2018/11/04/1541295639948.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <p>When you start learning Appium or start writing your first test script with it, your initial approach (especially from a beginner’s point of view) would be to start and stop the Appium server manually. Initially, a lot of people start working with the GUI based Appium versions. GUI versions of Appium are easy to use, and users can easily start and stop the Appium server manually using the controls provided in the tool. After some time, many people would <a href="http://www.automationtestinghub.com/download-and-install-appium-1-6/" target="_blank">download and install the latest versions of Appium</a>, which most of the times would be a non-GUI version. And its still relatively easy to start and stop the non-GUI version of Appium manually.</p>
+<p>Eventually there would come a time, when you are in the process of designing a good and robust test automation framework. And as part of this, you might also start thinking about removing all the manual steps involved in test execution, so that you can achieve the objective of continuous testing and feedback. Starting and stopping the Appium server manually would become a huge bottleneck to your approach. To remove this bottleneck, you would need to start and stop the Appium server programmatically. Hence, we have come up with this article which will help you start Appium server from Java.</p>
+<h2 id="toc_h2_0">Different methods to Start Appium server from Java</h2>
+<p>Good news is it doesn’t matter what type of Appium version you are using – be it GUI based Appium server, or non-GUI based versions (run from command prompt/terminal), both these types of Appium versions can be started and stopped programmatically using Java. There are 3 different methods that we use to start and stop Appium server from Java, two of which cater to the non-GUI version and the 3rd one would work for the GUI version. All these 3 methods are given below –</p>
+<p><img src="http://www.automationtestinghub.com/images/appium/3-different-ways-to-start-appium-server-from-java.png" alt=""></p>
+<p>Let us have a look at each of these methods one by one.</p>
+<h2 id="toc_h2_1">Method 1: Start Appium server using AppiumDriverLocalService</h2>
+<p>To use this method to start Appium server, you need to first make sure that the following pre-requisites are met –</p>
+<ul>
+<li>Node.js should be installed on your machine</li>
+<li>Appium server should have been installed via NPM</li>
+</ul>
+<p>If you have not installed Appium using NPM, then please follow this link for the setup process – <a href="http://www.automationtestinghub.com/download-and-install-appium-1-6/" target="_blank">Download and Install Appium using NPM</a></p>
+<p>Let us now see how you can start Appium server from Java using this method. There are two main classes which you will be using here –</p>
+<ul>
+<li>**AppiumDriverLocalService : **This is the class which is used to start and stop the Appium server</li>
+<li>**AppiumServiceBuilder : **This class is used to build the Appium service, i.e. you can use this class to set the server address, port, desired capabilities and other flags before starting the Appium server</li>
+</ul>
+<h3 id="toc_h3_2">Simplest Implementation:</h3>
+<p>The simplest way to use this service is where you just use the default service and then start/stop the Appium server. The code for this implementation is given below –</p>
+<pre><code class="language-fallback highlight-chroma">AppiumDriverLocalService service  =  AppiumDriverLocalService.buildDefaultService();
+
+service.start();
+
+//your test scripts logic...
+
+service.stop();
+</code></pre>
+<p>Once you execute the above code, you will see from Eclipse Console window that Appium server has been started. Please check that the since you used the <strong>buildDefaultService()</strong> method, the port and server used are <strong>0.0.0.0:4723</strong>, as shown below.</p>
+<p><img src="http://www.automationtestinghub.com/images/appium/start-appium-server-appium-driver-local-service.png" alt=""></p>
+<h3 id="toc_h3_3">Implementing AppiumServiceBuilder to add more arguments:</h3>
+<p>With AppiumServiceBuilder, you have the option to configure the Appium Server, where you can add a different address, port, capabilities and other server flags. The code given below illustrates how this can be done –</p>
+<p><strong>Edit 1 [11 Sep 2017]:</strong> We have added an additional functionality where you can check if the server is already running or not. And you can start the Appium server only if its not already running. <strong>The logic here is to figure out if the port is in use or not. Generally, the ports that you use with Appium are not used by other applications. So if the port is already in use, it is safe to assume that Appium server is running on the port.</strong></p>
+<p>This way you start the Appium server only if the port is not in use.</p>
+<pre><code class="language-fallback highlight-chroma">import org.openqa.selenium.remote.DesiredCapabilities;
+import io.appium.java_client.service.local.AppiumDriverLocalService;
+import io.appium.java_client.service.local.AppiumServiceBuilder;
+import io.appium.java_client.service.local.flags.GeneralServerFlag;
+
+public  class  AppiumServerJava  {
+
+  private  AppiumDriverLocalService service;
+  private  AppiumServiceBuilder builder;
+  private  DesiredCapabilities cap;
+
+  public  void  startServer()  {
+	//Set Capabilities
+
+	cap  =  new  DesiredCapabilities();
+
+	cap.setCapability("noReset",  "false");
+
+	//Build the Appium service
+
+	builder  =  new  AppiumServiceBuilder();
+
+	builder.withIPAddress("127.0.0.1");
+
+	builder.usingPort(4723);
+
+	builder.withCapabilities(cap);
+
+	builder.withArgument(GeneralServerFlag.SESSION_OVERRIDE);
+
+	builder.withArgument(GeneralServerFlag.LOG_LEVEL,"error");
+
+	//Start the server with the builder
+
+	service  =  AppiumDriverLocalService.buildService(builder);
+
+	service.start();
+  }
+
+  public  void  stopServer()  {
+
+	service.stop();
+
+  }
+
+  public  boolean  checkIfServerIsRunnning(int  port)  {
+
+	boolean  isServerRunning  =  false;
+
+	ServerSocket serverSocket;
+
+	try  {
+
+	  serverSocket  =  new  ServerSocket(port);
+
+	  serverSocket.close();
+
+	}  catch  (IOException  e)  {
+
+	  //If control comes here, then it means that the port is in use
+
+	  isServerRunning  =  true;
+
+	}  finally  {
+
+	  serverSocket  =  null;
+
+	}
+
+  return  isServerRunning;
+
+  }
+
+  public  static  void  main(String[]  args)  {
+
+	AppiumServerJava appiumServer  =  new  AppiumServerJava();
+
+	int  port  =  4723;
+
+	if(!appiumServer.checkIfServerIsRunnning(port))  {
+
+	  appiumServer.startServer();
+
+	  appiumServer.stopServer();
+
+	}  else  {
+
+	  System.out.println("Appium Server already running on Port - "  +  port);
+
+	}
+
+  }
+
+}
+</code></pre>
+<p>Note that, with this approach we have used <strong>buildService()</strong> method instead of <strong>buildDefaultService()</strong> method. When you run this code, you will see that the Appium server is now started with all the capabilities and flags that you had provided with the service builder.</p>
+<p><img src="http://www.automationtestinghub.com/images/appium/start-appium-server-appium-service-builder.png" alt=""></p>
+<p>Have a look at these pages to get more information on these classes and the methods that you can use – <a href="https://appium.github.io/java-client/io/appium/java_client/service/local/AppiumDriverLocalService.html" target="_blank">AppiumDriverLocalService</a> and <a href="https://appium.github.io/java-client/io/appium/java_client/service/local/AppiumServiceBuilder.html" target="_blank">AppiumServiceBuilder</a></p>
+<h2 id="toc_h2_4">Method 2: Using Appium.js with Node.exe (opening GUI version of Appium using code)</h2>
+<p>This is the approach, where you can open the GUI version of Appium using Java code. Please note that this approach will not directly open the GUI version, i.e., you won’t see the GUI version opened on the screen. It’s a sort of headless mode, where you will see that the server has been started in Eclipse command prompt, but you won’t see the actual GUI be opened on the screen. Let’s first start with the pre-requisites that you have to complete before using this approach.</p>
+<h3 id="toc_h3_5">Pre-requisites:</h3>
+<ul>
+<li>Node.js should be installed on your machine</li>
+<li>GUI version of Appium should be installed</li>
+</ul>
+<p>First of all, you need to find out the folder location where node and Appium are installed. This is important as you would need to supply these folder locations in Java code. Node.exe is normally installed in Appium folder. Check the folder where you have Appium installed and see if it has node.exe there. Generally, the default folder location is – *<em>C:\Program Files (x86)\Appium*</em></p>
+<p><img src="http://www.automationtestinghub.com/images/appium/node-exe-in-appium-folder.png" alt=""></p>
+<p><strong>So the path for Node.exe that you would use is – C:\Program Files (x86)\Appium\node.exe</strong>. Let’s now check the location of Appium.js which is generally also there in the Appium folder – C:\Program Files (x86)\Appium\node_modules\appium\bin</p>
+<p><img src="http://www.automationtestinghub.com/images/appium/appium-js-location-in-appium-folder.png" alt=""></p>
+<p><strong>So, the path that we will use for Appium.js is – C:\Program Files (x86)\Appium\node_modules\appium\bin\Appium.js</strong> Please note that if you have Appium installed in any other location, then please change the path accordingly for both node and appium.js</p>
+<p>Let’s now come to the actual code. With this approach, we will use <strong>CommandLine</strong>class to setup Appium server variables, and <strong>DefaultExecuteResultHandler</strong> to launch the Appium server. The complete code is given below (replace the folder paths if they are different in your case) –</p>
+<pre><code class="language-fallback highlight-chroma">import java.io.IOException;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecuteResultHandler;
+import org.apache.commons.exec.DefaultExecutor;
+
+public  class  AppiumServerJava  {
+
+  public  void  startServer()  {
+
+	CommandLine cmd  =  new  CommandLine("C:\\Program Files (x86)\\Appium\\node.exe");
+
+	cmd.addArgument("C:\\Program Files (x86)\\Appium\\node_modules\\appium\\bin\\Appium.js");
+
+	cmd.addArgument("--address");
+
+	cmd.addArgument("127.0.0.1");
+
+	cmd.addArgument("--port");
+
+	cmd.addArgument("4723");
+
+	DefaultExecuteResultHandler handler  =  new  DefaultExecuteResultHandler();
+
+	DefaultExecutor executor  =  new  DefaultExecutor();
+
+	executor.setExitValue(1);
+
+	try  {
+
+	  executor.execute(cmd,  handler);
+
+	  Thread.sleep(10000);
+
+	}  catch  (IOException  |  InterruptedException  e)  {
+
+	  e.printStackTrace();
+
+	}
+
+  }
+
+  public  void  stopServer()  {
+
+	Runtime runtime  =  Runtime.getRuntime();
+
+	try  {
+
+	  runtime.exec("taskkill /F /IM node.exe");
+
+	}  catch  (IOException  e)  {
+
+	  e.printStackTrace();
+
+	}
+
+  }
+
+  public  static  void  main(String[]  args)  {
+
+	AppiumServerJava appiumServer  =  new  AppiumServerJava();
+
+	appiumServer.startServer();
+
+	appiumServer.stopServer();
+
+  }
+
+}
+</code></pre>
+<p>Once you run the above code, Appium server will be started. To check that, you can have a look at the log console in Eclipse. You will see the logs similar to what is shown in the below image. Also, please note that the Appium server version shown in the logs is same as the GUI version that you would have installed.</p>
+<p><img src="http://www.automationtestinghub.com/images/appium/appium-server-gui-version-started-from-java-code.png" alt=""></p>
+<p>To stop this Appium server, we are just killing the node.exe process which gets created when the Appium server is started.</p>
+<h2 id="toc_h2_6">Method 3: Start Appium server using Command Prompt</h2>
+<p>With this approach, you mimic the manual process of opening command prompt and launching Appium server. Let us first check the manual steps and then we will check out the code which will replicate this manual approach.</p>
+<p><strong>Manual Process:</strong></p>
+<ul>
+<li>Open Command Prompt</li>
+<li>Run the following command – <strong>appium -a 127.0.0.1 -p 4723 –session-override -dc “{\”noReset\”: \”false\”}”</strong></li>
+<li>Hit ENTER</li>
+</ul>
+<p>The above command would start the Appium server as shown the below image –</p>
+<p><img src="http://www.automationtestinghub.com/images/appium/start-appium-server-manually-mimic.png" alt=""></p>
+<p>Below is the code which opens command prompt and launches Appium with the same command that we have given above. Please note that there is a slight change in the command format due to addition of escape characters. Also, launching cmd is also added as part of this command.</p>
+<pre><code class="language-fallback highlight-chroma">import java.io.IOException;
+
+public  class  AppiumServerJava  {
+
+  public  void  startServer()  {
+
+	Runtime runtime  =  Runtime.getRuntime();
+
+	try  {
+
+	  runtime.exec("cmd.exe /c start cmd.exe /k \"appium -a 127.0.0.1 -p 4723 --session-override -dc \"{\"\"noReset\"\": \"\"false\"\"}\"\"");
+
+	  Thread.sleep(10000);
+
+	}  catch  (IOException  |  InterruptedException  e)  {
+
+	  e.printStackTrace();
+
+	}
+
+  }
+
+  public  void  stopServer()  {
+
+	Runtime runtime  =  Runtime.getRuntime();
+
+	try  {
+
+	  runtime.exec("taskkill /F /IM node.exe");
+
+	  runtime.exec("taskkill /F /IM cmd.exe");
+
+	}  catch  (IOException  e)  {
+
+	  e.printStackTrace();
+
+	}
+
+  }
+
+  public  static  void  main(String[]  args)  {
+
+	AppiumServerJava appiumServer  =  new  AppiumServerJava();
+
+	appiumServer.startServer();
+
+	appiumServer.stopServer();
+
+  }
+
+}
+</code></pre>
+<p>Once you run this code, you will see that the code automatically opens command prompt and launches Appium as shown below –</p>
+<p><img src="http://www.automationtestinghub.com/images/appium/appium-start-server-using-java-runtime.png" alt=""></p>
+<p>If you think that the command is bit complex, that’s due to the fact that there are many escape characters used. If you want to keep it simple, you can just use the basic command where you just set the Appium server and port as shown below –</p>
+<pre><code class="language-fallback highlight-chroma">runtime.exec("cmd.exe /c start cmd.exe /k \"appium -a 127.0.0.1 -p 4723\"");
+</code></pre>
+<p>Also, please have a look at the stopServer() method. In this method, we are using <strong>taskkill /F /IM</strong> command, which is used to kill a process from task manager. Once you launch Appium server with this method, then have a look at the processes in Task Manager. You will see that a node.exe process would be displayed there. To stop the server, we first kill the node process and after that we are kill the cmd process to close the command prompt.</p>
+<p>This completes our article on starting and stopping Appium server from Java. Try out these methods and let us know if it works for you. If you face any issues, please contact us using the comments section.</p>
+<p>感谢原作者，博客转自：<a href="http://www.automationtestinghub.com/3-ways-to-start-appium-server-from-java/" target="_blank">http://www.automationtestinghub.com/3-ways-to-start-appium-server-from-java/</a></p>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Java">
+                            Java</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Selenium">
+                            Selenium</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Appium">
+                            Appium</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2018/10/24/1540351937866.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="SS、SSR链接解析，查看对应密码、端口、协议">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="3 ways to start Appium Server from Java"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2018/11/04/1541295639948.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2018/11/04/1541296167680.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="2018最新EDU邮箱申请-无限谷歌网盘，Office365教育版">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1541295639948"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+<ul class="article__toc">
+        <li class="toc__h2">
+            <a href="#toc_h2_0">Different methods to Start Appium server from Java</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_1">Method 1: Start Appium server using AppiumDriverLocalService</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_2">Simplest Implementation:</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_3">Implementing AppiumServiceBuilder to add more arguments:</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_4">Method 2: Using Appium.js with Node.exe (opening GUI version of Appium using code)</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_5">Pre-requisites:</a>
+        </li>
+        <li class="toc__h2">
+            <a href="#toc_h2_6">Method 3: Start Appium server using Command Prompt</a>
+        </li>
+</ul></aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1541295639948",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1541295639948",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("Java,Selenium,Appium", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1541295639948', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 31ms, 2020/11/29 22:19:05 -->

@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>Springboot 使用 Logback 自动同步指定级别日志到 MariaDB 数据库 - 随心笔客</title><meta name="description" content="为方便问题排查与分析，有时候需要把符合条件的指定级别日志自动持久化到数据库中。本文使用 logback 的 DBAppender，以及 AsyncAppender 实现 WARN 以上级别的日志自动异步到指定的数据库中。"/><meta property="og:description" content="为方便问题排查与分析，有时候需要把符合条件的指定级别日志自动持久化到数据库中。本文使用 logback 的 DBAppender，以及 AsyncAppender 实现 WARN 以上级别的日志自动异步到指定的数据库中。"/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="Springboot 使用 Logback 自动同步指定级别日志到 MariaDB 数据库 - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2020/03/25/1585146340397.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="Springboot 使用 Logback 自动同步指定级别日志到 MariaDB 数据库 - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2020/03/25/1585146340397.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title="用好这些隐藏「小开关」，让 Chrome 浏览器更好用（个人备用）" href="https://zxniuniu.github.io/articles/2020/01/07/1578385869281.html">
+            <link rel="next" title="Idea 中使用 JRebel 实现 SpringBoot 热部署" href="https://zxniuniu.github.io/articles/2020/03/26/1585192214841.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2020/03/25/1585146340397.html">
+                            Springboot 使用 Logback 自动同步指定级别日志到 MariaDB 数据库
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2020-03-25
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2020/03/25/1585146340397.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1585146340397">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2020/03/25/1585146340397.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <p>为方便问题排查与分析，有时候需要把符合条件的指定级别日志自动持久化到数据库中。<br>
+<img src="https://img.hacpai.com/bing/20181226.jpg?imageView2/1/w/960/h/540/interlace/1/q/100" alt=""></p>
+<h3 id="toc_h3_0">添加 pom 依赖</h3>
+<pre><code class="language-fallback highlight-chroma">&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+&lt;/dependency&gt;
+
+&lt;dependency&gt;
+    &lt;groupId&gt;commons-dbcp&lt;/groupId&gt;
+    &lt;artifactId&gt;commons-dbcp&lt;/artifactId&gt;
+    &lt;version&gt;1.4&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;mysql&lt;/groupId&gt;
+    &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+    &lt;scope&gt;runtime&lt;/scope&gt;
+&lt;/dependency&gt;
+</code></pre>
+<h3 id="toc_h3_1">创建 logback 配置文件 logback-spring.xml</h3>
+<pre><code class="language-fallback highlight-chroma">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- 日志级别从低到高：TRACE &lt; DEBUG &lt; INFO &lt; WARN &lt; ERROR &lt; FATAL --&gt;
+&lt;!-- 如果设置为WARN，则低于WARN的信息都不会输出 --&gt;
+&lt;!-- scan:当此属性设置为true时，配置文档如果发生改变，将会被重新加载，默认值为true --&gt;
+&lt;!-- scanPeriod:设置监测配置文档是否有修改的时间间隔，如果没有给出时间单位，默认单位是毫秒。 当scan为true时，此属性生效。默认的时间间隔为1分钟。 --&gt;
+&lt;!-- debug:当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false。 --&gt;
+
+&lt;configuration scan="true" scanPeriod="60 seconds" debug="false"&gt;
+    &lt;!-- name的值是变量的名称，value的值时变量定义的值。通过定义的值会被插入到logger上下文中。定义后，可以使“${}”来使用变量。 --&gt;
+    &lt;property name="log.path" value="logs/" /&gt;
+  
+    &lt;!-- 日志输出格式 --&gt;
+    &lt;property name="LOG_PATTERN" value="%d{MM-dd HH:mm:ss} %-5level %logger{100}[%method,%line] ● %msg%n" /&gt;
+
+    &lt;!-- 彩色日志依赖的渲染类 --&gt;
+    &lt;conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" /&gt;
+    &lt;conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" /&gt;
+    &lt;conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" /&gt;
+    &lt;property name="COLOR_PATTERN" value="${COLOR_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(-){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(●){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}" /&gt;
+  
+    &lt;!-- 控制台输出 --&gt;
+    &lt;appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender"&gt;
+        &lt;!-- 此日志appender是为开发使用，只配置最底级别，控制台输出的日志级别是大于或等于此级别的日志信息 --&gt;
+        &lt;filter class="ch.qos.logback.classic.filter.ThresholdFilter"&gt;
+            &lt;level&gt;DEBUG&lt;/level&gt;
+        &lt;/filter&gt;
+        &lt;encoder&gt;
+            &lt;!--&lt;pattern&gt;${LOG_PATTERN}&lt;/pattern&gt;--&gt;
+            &lt;pattern&gt;${COLOR_PATTERN}&lt;/pattern&gt;
+            &lt;charset&gt;UTF-8&lt;/charset&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!--DEBUG 级别的日志--&gt;
+    &lt;appender name="DEBUG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+        &lt;!-- 正在记录的日志文档的路径及文档名 --&gt;
+        &lt;file&gt;${log.path}/sys-debug.log&lt;/file&gt;
+        
+        &lt;!-- 日志记录器的滚动策略，按日期，按大小记录 --&gt;
+        &lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+            &lt;fileNamePattern&gt;
+                ${log.path}/sys-debug-%d{yyyy-MM-dd}.%i.log
+            &lt;/fileNamePattern&gt;
+            &lt;timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP"&gt;
+                &lt;maxFileSize&gt;
+                    100MB
+                &lt;/maxFileSize&gt;
+            &lt;/timeBasedFileNamingAndTriggeringPolicy&gt;
+            &lt;!--日志文档保留天数 --&gt;
+            &lt;maxHistory&gt;180&lt;/maxHistory&gt;
+        &lt;/rollingPolicy&gt;
+          
+        &lt;!--日志文档输出格式 --&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;${LOG_PATTERN}&lt;/pattern&gt;
+            &lt;charset&gt;UTF-8&lt;/charset&gt;
+        &lt;/encoder&gt;
+        
+        &lt;!-- 此日志文档只记录ERROR级别的 --&gt;
+        &lt;filter class="ch.qos.logback.classic.filter.LevelFilter"&gt;
+            &lt;level&gt;DEBUG&lt;/level&gt;
+            &lt;onMatch&gt;ACCEPT&lt;/onMatch&gt;
+            &lt;onMismatch&gt;DENY&lt;/onMismatch&gt;
+        &lt;/filter&gt;
+    &lt;/appender&gt;
+
+    &lt;!--INFO 级别的日志--&gt;
+    &lt;appender name="INFO_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+        &lt;!-- 正在记录的日志文档的路径及文档名 --&gt;
+        &lt;file&gt;${log.path}/sys-info.log&lt;/file&gt;
+        
+        &lt;!-- 日志记录器的滚动策略，按日期，按大小记录 --&gt;
+        &lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+            &lt;fileNamePattern&gt;
+                ${log.path}/sys-info-%d{yyyy-MM-dd}.%i.log
+            &lt;/fileNamePattern&gt;
+            &lt;timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP"&gt;
+                &lt;maxFileSize&gt;
+                    100MB
+                &lt;/maxFileSize&gt;
+            &lt;/timeBasedFileNamingAndTriggeringPolicy&gt;
+            &lt;!--日志文档保留天数 --&gt;
+            &lt;maxHistory&gt;180&lt;/maxHistory&gt;
+        &lt;/rollingPolicy&gt;
+        
+        &lt;!--日志文档输出格式 --&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;${LOG_PATTERN}&lt;/pattern&gt;
+            &lt;charset&gt;UTF-8&lt;/charset&gt;
+        &lt;/encoder&gt;
+        
+        &lt;!-- 此日志文档只记录ERROR级别的 --&gt;
+        &lt;filter class="ch.qos.logback.classic.filter.LevelFilter"&gt;
+            &lt;level&gt;INFO&lt;/level&gt;
+            &lt;onMatch&gt;ACCEPT&lt;/onMatch&gt;
+            &lt;onMismatch&gt;DENY&lt;/onMismatch&gt;
+        &lt;/filter&gt;
+    &lt;/appender&gt;
+
+    &lt;!--WARN 级别的日志--&gt;
+    &lt;appender name="WARN_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+        &lt;!-- 正在记录的日志文档的路径及文档名 --&gt;
+        &lt;file&gt;${log.path}/sys-warn.log&lt;/file&gt;
+        
+        &lt;!-- 日志记录器的滚动策略，按日期，按大小记录 --&gt;
+        &lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+            &lt;fileNamePattern&gt;
+                ${log.path}/sys-warn-%d{yyyy-MM-dd}.%i.log
+            &lt;/fileNamePattern&gt;
+            &lt;timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP"&gt;
+                &lt;maxFileSize&gt;
+                    100MB
+                &lt;/maxFileSize&gt;
+            &lt;/timeBasedFileNamingAndTriggeringPolicy&gt;
+            &lt;!--日志文档保留天数 --&gt;
+            &lt;maxHistory&gt;180&lt;/maxHistory&gt;
+        &lt;/rollingPolicy&gt;
+          
+        &lt;!--日志文档输出格式 --&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;${LOG_PATTERN}&lt;/pattern&gt;
+            &lt;charset&gt;UTF-8&lt;/charset&gt; &lt;!-- 此处设置字符集 --&gt;
+        &lt;/encoder&gt;
+        
+        &lt;!-- 此日志文档只记录ERROR级别的 --&gt;
+        &lt;filter class="ch.qos.logback.classic.filter.LevelFilter"&gt;
+            &lt;level&gt;WARN&lt;/level&gt;
+            &lt;onMatch&gt;ACCEPT&lt;/onMatch&gt;
+            &lt;onMismatch&gt;DENY&lt;/onMismatch&gt;
+        &lt;/filter&gt;
+    &lt;/appender&gt;
+
+    &lt;!--ERROR 级别的日志--&gt;
+    &lt;appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+        &lt;!-- 正在记录的日志文档的路径及文档名 --&gt;
+        &lt;file&gt;${log.path}/sys-error.log&lt;/file&gt;
+        
+        &lt;!-- 日志记录器的滚动策略，按日期，按大小记录 --&gt;
+        &lt;rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"&gt;
+            &lt;fileNamePattern&gt;
+                ${log.path}/sys-error-%d{yyyy-MM-dd}.%i.log
+            &lt;/fileNamePattern&gt;
+            &lt;timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP"&gt;
+                &lt;maxFileSize&gt;
+                    100MB
+                &lt;/maxFileSize&gt;
+            &lt;/timeBasedFileNamingAndTriggeringPolicy&gt;
+            &lt;!--日志文档保留天数 --&gt;
+            &lt;maxHistory&gt;180&lt;/maxHistory&gt;
+        &lt;/rollingPolicy&gt;
+      
+        &lt;!--日志文档输出格式 --&gt;
+        &lt;encoder&gt;
+            &lt;pattern&gt;${LOG_PATTERN}&lt;/pattern&gt;
+            &lt;charset&gt;UTF-8&lt;/charset&gt; &lt;!-- 此处设置字符集 --&gt;
+        &lt;/encoder&gt;
+        
+        &lt;!-- 此日志文档只记录ERROR级别的 --&gt;
+        &lt;filter class="ch.qos.logback.classic.filter.LevelFilter"&gt;
+            &lt;level&gt;ERROR&lt;/level&gt;
+            &lt;onMatch&gt;ACCEPT&lt;/onMatch&gt;
+            &lt;onMismatch&gt;DENY&lt;/onMismatch&gt;
+        &lt;/filter&gt;
+    &lt;/appender&gt;
+
+    &lt;!--日志异步到数据库（指定连接信息） --&gt; 
+    &lt;!--&lt;appender name="DB" class="ch.qos.logback.classic.db.DBAppender"&gt;
+        &lt;connectionSource class="ch.qos.logback.core.db.DriverManagerConnectionSource"&gt;
+            &lt;driverClass&gt;com.mysql.cj.jdbc.Driver&lt;/driverClass&gt;
+            &lt;url&gt;jdbc:mysql://127.0.0.1:3306/databaseName&lt;/url&gt;
+            &lt;user&gt;root&lt;/user&gt;
+            &lt;password&gt;db_passowrd&lt;/password&gt;
+        &lt;/connectionSource&gt;
+    &lt;/appender&gt; --&gt;
+    &lt;!--日志异步到数据库（采用DbConnectionSource利用已有的连接信息）--&gt;
+    &lt;appender name="DB" class="ch.qos.logback.classic.db.DBAppender"&gt;
+        &lt;connectionSource class="cn.xianwu.framework.datasource.DbConnectionSource" /&gt;
+        &lt;filter class="ch.qos.logback.classic.filter.ThresholdFilter"&gt;
+            &lt;level&gt;WARN&lt;/level&gt;
+        &lt;/filter&gt;
+    &lt;/appender&gt;
+    &lt;appender name="ASYNC_DB" class="ch.qos.logback.classic.AsyncAppender"&gt;
+        &lt;appender-ref ref="DB" /&gt;
+        &lt;includeCallerData&gt;true&lt;/includeCallerData&gt;
+    &lt;/appender&gt;
+
+    &lt;root level="DEBUG"&gt;
+        &lt;appender-ref ref="CONSOLE" /&gt;
+        &lt;appender-ref ref="DEBUG_FILE" /&gt;
+        &lt;appender-ref ref="INFO_FILE" /&gt;
+        &lt;appender-ref ref="WARN_FILE" /&gt;
+        &lt;appender-ref ref="ERROR_FILE" /&gt;
+        &lt;!-- 异步到数据库--&gt;
+        &lt;appender-ref ref="ASYNC_DB" /&gt;
+    &lt;/root&gt;
+
+    &lt;!-- 系统模块日志级别控制  --&gt;
+    &lt;logger name="org" level="WARN" additivity="false" /&gt;
+
+    &lt;logger name="ch.qos" level="WARN" additivity="false" /&gt;
+    &lt;logger name="net" level="WARN" additivity="false" /&gt;
+
+    &lt;logger name="io" level="WARN" additivity="false" /&gt;
+    &lt;logger name="springfox" level="WARN" additivity="false" /&gt;
+
+    &lt;logger name="com.alibaba" level="WARN" additivity="false" /&gt;
+
+    &lt;logger name="cn.xianwu" level="DEBUG" /&gt;
+    &lt;logger name="org.mybatis" level="DEBUG" /&gt;
+    &lt;logger name="cn.xianwu.framework.shiro.web.session" level="ERROR" /&gt;
+&lt;/configuration&gt; 
+</code></pre>
+<h3 id="toc_h3_2">数据库连接信息加载</h3>
+<p>其中，最重要的是数据库的配置部分，你可以使用<code>DriverManagerConnectionSource</code>来指定数据库的连接信息等，但由于使用了 SpringBoot 中的 application-druid.yml 中已经配置了数据库的连接信息，所以重新定义了一个<code>DbConnectionSource</code>以利用数据库连接信息。</p>
+<pre><code class="language-java highlight-chroma"><span class="highlight-nd">@Component</span>
+<span class="highlight-kd">public</span> <span class="highlight-nf">class</span> <span class="highlight-n">DbConnectionSource</span> <span class="highlight-nf">extends</span> <span class="highlight-n">DriverManagerConnectionSource</span> <span class="highlight-p">{</span>
+    <span class="highlight-kd">public</span> <span class="highlight-nf">DbConnectionSource</span><span class="highlight-p">()</span> <span class="highlight-kd">throws</span> <span class="highlight-nf">Exception</span> <span class="highlight-p">{</span>
+        <span class="highlight-n">Map</span><span class="highlight-o">&lt;?</span><span class="highlight-p">,</span> <span class="highlight-o">?&gt;</span> <span class="highlight-n">map</span> <span class="highlight-o">=</span> <span class="highlight-n">YamlUtils</span><span class="highlight-p">.</span><span class="highlight-na">loadYaml</span><span class="highlight-p">(</span><span class="highlight-s">"application-druid.yml"</span><span class="highlight-p">);</span>
+
+        <span class="highlight-n">String</span> <span class="highlight-nf">publicKey</span> <span class="highlight-o">=</span> <span class="highlight-p">(</span><span class="highlight-n">String</span><span class="highlight-p">)</span><span class="highlight-n">YamlUtils</span><span class="highlight-p">.</span><span class="highlight-na">getProperty</span><span class="highlight-p">(</span><span class="highlight-n">map</span><span class="highlight-p">,</span> <span class="highlight-s">"publickey"</span><span class="highlight-p">);</span>
+        <span class="highlight-n">Map</span><span class="highlight-o">&lt;?</span><span class="highlight-p">,</span> <span class="highlight-o">?&gt;</span> <span class="highlight-n">datasource</span> <span class="highlight-o">=</span> <span class="highlight-p">(</span><span class="highlight-n">Map</span><span class="highlight-p">)</span><span class="highlight-n">YamlUtils</span><span class="highlight-p">.</span><span class="highlight-na">getProperty</span><span class="highlight-p">(</span><span class="highlight-n">map</span><span class="highlight-p">,</span> <span class="highlight-s">"spring.datasource"</span><span class="highlight-p">);</span>
+        <span class="highlight-n">setDriverClass</span><span class="highlight-p">((</span><span class="highlight-n">String</span><span class="highlight-p">)</span><span class="highlight-n">YamlUtils</span><span class="highlight-p">.</span><span class="highlight-na">getProperty</span><span class="highlight-p">(</span><span class="highlight-n">datasource</span><span class="highlight-p">,</span> <span class="highlight-s">"driverClassName"</span><span class="highlight-p">));</span>
+
+        <span class="highlight-n">Map</span><span class="highlight-o">&lt;?</span><span class="highlight-p">,</span> <span class="highlight-o">?&gt;</span> <span class="highlight-n">master</span> <span class="highlight-o">=</span> <span class="highlight-p">(</span><span class="highlight-n">Map</span><span class="highlight-p">)</span><span class="highlight-n">YamlUtils</span><span class="highlight-p">.</span><span class="highlight-na">getProperty</span><span class="highlight-p">(</span><span class="highlight-n">datasource</span><span class="highlight-p">,</span> <span class="highlight-s">"druid.master"</span><span class="highlight-p">);</span>
+        <span class="highlight-n">setUrl</span><span class="highlight-p">((</span><span class="highlight-n">String</span><span class="highlight-p">)</span><span class="highlight-n">YamlUtils</span><span class="highlight-p">.</span><span class="highlight-na">getProperty</span><span class="highlight-p">(</span><span class="highlight-n">master</span><span class="highlight-p">,</span> <span class="highlight-s">"url"</span><span class="highlight-p">));</span>
+        <span class="highlight-n">setUser</span><span class="highlight-p">((</span><span class="highlight-n">String</span><span class="highlight-p">)</span><span class="highlight-n">YamlUtils</span><span class="highlight-p">.</span><span class="highlight-na">getProperty</span><span class="highlight-p">(</span><span class="highlight-n">master</span><span class="highlight-p">,</span> <span class="highlight-s">"username"</span><span class="highlight-p">));</span>
+
+        <span class="highlight-c1">// 解密密码
+</span><span class="highlight-c1"></span>        <span class="highlight-n">String</span> <span class="highlight-nf">password</span> <span class="highlight-o">=</span> <span class="highlight-p">(</span><span class="highlight-n">String</span><span class="highlight-p">)</span><span class="highlight-n">YamlUtils</span><span class="highlight-p">.</span><span class="highlight-na">getProperty</span><span class="highlight-p">(</span><span class="highlight-n">master</span><span class="highlight-p">,</span> <span class="highlight-s">"password"</span><span class="highlight-p">);</span>
+        <span class="highlight-k">if</span><span class="highlight-p">(</span><span class="highlight-n">StringUtils</span><span class="highlight-p">.</span><span class="highlight-na">isEmpty</span><span class="highlight-p">(</span><span class="highlight-n">publicKey</span><span class="highlight-p">)){</span>
+            <span class="highlight-n">setPassword</span><span class="highlight-p">(</span><span class="highlight-n">password</span><span class="highlight-p">);</span>
+        <span class="highlight-p">}</span><span class="highlight-k">else</span><span class="highlight-p">{</span>
+            <span class="highlight-n">setPassword</span><span class="highlight-p">(</span><span class="highlight-n">ConfigTools</span><span class="highlight-p">.</span><span class="highlight-na">decrypt</span><span class="highlight-p">(</span><span class="highlight-n">publicKey</span><span class="highlight-p">,</span> <span class="highlight-n">password</span><span class="highlight-p">));</span>
+        <span class="highlight-p">}</span>
+    <span class="highlight-p">}</span>
+<span class="highlight-p">}</span>
+</code></pre>
+<pre><code class="language-java highlight-chroma"><span class="highlight-kd">public</span> <span class="highlight-nf">class</span> <span class="highlight-n">YamlUtils</span> <span class="highlight-p">{</span>
+    <span class="highlight-kd">public</span> <span class="highlight-nf">static</span> <span class="highlight-n">Map</span><span class="highlight-o">&lt;?</span><span class="highlight-p">,</span> <span class="highlight-o">?&gt;</span> <span class="highlight-n">loadYaml</span><span class="highlight-p">(</span><span class="highlight-n">String</span> <span class="highlight-nf">fileName</span><span class="highlight-p">)</span> <span class="highlight-kd">throws</span> <span class="highlight-nf">FileNotFoundException</span> <span class="highlight-p">{</span>
+        <span class="highlight-n">InputStream</span> <span class="highlight-nf">in</span> <span class="highlight-o">=</span> <span class="highlight-n">YamlUtils</span><span class="highlight-p">.</span><span class="highlight-na">class</span><span class="highlight-p">.</span><span class="highlight-na">getClassLoader</span><span class="highlight-p">().</span><span class="highlight-na">getResourceAsStream</span><span class="highlight-p">(</span><span class="highlight-n">fileName</span><span class="highlight-p">);</span>
+        <span class="highlight-k">return</span> <span class="highlight-n">StringUtils</span><span class="highlight-p">.</span><span class="highlight-na">isNotEmpty</span><span class="highlight-p">(</span><span class="highlight-n">fileName</span><span class="highlight-p">)</span> <span class="highlight-o">?</span> <span class="highlight-p">(</span><span class="highlight-n">LinkedHashMap</span><span class="highlight-o">&lt;?</span><span class="highlight-p">,</span> <span class="highlight-o">?&gt;</span><span class="highlight-p">)</span> <span class="highlight-k">new</span> <span class="highlight-n">Yaml</span><span class="highlight-p">().</span><span class="highlight-na">load</span><span class="highlight-p">(</span><span class="highlight-n">in</span><span class="highlight-p">)</span> <span class="highlight-o">:</span> <span class="highlight-kc">null</span><span class="highlight-p">;</span>
+    <span class="highlight-p">}</span>
+
+    <span class="highlight-kd">public</span> <span class="highlight-nf">static</span> <span class="highlight-n">Object</span> <span class="highlight-nf">getProperty</span><span class="highlight-p">(</span><span class="highlight-n">Map</span><span class="highlight-o">&lt;?</span><span class="highlight-p">,</span> <span class="highlight-o">?&gt;</span> <span class="highlight-n">map</span><span class="highlight-p">,</span> <span class="highlight-n">Object</span> <span class="highlight-nf">qualifiedKey</span><span class="highlight-p">)</span> <span class="highlight-p">{</span>
+        <span class="highlight-k">if</span> <span class="highlight-p">(</span><span class="highlight-n">map</span> <span class="highlight-o">!=</span> <span class="highlight-kc">null</span> <span class="highlight-o">&amp;&amp;</span> <span class="highlight-o">!</span><span class="highlight-n">map</span><span class="highlight-p">.</span><span class="highlight-na">isEmpty</span><span class="highlight-p">()</span> <span class="highlight-o">&amp;&amp;</span> <span class="highlight-n">qualifiedKey</span> <span class="highlight-o">!=</span> <span class="highlight-kc">null</span><span class="highlight-p">)</span> <span class="highlight-p">{</span>
+            <span class="highlight-n">String</span> <span class="highlight-nf">input</span> <span class="highlight-o">=</span> <span class="highlight-n">String</span><span class="highlight-p">.</span><span class="highlight-na">valueOf</span><span class="highlight-p">(</span><span class="highlight-n">qualifiedKey</span><span class="highlight-p">);</span>
+            <span class="highlight-k">if</span> <span class="highlight-p">(</span><span class="highlight-o">!</span><span class="highlight-s">""</span><span class="highlight-p">.</span><span class="highlight-na">equals</span><span class="highlight-p">(</span><span class="highlight-n">input</span><span class="highlight-p">))</span> <span class="highlight-p">{</span>
+                <span class="highlight-k">if</span> <span class="highlight-p">(</span><span class="highlight-n">input</span><span class="highlight-p">.</span><span class="highlight-na">contains</span><span class="highlight-p">(</span><span class="highlight-s">"."</span><span class="highlight-p">))</span> <span class="highlight-p">{</span>
+                    <span class="highlight-kt">int</span> <span class="highlight-nf">index</span> <span class="highlight-o">=</span> <span class="highlight-n">input</span><span class="highlight-p">.</span><span class="highlight-na">indexOf</span><span class="highlight-p">(</span><span class="highlight-s">"."</span><span class="highlight-p">);</span>
+                    <span class="highlight-n">String</span> <span class="highlight-nf">left</span> <span class="highlight-o">=</span> <span class="highlight-n">input</span><span class="highlight-p">.</span><span class="highlight-na">substring</span><span class="highlight-p">(</span><span class="highlight-n">0</span><span class="highlight-p">,</span> <span class="highlight-n">index</span><span class="highlight-p">);</span>
+                    <span class="highlight-n">String</span> <span class="highlight-nf">right</span> <span class="highlight-o">=</span> <span class="highlight-n">input</span><span class="highlight-p">.</span><span class="highlight-na">substring</span><span class="highlight-p">(</span><span class="highlight-n">index</span> <span class="highlight-o">+</span> <span class="highlight-n">1</span><span class="highlight-p">,</span> <span class="highlight-n">input</span><span class="highlight-p">.</span><span class="highlight-na">length</span><span class="highlight-p">());</span>
+                    <span class="highlight-k">return</span> <span class="highlight-n">getProperty</span><span class="highlight-p">((</span><span class="highlight-n">Map</span><span class="highlight-o">&lt;?</span><span class="highlight-p">,</span> <span class="highlight-o">?&gt;</span><span class="highlight-p">)</span> <span class="highlight-n">map</span><span class="highlight-p">.</span><span class="highlight-na">get</span><span class="highlight-p">(</span><span class="highlight-n">left</span><span class="highlight-p">),</span> <span class="highlight-n">right</span><span class="highlight-p">);</span>
+                <span class="highlight-p">}</span> <span class="highlight-k">else</span> <span class="highlight-k">if</span> <span class="highlight-p">(</span><span class="highlight-n">map</span><span class="highlight-p">.</span><span class="highlight-na">containsKey</span><span class="highlight-p">(</span><span class="highlight-n">input</span><span class="highlight-p">))</span> <span class="highlight-p">{</span>
+                    <span class="highlight-k">return</span> <span class="highlight-n">map</span><span class="highlight-p">.</span><span class="highlight-na">get</span><span class="highlight-p">(</span><span class="highlight-n">input</span><span class="highlight-p">);</span>
+                <span class="highlight-p">}</span> <span class="highlight-k">else</span> <span class="highlight-p">{</span>
+                    <span class="highlight-k">return</span> <span class="highlight-kc">null</span><span class="highlight-p">;</span>
+                <span class="highlight-p">}</span>
+            <span class="highlight-p">}</span>
+        <span class="highlight-p">}</span>
+        <span class="highlight-k">return</span> <span class="highlight-kc">null</span><span class="highlight-p">;</span>
+    <span class="highlight-p">}</span>
+<span class="highlight-p">}</span>
+</code></pre>
+<p>数据库连接信息 application-druid.yml 配置如下：</p>
+<pre><code class="language-fallback highlight-chroma"># https://github.com/alibaba/druid/wiki/如何在Spring-Boot中配置数据库密码加密？
+# https://github.com/alibaba/druid/wiki/使用ConfigFilter
+# 公钥
+publickey: MFwwDQYJKoZIhvcNAQEABCDDSwAwSAJBANc0H+pBCEFSdn/JfNYABCDEFZcfe1/amFWLJ7x+F2kCexIJTzngF37bjHbEZPf5j6/1gZnFNNyVJrzZ7vdt1ocUCAwEAAQ==
+
+# 数据源配置
+spring:
+    datasource:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driverClassName: com.mysql.cj.jdbc.Driver
+        druid:
+            # 主库数据源
+            master:
+                url: jdbc:mysql://172.16.220.14:3306/db?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;useSSL=true&amp;serverTimezone=GMT%2B8
+                username: root
+                password: Jwabcde55HvAAkPWYWleVQfxruuSOICmBzqHKGiyEsE5t2QawAIOPaQYDtqB2345667UTHplmHvAl9/C6zX61uQ==
+            # 从库数据源
+            slave:
+                # 从数据源开关/默认关闭
+                enabled: true
+                url: jdbc:mysql://172.16.220.13:3306/db?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;useSSL=true&amp;serverTimezone=GMT%2B8
+                username: root
+                password: Jwabcde55HvAAkPWYWleVQfxruuSOICmBzqHKGiyEsE5t2QawAIOPaQYDtqB2345667UTHplmHvAl9/C6zX61uQ==
+            # 初始连接数
+            initialSize: 5
+            # 最小连接池数量
+            minIdle: 10
+            # 最大连接池数量
+            maxActive: 20
+            # 配置获取连接等待超时的时间
+            maxWait: 60000
+            # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+            timeBetweenEvictionRunsMillis: 60000
+            # https://github.com/alibaba/druid/wiki/怎么保存Druid的监控记录
+            # 配置timeBetweenLogStatsMillis&gt;0之后，DruidDataSource会定期把监控数据输出到日志中
+            timeBetweenLogStatsMillis: 300000
+            # 配置一个连接在池中最小生存的时间，单位是毫秒
+            minEvictableIdleTimeMillis: 300000
+            # 配置一个连接在池中最大生存的时间，单位是毫秒
+            maxEvictableIdleTimeMillis: 900000
+            # 配置检测连接是否有效
+            validationQuery: SELECT 1 FROM DUAL
+            testWhileIdle: true
+            testOnBorrow: false
+            testOnReturn: false
+            # 配置 connection-properties，启用加密，配置公钥。
+            connection-properties: "config.decrypt=true;config.decrypt.key=${publickey}"
+</code></pre>
+<p>公钥生成可参见上方连接地址：<a href="https://github.com/alibaba/druid/wiki/" target="_blank">https://github.com/alibaba/druid/wiki/</a>如何在 Spring-Boot 中配置数据库密码加密？</p>
+<p>此处需要说明的一点是，SpringBoot 中的 logback.xml 文件需要配置为 logback-spring.xml 以便 SpringBoot 能够正常加载，同时，此处也不能使用自动注入的 DataSource，因为 Spring 的 Logging 加载的很早，此时 DataSource 还未初始化，具体可参见 LoggingApplicationListener。</p>
+<h3 id="toc_h3_3">数据库表结构</h3>
+<pre><code class="language-fallback highlight-chroma">-- ----------------------------
+-- Table structure for logging_event
+-- ----------------------------
+DROP TABLE IF EXISTS `logging_event`;
+CREATE TABLE `logging_event`  (
+  `timestmp` bigint(20) NOT NULL,
+  `formatted_message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `logger_name` varchar(254) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `level_string` varchar(254) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `thread_name` varchar(254) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `reference_flag` smallint(6) NULL DEFAULT NULL,
+  `arg0` varchar(254) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `arg1` varchar(254) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `arg2` varchar(254) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `arg3` varchar(254) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `caller_filename` varchar(254) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `caller_class` varchar(254) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `caller_method` varchar(254) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `caller_line` char(4) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `event_id` bigint(20) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`event_id`) USING BTREE
+) ENGINE = MyISAM AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for logging_event_exception
+-- ----------------------------
+DROP TABLE IF EXISTS `logging_event_exception`;
+CREATE TABLE `logging_event_exception`  (
+  `event_id` bigint(20) NOT NULL,
+  `i` smallint(6) NOT NULL,
+  `trace_line` varchar(5000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  PRIMARY KEY (`event_id`, `i`) USING BTREE
+) ENGINE = MyISAM CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for logging_event_property
+-- ----------------------------
+DROP TABLE IF EXISTS `logging_event_property`;
+CREATE TABLE `logging_event_property`  (
+  `event_id` bigint(20) NOT NULL,
+  `mapped_key` varchar(245) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `mapped_value` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  PRIMARY KEY (`event_id`, `mapped_key`) USING BTREE
+) ENGINE = MyISAM CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+</code></pre>
+<h3 id="toc_h3_4">结论</h3>
+<p>配置完成，WARN 以上级别的日志会自动异步到数据库，以便后期问题排查，以及分析。</p>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Springboot">
+                            Springboot</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/MariaDB">
+                            MariaDB</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93">
+                            数据库</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2020/01/07/1578385869281.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="用好这些隐藏「小开关」，让 Chrome 浏览器更好用（个人备用）">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="Springboot 使用 Logback 自动同步指定级别日志到 MariaDB 数据库"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2020/03/25/1585146340397.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2020/03/26/1585192214841.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="Idea 中使用 JRebel 实现 SpringBoot 热部署">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1585146340397"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+<ul class="article__toc">
+        <li class="toc__h3">
+            <a href="#toc_h3_0">添加 pom 依赖</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_1">创建 logback 配置文件 logback-spring.xml</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_2">数据库连接信息加载</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_3">数据库表结构</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_4">结论</a>
+        </li>
+</ul></aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1585146340397",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1585146340397",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("Springboot,MariaDB,数据库", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1585146340397', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 30ms, 2020/11/29 22:19:04 -->

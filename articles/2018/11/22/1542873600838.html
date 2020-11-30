@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/><meta name="theme-color" content="#3b3e43"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="format-detection" content="telephone=no"/><title>A Step By Step Guide to Tomcat Performance Monitoring - 随心笔客</title><meta name="description" content="Monitoring the metrics and runtime characteristics of an application server is essential to ensure the adequate functioning of the applications running on that server, as well as to prevent or resolve potential issues in a timely manner. As far as Java applications go, one of the most commonly used servers is Apache Tomcat, which will be the focus of this article. Tomcat performance monitoring can be done either by relying on JMX beans or by using a dedicated monitoring tool like MoSKito or JavaMelody."/><meta property="og:description" content="Monitoring the metrics and runtime characteristics of an application server is essential to ensure the adequate functioning of the applications running on that server, as well as to prevent or resolve potential issues in a timely manner. As far as Java applications go, one of the most commonly used servers is Apache Tomcat, which will be the focus of this article. Tomcat performance monitoring can be done either by relying on JMX beans or by using a dedicated monitoring tool like MoSKito or JavaMelody."/>    <meta name="keywords" content="博客,开源,分享,平台,自媒体,原创,随心笔客,图库"/><link rel="dns-prefetch" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources"><link rel="icon" type="image/png" href="favicon.ico"/><link rel="apple-touch-icon" href="favicon.ico"><link rel="shortcut icon" type="image/x-icon" href="favicon.ico"><meta name="copyright" content="B3log"/><meta http-equiv="Window-target" content="_top"/><meta property="og:locale" content="zh_CN"/><meta property="og:title" content="A Step By Step Guide to Tomcat Performance Monitoring - 随心笔客"/><meta property="og:site_name" content="随心笔客"/><meta property="og:url"      content="https://zxniuniu.github.io/articles/2018/11/22/1542873600838.html?"/><meta property="og:image" content="favicon.ico"/><link rel="search" type="application/opensearchdescription+xml" title="A Step By Step Guide to Tomcat Performance Monitoring - 随心笔客" href="/opensearch.xml"><link href="https://zxniuniu.github.io/rss.xml" title="RSS" type="application/rss+xml" rel="alternate"/><link rel="manifest" href="https://zxniuniu.github.io/manifest.json">        <link rel="canonical" href="https://zxniuniu.github.io/articles/2018/11/22/1542873600838.html">        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/css/base.css?1606610382706"/>
+            <link rel="prev" title=" Unblocking Clipboard Access" href="https://zxniuniu.github.io/articles/2018/11/21/1542762548365.html">
+            <link rel="next" title="Pros and cons of end to end testing tools" href="https://zxniuniu.github.io/articles/2018/11/24/1543063983807.html">
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>-->
+
+<!--<iframe frameborder="0" border="0" marginwidth="0" marginheight="0" width="90%" height=88 src="//music.163.com/outchain/player?type=2&id=1313363070&auto=1&height=66"></iframe>-->
+
+<!--<font color='green' size='5em'><strong>FAMILY</strong></font> = <font color='green' size='5em'><strong>F</strong></font>ather <font color='green' size='5em'><strong>A</strong></font>nd <font color='green' size='5em'><strong>M</strong></font>other <font color='green' size='5em'><strong>I</strong></font> <font color='green' size='5em'><strong>L</strong></font>ove <font color='green' size='5em'><strong>Y</strong></font>ou--><script src="https://cdn.jsdelivr.net/npm/vditor@3.5.3/dist/js/icons/ant.js" async="" id="vditorIconScript"></script></head>
+<body>
+<header>
+    <div class="banner">
+        <div class="fn-clear wrapper">
+            <h1 class="fn-inline">
+                <a href="https://zxniuniu.github.io" rel="start">
+                    随心笔客
+                </a>
+            </h1>
+            <small> &nbsp; 张小妞的个人博客</small>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <div class="fn-clear wrapper">
+            <nav class="fn-left">
+                <a href="https://zxniuniu.github.io">
+                    <i class="icon-home"></i>
+                    首页
+                </a>
+                    <a href="/my-github-repos" target="_self" rel="section">
+                        <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                    </a>
+                <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                    <i class="icon-tags"></i> 标签墙
+                </a>
+                <a href="https://zxniuniu.github.io/archives.html">
+                    <i class="icon-inbox"></i> 存档
+                </a>
+                <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                    <i class="icon-link"></i> 友链
+                </a>
+                <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                    <i class="icon-rss"></i> RSS
+                </a>
+            </nav>
+        </div>
+    </div>
+</header>
+<div class="responsive fn-none">
+    <i class="icon-list"></i>
+    <ul class="list">
+        <li>
+            <a href="https://zxniuniu.github.io">
+                <i class="icon-home"></i>
+                首页
+            </a>
+        </li>
+            <li>
+                <a href="/my-github-repos" target="_self" rel="section">
+                    <img class="page-icon" src="/images/github-icon.png" alt="我的开源">我的开源
+                </a>
+            </li>
+        <li>
+            <a href="https://zxniuniu.github.io/tags.html" rel="section">
+                <i class="icon-tags"></i> 标签墙
+            </a>
+        </li>
+        <li>
+            <a href="https://zxniuniu.github.io/archives.html">
+                <i class="icon-inbox"></i> 存档
+            </a>
+        </li>
+        <li>
+            <a rel="archive" href="https://zxniuniu.github.io/links.html">
+                <i class="icon-link"></i> 友链
+            </a>
+        </li>
+        <li>
+            <a rel="alternate" href="https://zxniuniu.github.io/rss.xml" rel="section">
+                <i class="icon-rss"></i> RSS
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="wrapper">
+    <div class="main-wrap">
+        <main>
+            <article class="post">
+                <header>
+                    <h2>
+                        <a rel="bookmark" href="https://zxniuniu.github.io/articles/2018/11/22/1542873600838.html">
+                            A Step By Step Guide to Tomcat Performance Monitoring
+                        </a>
+                    </h2>
+                    <div class="meta">
+                                <span class="vditor-tooltipped vditor-tooltipped__n"
+                                      aria-label="更新日期">
+                                    <i class="icon-date"></i>
+                                    <time>
+                                    2019-10-15
+                                    </time>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="评论数">
+                                    <i class="icon-comments"></i>
+                                    <a href="https://zxniuniu.github.io/articles/2018/11/22/1542873600838.html#b3logsolocomments">
+                                        <span data-uvstatcmt="1542873600838">0</span> 评论</a>
+                                </span>
+                        &nbsp; | &nbsp;
+                        <span class="vditor-tooltipped vditor-tooltipped__n" aria-label="浏览数">
+                                    <i class="icon-views"></i>
+                        <span data-uvstaturl="https://zxniuniu.github.io/articles/2018/11/22/1542873600838.html">0</span> 浏览
+                                </span>
+                    </div>
+                </header>
+
+                <div class="vditor-reset post__content">
+                    <h3 id="toc_h3_0"><strong>Overview</strong></h3>
+<p><a href="https://stackify.com/women-tech/" target="_blank">Monitoring the metrics</a> and runtime characteristics of an application server is essential to ensure the adequate functioning of the applications running on that server, as well as to prevent or resolve potential issues in a timely manner.</p>
+<p><img src="https://stackify.com/wp-content/uploads/2017/09/Tomcat-Performance-793x397.png" alt=""><br>
+As far as Java applications go, one of the most commonly used servers is <em><a href="https://tomcat.apache.org/" target="_blank">Apache Tomcat</a></em>, which will be the focus of this article.</p>
+<p><strong><em>Tomcat</em> performance monitoring can be done either by relying on JMX beans or by using a dedicated monitoring tool like <a href="https://www.moskito.org/" target="_blank">MoSKito</a> or <a href="https://github.com/javamelody/javamelody/wiki" target="_blank">JavaMelody</a>.</strong></p>
+<p>Of course, it’s important to know what is relevant to monitor and what are acceptable values for the metrics that are being watched.</p>
+<p>In the following sections, let’s take a look at how you can setup <em>Tomcat</em> monitoring and what metrics can be used to keep tabs on performance.</p>
+<h3 id="toc_h3_1"><strong><em>Tomcat</em> Performance Metrics</strong></h3>
+<p>When checking the performance of an application deployed on a server, there are several areas that can provide clues as to whether everything is working within ideal parameters.</p>
+<p>Here are some of the key areas you’ll want to monitor:</p>
+<ul>
+<li><strong>memory usage</strong> – this reading is critical, since running low on heap memory will cause your application to perform slower, and can even lead to _OutOfMemory_exceptions; on the other hand, using very little of the available memory could mean you could decrease your memory needs and therefore minimize costs</li>
+<li><strong>garbage collection</strong> – since this is a resource-intensive process itself, you have to determine the right frequency at which it should be run, as well as if a sufficient amount of memory is freed up every time</li>
+<li><strong>thread usage</strong> – if there are too many active threads at the same time, this can slow down the application, and even the whole server</li>
+<li><strong>request throughout</strong> – this metric refers to the number of requests that the server can handle for a certain unit of time and can help determine your hardware needs</li>
+<li><strong>number of sessions</strong> – a similar measure to the number of requests is the number of sessions that the server can support at a time</li>
+<li><strong>response time</strong> – if your system takes too long to respond to requests, users are likely to quit so it’s crucial to monitor this response time and investigate the potential causes</li>
+<li><strong>database connection pool</strong> – monitoring this can help tune the number of connections in a pool that your application needs</li>
+<li><strong>error rates</strong> – this metric is helpful in identifying any issues in your codebase</li>
+<li><strong>uptime</strong> – this is a simple measure that shows how long your server has been running or down</li>
+</ul>
+<p>The <em>Tomcat</em> server comes to your aide in monitoring performance by providing JMX beans for most of these metrics that you can verify using a tool like _Tomcat Manager_or <em>JavaMelody</em>.</p>
+<p>To continue this article, we’re going to take a look at each area of performance, any <em>MBeans</em> definitions that can help monitor it and how you can view their values.</p>
+<p>But first, let’s start with defining a very simple application that we’re gonna use as an example to monitor.</p>
+<h3 id="toc_h3_2"><strong>Example Application to Monitor</strong></h3>
+<p>For this example, we’re gonna use a small Web service application that uses an _H2_database, built with <em>Maven</em> and <em>Jersey</em>.</p>
+<p>The application will manipulate a simple <em>User</em> entity:</p>
+<p>public  class  User  {  private  String email;  private  String name;  // standard constructors, getters, setters  }</p>
+<p>The REST Web service defined has two endpoints that saves a new <em>User</em> to the database and outputs the list of <em>Users</em> in JSON format:</p>
+<p>@Path("/users")  public  class  UserService  {  private  UserDAO userDao =  new  UserDAO();  public  UserService  ()  { userDao.createTable();  }  @POST  @Consumes(MediaType.APPLICATION_JSON)  public  Response addUser(User user)  { userDao.add(user);  return  Response.ok()  .build();  }  @GET  @Produces(MediaType.APPLICATION_JSON)  public  List<user> getUsers()  {  return userDao.findAll();  }  }</user></p>
+<p>Building a REST Web service is outside the scope of this piece. For more information, check out our article on <a href="https://stackify.com/java-web-services/" target="_blank">Java Web Services</a>.</p>
+<p>Also, note that the examples in this article are tested with <em>Tomcat</em> version <em>9.0.0.M26</em>. For other versions, the names of beans or attributes may differ slightly.</p>
+<h3 id="toc_h3_3"><strong>Tomcat Manager</strong></h3>
+<p>One way of obtaining the values of the <em>MBeans</em> is through the <em>Manager App</em> that <em>Tomcat</em> comes with. This app is protected, so to access it, you need to first define a user and password by adding the following in the <em>conf/tomcat-users.xml</em> file:</p>
+<p>rolename="manager-gui"/&gt;    rolename="manager-jmx"/&gt;    username="tomcat"  password="s3cret"  roles="manager-gui, manager-jmx"/&gt;</p>
+<p>The <em>Manage App</em> interface can be accessed at <em>http://localhost:8080/manager/html</em>. This contains some minimal information on the server status and the deployed applications, as well as the possibility to deploy a new application.</p>
+<p>One interesting feature for the purpose of performance monitoring is the possibility of checking for memory leaks:</p>
+<p><img src="https://stackify.com/wp-content/uploads/2017/09/tm-diagnostics.png" alt=""></p>
+<p>This will look for memory leaks in all the deployed applications.</p>
+<p><strong>Information on the JMX beans can be found at <em>http://localhost:8080/manager/jmxproxy</em></strong>. This is displayed in a text format, as it is intended to be processed by tools.</p>
+<p>To retrieve data about a specific bean, you can add parameters to the URL that represent the name of the bean and attribute you want:</p>
+<p>http://localhost:8080/manager/jmxproxy/?get=java.lang:type=Memory&amp;att=HeapMemoryUsage</p>
+<p>Overall, this tool can be useful for a quick check, but it’s limited and unreliable; therefore, it’s not recommended for a production instance.</p>
+<p>Next, let’s move on to a tool that provides a friendlier user interface.</p>
+<h4 id="toc_h4_4">Where to Start:</h4>
+<ul>
+<li><a href="https://tomcat.apache.org/tomcat-8.0-doc/manager-howto.html" target="_blank">Manager App HOW-TO</a></li>
+<li><a href="https://tomcat.apache.org/tomcat-8.0-doc/html-manager-howto.html" target="_blank">Tomcat Web Application Manager How To</a></li>
+</ul>
+<h3 id="toc_h3_5"><strong>Enabling <em>Tomcat</em> Performance Monitoring with <em>JavaMelody</em></strong></h3>
+<p>If you’re using <em>Maven</em>, simply add the <em><a href="https://search.maven.org/#search%7Cga%7C1%7Ca%3A%22javamelody-core%22" target="_blank">javamelody-core</a></em> dependency to the <em>pom.xml</em>:</p>
+<p>net.bull.javamelody  javamelody-core  1.69.0</p>
+<p>In this way, you can enable monitoring for your Web application.</p>
+<p>After deploying the application on <em>Tomcat</em>, <strong>you can access the monitoring screens at the <em>/monitoring</em> URL</strong>.</p>
+<p><em>JavaMelody</em> contains useful graphs for displaying information related to various performance measures, as well as a way to find the values of the <em>Tomcat</em> JMX beans.</p>
+<p>Most of these beans are JVM-specific and not application-specific.</p>
+<p>Let’s go through each of the most important metrics – and see what <em>MBeans</em> are available and other ways to monitor them.</p>
+<h4 id="toc_h4_6">Where to Start:</h4>
+<ul>
+<li><a href="https://github.com/javamelody/javamelody/wiki" target="_blank">JavaMelody : monitoring of JavaEE applications</a></li>
+</ul>
+<h3 id="toc_h3_7"><strong>Memory Usage</strong></h3>
+<p>Monitoring the used and available memory is helpful both for ensuring proper functioning and statistics purposes. <strong>When the system can no longer create new objects due to lack of memory, the JVM will throw an exception.</strong></p>
+<p>Also, you should note that a constant increase in memory usage without a corresponding activity level is indicative of a <a href="https://stackify.com/memory-leaks-java/" target="_blank">memory leak</a>.</p>
+<p>Generally, it’s difficult to set a minimum absolute value for the available memory, and you should instead base it on observing the trends of your particular application. The maximum value should of course, not exceed the size of the available physical RAM.</p>
+<p>The minimum and maximum heap size can be set in <em>Tomcat</em> by adding the parameters:</p>
+<p>set CATALINA_OPTS=% CATALINA_OPTS%  -Xms1024m  -Xmx1024m</p>
+<p>Oracle recommends setting the same value for the two arguments to minimize garbage collections.</p>
+<p><strong>To view the available memory, you can inspect the _MBean java.lang:type=Memory_with the attribute <em>HeapMemoryUsage</em></strong>:</p>
+<p><img src="https://stackify.com/wp-content/uploads/2017/09/mbeans.png" alt=""></p>
+<p>The_ MBeans_ page can be accessed at the <em>/monitoring?part=mbeans</em> URL.</p>
+<p>Also, the <em>MBean java.lang:type=MemoryPool</em> has attributes that show the memory usage for every type of heap memory.</p>
+<p>Since this bean only shows the current status of the memory, you can also check the “Used memory” graph of _JavaMelody _to see the evolution of memory usage over a period of time:</p>
+<p><img src="https://stackify.com/wp-content/uploads/2017/09/tomcat-memory-1024x504.png" alt=""></p>
+<p>In the graph, you can see the highest memory-use reading was 292 MB, while the average is 202 MB of the allocated 1024 MB, which means the initial value is more than enough.</p>
+<p>Of note here is that <em>JavaMelody</em> runs on the same <em>Tomcat</em> server, which does have a small impact on the readings.</p>
+<h4 id="toc_h4_8">Where to Start:</h4>
+<ul>
+<li><a href="https://www.mulesoft.com/tcat/tomcat-memory" target="_blank">Common Tomcat Memory Issues and How To Fix Them</a></li>
+</ul>
+<h3 id="toc_h3_9"><strong>Garbage Collection</strong></h3>
+<p>This is the process through which unused objects are released so that memory can be freed up again. If the system spends more than 98% of CPU time doing garbage collection and recovers less than 2% heap, the JVM will throw an _OutOfMemoryError_with the message “GC overhead limit exceeded”.</p>
+<p>This is usually indicative of a memory leak, so it’s a good idea to watch for values approaching these limits and investigate the code.</p>
+<p>To check these values, you can take a look at the <em>java.lang:type=GarbageCollector MBean</em>, particularly the <em>LastGcInfo</em> attribute. This shows information about the memory status, duration and thread count of the last execution of the GC.</p>
+<p>A full garbage collection cycle can be triggered from <em>JavaMelody</em> using the “Execute the garbage collection” link.</p>
+<p>Let’s have a look at the evolution of the memory usage – <strong>before and after garbage collection</strong>:</p>
+<p><img src="https://stackify.com/wp-content/uploads/2017/09/tomcat-jm-gc1.png" alt=""></p>
+<p>In the case of the example app, the GC is run at 23:30 and the graph shows a large percentage of memory is reclaimed.</p>
+<h4 id="toc_h4_10">Where to Start:</h4>
+<ul>
+<li><a href="https://stackify.com/what-is-java-garbage-collection/" target="_blank">What is Java Garbage Collection? How It Works, Best Practices, Tutorials, and More</a></li>
+</ul>
+<h3 id="toc_h3_11"><strong>Thread Usage</strong></h3>
+<p><strong>To find the status of the in-use threads, <em>Tomcat</em> provides the <em>ThreadPool MBean</em>.</strong> The attributes <em>currentThreadsBusy</em>, <em>currentThreadCount</em> and <em>maxThreads</em> provide information on the number of currently busy threads, the number of threads currently in the thread pool as well as the maximum number of threads that can be created.</p>
+<p>By default, <em>Tomcat</em> uses a <em>maxThreads</em> number of 200.</p>
+<p>If you expect a large number of concurrent requests, this count can naturally be increased by modifying the <em>conf/server.xml</em> file:</p>
+<p>port="8080"  protocol="HTTP/1.1"  connectionTimeout="20000"  redirectPort="8443"  maxThreads="400"/&gt;</p>
+<p>Alternatively, if the system performs poorly with a high thread count, you can tune and adjust the value. What’s important here is a good battery of performance tests to put load on the system and see how the application and the server handle that load.</p>
+<h4 id="toc_h4_12">Where to Start:</h4>
+<ul>
+<li><a href="https://tomcat.apache.org/tomcat-8.0-doc/config/executor.html" target="_blank">Tomcat – The Executor (thread pool)</a></li>
+</ul>
+<h3 id="toc_h3_13"><strong>Request Throughput and Response Time</strong></h3>
+<p>For determining the number of requests in a period of time, you can make use of the <em>MBean Catalina:type=GlobalRequestProcessor</em>, which has attributes like _requestCount_and <em>errorCount</em> – which represent the total number of requests performed and errors encountered.</p>
+<p>The <em>maxTime</em> attribute shows the longest time to process a request, while <em>processingTime</em> represents the total time for processing all the requests:</p>
+<p><img src="https://stackify.com/wp-content/uploads/2017/09/tomcat-requests.png" alt=""></p>
+<p>The disadvantage of viewing this <em>MBean</em> directly is that it includes all the requests made to the server. To isolate the HTTP requests, you can check out the “HTTP hits per minute” graph of the <em>JavaMelody</em> interface.</p>
+<p>Let’s send a request that retrieves the list of users, then a set of requests to add a user and display the list again:</p>
+<p><img src="https://stackify.com/wp-content/uploads/2017/09/javamelody-hits-1024x483.png" alt=""></p>
+<p>You can see the number of requests sent around 17:00 displayed in the chart, with an average execution time of 65 ms.</p>
+<p><em>JavaMelody</em> provides high-level information on all the requests and the average response time. However, if you want more detailed knowledge on each request, you can add another tool like <strong>Stackify’s own <a href="https://stackify.com/prefix/" target="_blank"><em>Prefix</em></a> – which monitors the performance of the application per individual Web request</strong>.</p>
+<p>Another advantage of <em>Prefix</em> is that you can see which application each request belongs to, in case you have multiple applications deployed on the same _Tomcat_server.</p>
+<p>In order to use both <em>JavaMelody</em> and <em>Prefix</em>, you have to disable the <em>gzip</em> compression of the <em>JavaMelody</em> monitoring reports, to avoid encoded everything twice. To do that, simply add the <em>gzip-compression-disabled</em> parameter to the <em>MonitoringFilter</em> class in the <em>web.xml</em> of the application:</p>
+<p>javamelody  net.bull.javamelody.MonitoringFilter    gzip-compression-disabled  true</p>
+<p>Next, download <em>Prefix</em>, then create a <em>setenv.bat</em> (<em>setenv.sh</em> for <em>Unix</em> systems) file in the <em>bin</em> directory of the <em>Tomcat</em> installation. In this file, add the <em>-javaagent</em> parameter to CATALINA_OPTS to enable <em>Prefix</em> profiling for the <em>Tomcat</em> server:</p>
+<p>set CATALINA_OPTS=% CATALINA_OPTS%  -javaagent:"C:\Program Files (x86)\StackifyPrefix\java\lib\stackify-java-apm.jar"</p>
+<p>Now <strong>you can access the <em>Prefix</em> reports at <em>http://localhost:2012/</em></strong> – and view the time at which each request was executed and how long it took:</p>
+<p><img src="https://stackify.com/wp-content/uploads/2017/09/prefix-reqs.png" alt=""></p>
+<p>This is naturally very useful for tracking down the cause of any lag in your application.</p>
+<h3 id="toc_h3_14"><strong>Database Connections</strong></h3>
+<p>Connecting to a database is an intensive process, which is why it’s important to use a connection pool.</p>
+<p>Tomcat provides a way to configure a JNDI data source that uses connection pooling, by adding a <em>Resource</em> element in the <em>conf/context.xml</em> file:</p>
+<p>name="jdbc/MyDataSource"  auth="Container"  type="javax.sql.DataSource"  maxActive="100"  maxIdle="30"  maxWait="10000"  driverClassName="org.h2.Driver"  url="jdbc:h2:mem:myDb;DB_CLOSE_DELAY=-1"  username="sa"  password="sa"  /&gt;</p>
+<p>Then, <strong>the <em>MBean Catalina:type=DataSource</em> can display information regarding the JNDI data source</strong>, such as <em>numActive</em> and <em>numIdle</em>, representing the number of active or idle connections.</p>
+<p>For the database connections to be displayed in the <em>JavaMelody</em> interface, the JNDI data source has to be named <em>MyDataSource</em>. Afterwards, you can consult graphs such as “SQL hits per minute”, “SQL mean times” and “ % of sql errors”.</p>
+<p>For more detail on each SQL command sent to the database, you can consult _Prefix_for each HTTP request. The requests that involve a database connection are marked with a database icon.</p>
+<p><strong><em>Prefix</em> will display the SQL query that was generated</strong> by the application. Let’s see the data recorded by <em>Prefix</em> for a call to the <em>addUser()</em> endpoint method:</p>
+<p><img src="https://stackify.com/wp-content/uploads/2017/09/prefix-insert.png" alt=""></p>
+<p>The screenshot above shows the SQL code, as well as the result of the execution.</p>
+<p>In case there is an SQL error, <em>Prefix</em> will show you this as well. For example, if someone attempts to add a user with an existing email address, this causes a primary key constraint violation:</p>
+<p><img src="https://stackify.com/wp-content/uploads/2017/09/prefix-error.png" alt=""></p>
+<p>The tool shows the SQL error message, as well as the script that caused it.</p>
+<h3 id="toc_h3_15"><strong>Error Rates</strong></h3>
+<p>Errors are a sign that your application is not performing as expected, so it’s important to monitor the rate at which they occur. Tomcat does not provide an <em>MBean</em> for this, but you can use other tools to find this information.</p>
+<p>Let’s introduce an error in the example application by writing an incorrect name for the JNDI data source, and see how the performance tools behave.</p>
+<p><em>JavaMelody</em> provides a “ % of HTTP errors” chart which shows what percentage of requests at a given time resulted in an error:</p>
+<p><img src="https://stackify.com/wp-content/uploads/2017/09/jm-errors-1024x495.png" alt=""></p>
+<p>This shows you that an error occurred, but it’s not very helpful in identifying the error. For this latter purpose, you can turn to <em>Prefix</em> again – which highlights HTTP requests that ended with an error code:</p>
+<p><img src="https://stackify.com/wp-content/uploads/2017/09/prefix-err.png" alt=""></p>
+<p>If you select this request, <strong><em>Prefix</em> will display details regarding the endpoint that was accessed and the error encountered</strong>:</p>
+<p><img src="https://stackify.com/wp-content/uploads/2017/09/prefix-err1.png" alt=""></p>
+<p>According to this, the error happened when accessing the <em>/users</em> endpoint, and the cause is “MyyyDataSource is not bound in this context”, meaning the JNDI data source with the incorrect name was not found.</p>
+<h3 id="toc_h3_16"><strong>Conclusion</strong></h3>
+<p>Monitoring the performance of a Tomcat server is crucial to successfully run your Java applications in production. This can refer to ensuring that the application responds to requests without significant delays, in addition to identifying any potential errors or memory leaks in your code.</p>
+<p>Tomcat anticipates this need by providing a series of performance-related JMX beans that you can monitor. And of course, a production-grade <a href="https://stackify.com/what-is-apm/" target="_blank">APM tool</a> such as Stackify’s <em>Prefix</em> can make the task a lot easier as well as scalable.</p>
+<p>Overall, this is data you always need to keep track of in production and understand well, to stay in front of the issues that will inevitably come up.</p>
+<p>谢谢原作者，博客转自：<a href="https://stackify.com/tomcat-performance-monitoring/" target="_blank">https://stackify.com/tomcat-performance-monitoring/</a></p>
+                </div>
+
+                <footer class="tags">
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Apache">
+                            Apache</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/Tomcat">
+                            Tomcat</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E5%8A%A0%E5%AF%86%E5%AE%89%E5%85%A8">
+                            加密安全</a>
+                        <a class="tag" rel="tag" href="https://zxniuniu.github.io/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96">
+                            性能优化</a>
+
+                    <div class="rel fn-clear ft__center">
+                            <a href="https://zxniuniu.github.io/articles/2018/11/21/1542762548365.html" rel="prev"
+                               class="fn-left vditor-tooltipped vditor-tooltipped__n"
+                               aria-label=" Unblocking Clipboard Access">
+                                旧一篇
+                            </a>
+<div class="article__share"
+     data-title="A Step By Step Guide to Tomcat Performance Monitoring"
+     data-blogtitle="随心笔客"
+     data-url="https://zxniuniu.github.io/articles/2018/11/22/1542873600838.html"
+     data-avatar="https://img.hacpai.com/avatar/1538398487257_1540086121348.jpeg?imageView2/1/w/128/h/128/interlace/0/q/100">
+    <span class="item" data-type="qqz">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M22.824 13.989l-8.348 6.287s3.351 0.522 8.404 0.461l-0.23-1.040 7.2-6.549c0.132-0.12 0.183-0.312 0.129-0.487s-0.203-0.299-0.377-0.314l-9.492-0.856-3.708-9.213c-0.068-0.169-0.226-0.279-0.401-0.279s-0.333 0.11-0.401 0.279l-3.708 9.213-9.492 0.856c-0.174 0.015-0.323 0.139-0.377 0.314s-0.004 0.366 0.129 0.487l7.2 6.549-2.158 9.742c-0.040 0.178 0.026 0.365 0.168 0.474 0.142 0.107 0.331 0.115 0.481 0.021l8.158-5.165 8.158 5.165c0.070 0.045 0.147 0.066 0.225 0.066 0.090 0 0.18-0.029 0.256-0.086 0.142-0.109 0.208-0.295 0.168-0.474l-1.707-7.704c0.732-0.386 1.538-1.040 1.538-1.040s-3.195 1.638-14.664 0.838l8.312-6.325s-0.327-0.534-10.744-0.914c-0.697-0.026 8.493-1.83 15.281-0.305z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="wechat">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M9.062 9.203c0-0.859-0.562-1.422-1.422-1.422-0.844 0-1.703 0.562-1.703 1.422 0 0.844 0.859 1.406 1.703 1.406 0.859 0 1.422-0.562 1.422-1.406zM20.672 17.125c0-0.562-0.562-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.859 0 1.422-0.562 1.422-1.141zM16.984 9.203c0-0.859-0.562-1.422-1.406-1.422-0.859 0-1.703 0.562-1.703 1.422 0 0.844 0.844 1.406 1.703 1.406 0.844 0 1.406-0.562 1.406-1.406zM26.906 17.125c0-0.562-0.578-1.125-1.422-1.125-0.562 0-1.125 0.562-1.125 1.125 0 0.578 0.562 1.141 1.125 1.141 0.844 0 1.422-0.562 1.422-1.141zM22.75 10.922c-0.359-0.047-0.719-0.063-1.094-0.063-5.375 0-9.625 4.016-9.625 8.953 0 0.828 0.125 1.625 0.359 2.375-0.359 0.031-0.703 0.047-1.063 0.047-1.422 0-2.547-0.281-3.969-0.562l-3.953 1.984 1.125-3.406c-2.828-1.984-4.531-4.547-4.531-7.656 0-5.391 5.094-9.625 11.328-9.625 5.563 0 10.453 3.391 11.422 7.953zM32 19.687c0 2.547-1.688 4.813-3.969 6.516l0.859 2.828-3.109-1.703c-1.141 0.281-2.281 0.578-3.406 0.578-5.391 0-9.625-3.688-9.625-8.219s4.234-8.219 9.625-8.219c5.094 0 9.625 3.688 9.625 8.219z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="weibo">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M13.444 27.064c-5.3 0.525-9.875-1.875-10.219-5.35-0.344-3.481 3.675-6.719 8.969-7.244 5.3-0.525 9.875 1.875 10.212 5.35 0.35 3.481-3.669 6.725-8.963 7.244zM24.038 15.521c-0.45-0.137-0.762-0.225-0.525-0.819 0.512-1.287 0.563-2.394 0.006-3.188-1.038-1.481-3.881-1.406-7.137-0.037 0 0-1.025 0.444-0.762-0.363 0.5-1.613 0.425-2.956-0.356-3.737-1.769-1.769-6.469 0.069-10.5 4.1-3.013 3.006-4.763 6.212-4.763 8.981 0 5.287 6.787 8.506 13.425 8.506 8.7 0 14.494-5.056 14.494-9.069 0-2.431-2.044-3.806-3.881-4.375z"></path>
+            <path d="M29.819 5.833c-2.1-2.331-5.2-3.219-8.063-2.612v0c-0.663 0.144-1.081 0.794-0.938 1.45 0.144 0.662 0.788 1.081 1.45 0.938 2.038-0.431 4.238 0.2 5.731 1.856s1.9 3.913 1.256 5.888v0c-0.206 0.644 0.144 1.331 0.788 1.544 0.644 0.206 1.331-0.144 1.544-0.787v-0.006c0.9-2.762 0.331-5.938-1.769-8.269z"></path>
+            <path d="M26.588 8.752c-1.025-1.138-2.538-1.569-3.925-1.269-0.569 0.119-0.931 0.688-0.813 1.256 0.125 0.569 0.688 0.931 1.25 0.806v0c0.681-0.144 1.419 0.069 1.919 0.619 0.5 0.556 0.637 1.313 0.419 1.975v0c-0.175 0.55 0.125 1.15 0.681 1.331 0.556 0.175 1.15-0.125 1.331-0.681 0.438-1.356 0.163-2.906-0.863-4.037z"></path>
+            <path d="M13.738 20.771c-0.188 0.319-0.594 0.469-0.912 0.337-0.319-0.125-0.412-0.488-0.231-0.794 0.188-0.306 0.581-0.456 0.894-0.337 0.313 0.113 0.425 0.469 0.25 0.794zM12.044 22.933c-0.512 0.819-1.613 1.175-2.438 0.8-0.813-0.369-1.056-1.319-0.544-2.119 0.506-0.794 1.569-1.15 2.388-0.806 0.831 0.356 1.1 1.3 0.594 2.125zM13.969 17.146c-2.519-0.656-5.369 0.6-6.463 2.819-1.119 2.262-0.037 4.781 2.506 5.606 2.638 0.85 5.75-0.456 6.831-2.894 1.069-2.394-0.262-4.85-2.875-5.531z"></path>
+        </svg>
+    </span>
+    <span class="item" data-type="twitter">
+        <svg viewBox="0 0 32 32" width="100%" height="100%">
+            <path d="M32.003 6.075c-1.175 0.525-2.444 0.875-3.769 1.031 1.356-0.813 2.394-2.1 2.887-3.631-1.269 0.75-2.675 1.3-4.169 1.594-1.2-1.275-2.906-2.069-4.794-2.069-3.625 0-6.563 2.938-6.563 6.563 0 0.512 0.056 1.012 0.169 1.494-5.456-0.275-10.294-2.888-13.531-6.862-0.563 0.969-0.887 2.1-0.887 3.3 0 2.275 1.156 4.287 2.919 5.463-1.075-0.031-2.087-0.331-2.975-0.819 0 0.025 0 0.056 0 0.081 0 3.181 2.263 5.838 5.269 6.437-0.55 0.15-1.131 0.231-1.731 0.231-0.425 0-0.831-0.044-1.237-0.119 0.838 2.606 3.263 4.506 6.131 4.563-2.25 1.762-5.075 2.813-8.156 2.813-0.531 0-1.050-0.031-1.569-0.094 2.913 1.869 6.362 2.95 10.069 2.95 12.075 0 18.681-10.006 18.681-18.681 0-0.287-0.006-0.569-0.019-0.85 1.281-0.919 2.394-2.075 3.275-3.394z"></path>
+        </svg>
+    </span>
+    <span class="item__qr"></span>
+</div>                            <a href="https://zxniuniu.github.io/articles/2018/11/24/1543063983807.html" rel="next"
+                               class="fn-right vditor-tooltipped vditor-tooltipped__n"
+                               aria-label="Pros and cons of end to end testing tools">
+                                新一篇
+                            </a>
+                    </div>
+                </footer>
+                    <div id="gitalk-container"></div>
+                    <div id="b3logsolocomments"></div>
+                    <div id="vcomment" data-name="zxniuniu" data-postId="1542873600838"></div>
+                <br>
+                <div id="externalRelevantArticles" class="list"></div>
+                <div id="relevantArticles" class="list"></div>
+                <div id="randomArticles" class="list"></div>
+            </article>
+        </main>
+<aside>
+<ul class="article__toc">
+        <li class="toc__h3">
+            <a href="#toc_h3_0">Overview</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_1">Tomcat Performance Metrics</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_2">Example Application to Monitor</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_3">Tomcat Manager</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_4">Where to Start:</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_5">Enabling Tomcat Performance Monitoring with JavaMelody</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_6">Where to Start:</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_7">Memory Usage</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_8">Where to Start:</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_9">Garbage Collection</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_10">Where to Start:</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_11">Thread Usage</a>
+        </li>
+        <li class="toc__h4">
+            <a href="#toc_h4_12">Where to Start:</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_13">Request Throughput and Response Time</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_14">Database Connections</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_15">Error Rates</a>
+        </li>
+        <li class="toc__h3">
+            <a href="#toc_h3_16">Conclusion</a>
+        </li>
+</ul></aside>
+    </div>
+</div>
+<footer class="footer fn-clear">
+    &copy; 2020
+    <a href="https://zxniuniu.github.io">随心笔客</a>
+    <!--<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    if (Label.articleId) {
+      const gitalk = new Gitalk({
+        clientID: '9e3b567fd3adfbc50216',
+        clientSecret: '7aed9ad9b65cd6322b2fe3cdcaa4178d093ed3a7',
+        repo: 'solo-blog',
+        owner: 'zxniuniu',
+        admin: ['zxniuniu'],
+        id: Label.articleId,
+        distractionFreeMode: false
+      })
+
+      gitalk.render('gitalk-container')
+    }
+  })
+</script>-->
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?39a78d58b860487e6244a92beef4d745";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</footer>
+<div class="icon-up" onclick="Util.goTop()"></div>
+<script>
+  var Label = {
+    speech: false,
+    servePath: "https://zxniuniu.github.io",
+    staticServePath: "https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources",
+    luteAvailable: true,
+    hljsStyle: 'github',
+    langLabel: "zh_CN",
+    version: "4.3.1",
+    staticSite: true,
+    showCodeBlockLn: true,
+    articleId: "1542873600838",
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/skins/9IPHP/js/common.min.js?1606610382706"></script>
+
+<script type="text/javascript">
+    Util.addScript('https://cdn.jsdelivr.net/gh/88250/solo@4.3.1/src/main/resources/js/page.min.js?1606610382706', 'soloPageScript')
+    var page = new Page({
+        "commentContentCannotEmptyLabel": "评论不能为空",
+        "oId": "1542873600838",
+        "blogHost": "https://zxniuniu.github.io",
+        "randomArticles1Label": "随机阅读：",
+        "externalRelevantArticles1Label": "站外相关阅读："
+    });
+    $(document).ready(function () {
+        page.load();
+    page.tips.externalRelevantArticlesDisplayCount = "10";
+        page.loadRandomArticles();
+        page.loadExternalRelevantArticles("Apache,Tomcat,加密安全,性能优化", "<header class='title'><h2>站外相关阅读</h2></header>");
+        page.loadRelevantArticles('1542873600838', '<h4>相关阅读</h4>');
+    Skin.initToc()
+    page.share()
+    });
+</script>
+</body>
+</html>
+
+<!-- Generated by Latke (https://github.com/88250/latke) in 34ms, 2020/11/29 22:19:05 -->
